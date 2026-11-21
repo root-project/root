@@ -63,10 +63,6 @@ using ROOT::Experimental::Detail::RNTupleCalcPerf;
 using ROOT::Experimental::Detail::RNTupleMetrics;
 using ROOT::Experimental::Detail::RNTupleTickCounter;
 
-ROOT::Internal::RPageStorage::RPageStorage(std::string_view name) : fNTupleName(name) {}
-
-ROOT::Internal::RPageStorage::~RPageStorage() {}
-
 void ROOT::Internal::RPageStorage::RSealedPage::ChecksumIfEnabled()
 {
    if (!fHasChecksum)
@@ -161,9 +157,9 @@ bool ROOT::Internal::RPageSource::REntryRange::IntersectsWith(const ROOT::RClust
 }
 
 ROOT::Internal::RPageSource::RPageSource(std::string_view name, const ROOT::RNTupleReadOptions &options)
-   : RPageStorage(name),
-     fClusterPool(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(options)),
+   : fClusterPool(*this, ROOT::Internal::RNTupleReadOptionsManip::GetClusterBunchSize(options)),
      fPagePool(*this),
+     fNTupleName(name),
      fOptions(options),
      fMetrics("")
 {
@@ -1226,7 +1222,7 @@ bool ROOT::Internal::RWritePageMemoryManager::TryUpdate(RWriteColumn &column, st
 //------------------------------------------------------------------------------
 
 ROOT::Internal::RPageSink::RPageSink(std::string_view name, const ROOT::RNTupleWriteOptions &options)
-   : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget()), fMetrics("")
+   : fNTupleName(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget()), fMetrics("")
 {
    ROOT::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
 }
@@ -1475,7 +1471,7 @@ void ROOT::Internal::RPagePersistentSink::UpdateExtraTypeInfo(const ROOT::RExtra
 
 void ROOT::Internal::RPagePersistentSink::InitImpl(ROOT::RNTupleModel &model)
 {
-   fDescriptorBuilder.SetNTuple(fNTupleName, model.GetDescription());
+   fDescriptorBuilder.SetNTuple(GetNTupleName(), model.GetDescription());
    fDescriptorBuilder.SetVersionForWriting();
    const auto &descriptor = fDescriptorBuilder.GetDescriptor();
 

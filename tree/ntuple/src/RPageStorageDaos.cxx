@@ -250,7 +250,7 @@ void ROOT::Experimental::Internal::RPageSinkDaos::CommitHeaderImpl(const unsigne
    fDaosContainer = std::make_unique<RDaosContainer>(std::move(pool), args.fContainerLabel, /*create =*/true);
    fDaosContainer->SetDefaultObjectClass(fNTupleAnchor.fObjClass);
 
-   auto [locator, _] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
+   auto [locator, _] = RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, GetNTupleName());
    fNTupleIndex = locator.GetIndex();
 
    auto zipBuffer = MakeUninitArray<unsigned char>(length);
@@ -431,10 +431,10 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadStructureImpl()
 {
    RDaosContainerNTupleLocator ntupleLocator;
    std::tie(ntupleLocator, fDescriptorBuilder) =
-      RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, fNTupleName);
+      RDaosContainerNTupleLocator::LocateNTuple(*fDaosContainer, GetNTupleName());
    if (!ntupleLocator.IsValid()) {
       throw ROOT::RException(
-         R__FAIL("LoadStructureImpl: requested ntuple '" + fNTupleName + "' is not present in DAOS container."));
+         R__FAIL("LoadStructureImpl: requested ntuple '" + GetNTupleName() + "' is not present in DAOS container."));
    }
    fAnchor = *ntupleLocator.fAnchor;
    fNTupleIndex = ntupleLocator.GetIndex();
@@ -472,9 +472,10 @@ ROOT::RNTupleDescriptor ROOT::Experimental::Internal::RPageSourceDaos::AttachImp
    RNTupleDecompressor::Unzip(fStructureBuffer.fPtrFooter, fAnchor.fNBytesFooter, fAnchor.fLenFooter, unzipBuf);
    RNTupleSerializer::DeserializeFooter(unzipBuf, fAnchor.fLenFooter, fDescriptorBuilder);
 
-   if (fDescriptorBuilder.GetDescriptor().GetName() != fNTupleName) {
+   if (fDescriptorBuilder.GetDescriptor().GetName() != GetNTupleName()) {
       // Hash already taken by a differently-named ntuple.
-      throw ROOT::RException(R__FAIL("LocateNTuple: ntuple name '" + fNTupleName + "' unavailable in this container."));
+      throw ROOT::RException(
+         R__FAIL("LocateNTuple: ntuple name '" + GetNTupleName() + "' unavailable in this container."));
    }
 
    return fDescriptorBuilder.MoveDescriptor();
@@ -505,7 +506,7 @@ void ROOT::Experimental::Internal::RPageSourceDaos::LoadSealedPageImpl(const RNT
 
 std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Experimental::Internal::RPageSourceDaos::CloneImpl() const
 {
-   auto clone = std::make_unique<RPageSourceDaos>(fNTupleName, fURI, fOptions);
+   auto clone = std::make_unique<RPageSourceDaos>(GetNTupleName(), fURI, fOptions);
    clone->fAnchor = fAnchor;
    clone->fNTupleIndex = fNTupleIndex;
    if (!fAnchor.fObjClass.empty())

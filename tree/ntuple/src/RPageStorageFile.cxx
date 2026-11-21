@@ -420,7 +420,7 @@ void ROOT::Internal::RPageSourceFile::LoadStructureImpl()
    // If we constructed the page source with (ntuple name, path), we need to find the anchor first.
    // Otherwise, the page source was created by OpenFromAnchor()
    if (!fAnchor) {
-      fAnchor = fReader.GetNTuple(fNTupleName).Unwrap();
+      fAnchor = fReader.GetNTuple(GetNTupleName()).Unwrap();
       // We couple finding the RNTuple anchor to loading the streamer infos.
       // If we already have the anchor, we must have opened the file before (either through TFile or by the source of
       // OpenWithDifferentAnchor(), in which case we already loaded the streamer info) .
@@ -524,7 +524,7 @@ void ROOT::Internal::RPageSourceFile::LoadSealedPageImpl(const RNTupleLocator &l
 
 std::unique_ptr<ROOT::Internal::RPageSource> ROOT::Internal::RPageSourceFile::CloneImpl() const
 {
-   auto clone = new RPageSourceFile(fNTupleName, fOptions);
+   auto clone = new RPageSourceFile(GetNTupleName(), GetReadOptions());
    clone->fFile = fFile->Clone();
    clone->fReader = ROOT::Internal::RMiniFileReader(clone->fFile.get());
    return std::unique_ptr<RPageSourceFile>(clone);
