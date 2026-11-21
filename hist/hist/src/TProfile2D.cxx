@@ -485,7 +485,7 @@ Bool_t TProfile2D::Divide(const TH1 *h1)
    }
 
    // Reset statistics
-   fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
+   fEntries = fTsumw = fTsumw2 = fTsumwx = fTsumwx2 = fTsumwy = fTsumwy2 = fTsumwxy = fTsumwz = fTsumwz2 = 0;
 
    // Loop on bins (including underflows/overflows)
    Int_t bin,binx,biny;
@@ -580,7 +580,7 @@ Bool_t TProfile2D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
    }
 
    // Reset statistics
-   fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
+   fEntries = fTsumw = fTsumw2 = fTsumwx = fTsumwx2 = fTsumwy = fTsumwy2 = fTsumwxy = fTsumwz = fTsumwz2 = 0;
 
    // Loop on bins (including underflows/overflows)
    Int_t bin,binx,biny;

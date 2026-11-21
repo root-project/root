@@ -449,9 +449,10 @@ Bool_t TProfile3D::Divide(const TH1 *h1)
    }
 
 // Reset statistics
-   fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
+   fEntries = fTsumw = fTsumw2 = fTsumwx = fTsumwx2 = fTsumwy = fTsumwy2 = fTsumwxy = fTsumwz = fTsumwz2 = fTsumwxz =
+      fTsumwyz = fTsumwt = fTsumwt2 = 0;
 
-// Loop on bins (including underflows/overflows)
+   // Loop on bins (including underflows/overflows)
    Int_t bin,binx,biny,binz;
    Double_t *cu1 = p1->GetW();
    Double_t *er1 = p1->GetW2();
@@ -478,8 +479,8 @@ Bool_t TProfile3D::Divide(const TH1 *h1)
             fTsumwy  += u*y;
             fTsumwy2 += u*y*y;
             fTsumwxy += u*x*y;
-            fTsumwz  += u;
-            fTsumwz2 += u*z;
+            fTsumwz += u * z;
+            fTsumwz2 += u * z * z;
             fTsumwxz += u*x*z;
             fTsumwyz += u*y*z;
             fTsumwt  += u;
@@ -553,9 +554,10 @@ Bool_t TProfile3D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
    }
 
 // Reset statistics
-   fEntries = fTsumw   = fTsumw2 = fTsumwx = fTsumwx2 = 0;
+   fEntries = fTsumw = fTsumw2 = fTsumwx = fTsumwx2 = fTsumwy = fTsumwy2 = fTsumwxy = fTsumwz = fTsumwz2 = fTsumwxz =
+      fTsumwyz = fTsumwt = fTsumwt2 = 0;
 
-// Loop on bins (including underflows/overflows)
+   // Loop on bins (including underflows/overflows)
    Int_t bin,binx,biny,binz;
    Double_t *cu1 = p1->GetW();
    Double_t *cu2 = p2->GetW();
@@ -578,7 +580,7 @@ Bool_t TProfile3D::Divide(const TH1 *h1, const TH1 *h2, Double_t c1, Double_t c2
             u = TMath::Abs(w);
             x = fXaxis.GetBinCenter(binx);
             y = fYaxis.GetBinCenter(biny);
-            z = fZaxis.GetBinCenter(biny);
+            z = fZaxis.GetBinCenter(binz);
             fEntries++;
             fTsumw   += u;
             fTsumw2  += u*u;
