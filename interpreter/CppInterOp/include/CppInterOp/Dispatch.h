@@ -56,10 +56,23 @@ inline void* dlGetProcAddress(const char* name,
                               const char* customLibPath = nullptr) {
   static auto init = std::make_unique<std::once_flag>();
   static void* (*getProc)(const char*);
+#ifdef _WIN32
+  static HMODULE libHandle = nullptr;
+#else
+  static void* libHandle = nullptr;
+#endif
 
   if (!name) {
     init = std::make_unique<std::once_flag>();
     getProc = nullptr;
+    if (libHandle) {
+#ifdef _WIN32
+      FreeLibrary(libHandle);
+#else
+      dlclose(libHandle);
+#endif
+      libHandle = nullptr;
+    }
     return nullptr;
   }
 
@@ -76,6 +89,8 @@ inline void* dlGetProcAddress(const char* name,
           GetProcAddress(h, "CppGetProcAddress"));
       if (!getProc)
         FreeLibrary(h);
+      else
+        libHandle = h;
     } else {
       std::cerr << "[CppInterOp Dispatch] error code=" << GetLastError()
                 << "\n";
@@ -88,6 +103,8 @@ inline void* dlGetProcAddress(const char* name,
           dlsym(handle, "CppGetProcAddress"));
       if (!getProc)
         dlclose(handle);
+      else
+        libHandle = handle;
     } else {
       std::cerr << "[CppInterOp Dispatch] " << dlerror() << "\n";
     }
