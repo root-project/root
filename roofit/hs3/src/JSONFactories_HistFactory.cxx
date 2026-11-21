@@ -1407,10 +1407,16 @@ RooRealSumPdf const *channelSum(RooAbsArg const &pdf)
 // which the export visits the objects.
 bool usedOnlyByHistFactoryChannels(RooJSONFactoryWSTool &tool, RooAbsPdf const &constraint)
 {
-   for (TObject const *obj : tool.workspace()->allGenericObjects()) {
-      auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj);
-      if (mc && mc->GetExternalConstraints() && mc->GetExternalConstraints()->find(constraint.GetName())) {
-         return false;
+   // A component of an array distribution stays in it (see exportConstraint()); a ModelConfig refers to it through
+   // the array.
+   const bool inArray = std::any_of(constraint.clients().begin(), constraint.clients().end(),
+                                    [](RooAbsArg const *client) { return client->getAttribute(arrayDistTag); });
+   if (!inArray) {
+      for (TObject const *obj : tool.workspace()->allGenericObjects()) {
+         auto const *mc = dynamic_cast<RooFit::ModelConfig const *>(obj);
+         if (mc && mc->GetExternalConstraints() && mc->GetExternalConstraints()->find(constraint.GetName())) {
+            return false;
+         }
       }
    }
    for (RooAbsArg const *client : constraint.clients()) {
@@ -1433,8 +1439,9 @@ std::string exportConstraint(RooJSONFactoryWSTool &tool, RooAbsPdf const &constr
    if (RooJSONFactoryWSTool::config().exportArrayDist && usedOnlyByHistFactoryChannels(tool, constraint)) {
       if (auto info = arrayComponentInfo(constraint)) {
          std::string arrayName;
+         // An array that is written: one that only skipped helpers use is not (see isSkippedHelper()).
          for (RooAbsArg const *client : constraint.clients()) {
-            if (client->getAttribute(arrayDistTag)) {
+            if (client->getAttribute(arrayDistTag) && !isSkippedHelper(*client, *tool.workspace())) {
                arrayName = client->GetName();
                break;
             }

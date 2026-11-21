@@ -41,6 +41,8 @@ struct Ref;
 using DistributionRef = Ref<struct DistributionTag>;
 void setExportedObject(RooJSONFactoryWSTool &tool, HistFactoryDist dist,
                        std::vector<DistributionRef> channelConstraints);
+std::string const *importedArrayComponentForm(RooJSONFactoryWSTool &tool, std::string const &name);
+void recordImportedArrayComponent(RooJSONFactoryWSTool &tool, std::string const &name, std::string form);
 } // namespace HS3
 } // namespace RooFit
 namespace RooStats {
@@ -311,6 +313,10 @@ private:
 
    friend void RooFit::HS3::setExportedObject(RooJSONFactoryWSTool &tool, RooFit::HS3::HistFactoryDist dist,
                                               std::vector<RooFit::HS3::DistributionRef> channelConstraints);
+   friend std::string const *
+   RooFit::HS3::importedArrayComponentForm(RooJSONFactoryWSTool &tool, std::string const &name);
+   friend void
+   RooFit::HS3::recordImportedArrayComponent(RooJSONFactoryWSTool &tool, std::string const &name, std::string form);
 
    // member variables
    RooWorkspace &_workspace;

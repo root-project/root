@@ -768,6 +768,13 @@ std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector
 /// combined data set that has entries: measurements of their own.
 std::set<std::string> componentsWithData(HS3Document const &doc);
 
+/// A canonical form of the component `component` of an array distribution with the type `componentType` and the
+/// default parameters `defaults` (may be nullptr): the type and all fields after applying the defaults, sorted, with
+/// numbers in a canonical representation. Two components with the same form are identical in the sense of HS3: they
+/// are one factor of a union composition, also if they belong to different array distributions.
+std::string arrayComponentForm(std::string const &componentType, RooFit::Detail::JSONNode const &component,
+                               RooFit::Detail::JSONNode const *defaults);
+
 /// The variates of the "distributions" of a likelihood, which it pairs with data, with the columns of its combined
 /// distributions.
 std::set<std::string> variatesOf(HS3Document const &doc, Likelihood const &likelihood);

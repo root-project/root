@@ -407,15 +407,10 @@ void Validator::checkCombined(Combined<Ref_t> const &combined, std::string const
    }
 }
 
-// Every sub-data set of a combined data set is a data set of the document that belongs to one combined data set.
+// Every sub-data set of a combined data set is a data set of the document that belongs to one combined data set. A
+// component may itself be a combined data set, paired with a component that is a combined distribution.
 void Validator::checkCombinedData()
 {
-   std::set<std::string> combinedNames;
-   for (auto const &data : _doc.data) {
-      if (std::holds_alternative<CombinedData>(data.body)) {
-         combinedNames.insert(data.name);
-      }
-   }
    std::set<std::string> usedComponents;
    for (std::size_t i = 0; i < _doc.data.size(); ++i) {
       auto const *combined = std::get_if<CombinedData>(&_doc.data[i].body);
@@ -427,7 +422,7 @@ void Validator::checkCombinedData()
       checkCombined(*combined, path, context);
       for (auto const &component : combined->components) {
          std::string const &name = component.ref.name;
-         if (!isDefinedIn(name, "data") || combinedNames.count(name) || !usedComponents.insert(name).second) {
+         if (!isDefinedIn(name, "data") || name == _doc.data[i].name || !usedComponents.insert(name).second) {
             error(path, "the component '" + name + "' of " + context +
                            " is not a data set of the document, or it is already a component of another combined "
                            "data set");
