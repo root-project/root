@@ -186,14 +186,16 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
         // RooWorkspace::Write() can store the histograms next to the workspace, see RooHistFactorySample.
         chanFile->cd();
         ws_single->Write();
-        // Now, write the measurement to the file
-        // Make a new measurement for only this channel
-        RooStats::HistFactory::Measurement meas_chan( measurement );
-        meas_chan.GetChannels().clear();
-        meas_chan.GetChannels().push_back( channel );
-        cxcoutIHF << "About to write channel measurement to file" << std::endl;
-        meas_chan.writeToFile( chanFile.get() );
-        cxcoutPHF << "Successfully wrote channel to file" << std::endl;
+        if (cfg.writeMeasurement) {
+          // Now, write the measurement to the file
+          // Make a new measurement for only this channel
+          RooStats::HistFactory::Measurement meas_chan( measurement );
+          meas_chan.GetChannels().clear();
+          meas_chan.GetChannels().push_back( channel );
+          cxcoutIHF << "About to write channel measurement to file" << std::endl;
+          meas_chan.writeToFile( chanFile.get() );
+          cxcoutPHF << "Successfully wrote channel to file" << std::endl;
+        }
       }
 
       channel_workspaces.emplace_back(std::move(ws_single));
@@ -227,8 +229,10 @@ RooStats::HistFactory::MakeModelAndMeasurementFast(RooStats::HistFactory::Measur
       }
       combFile->cd();
       ws->Write();
-      cxcoutPHF << "Writing combined measurement to file: " << CombinedFileName << std::endl;
-      measurement.writeToFile( combFile.get() );
+      if (cfg.writeMeasurement) {
+        cxcoutPHF << "Writing combined measurement to file: " << CombinedFileName << std::endl;
+        measurement.writeToFile( combFile.get() );
+      }
     }
 
   return RooFit::makeOwningPtr(std::move(ws));
