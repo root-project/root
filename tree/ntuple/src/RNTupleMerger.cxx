@@ -794,6 +794,44 @@ static ROOT::RResult<void> RestoreRealFieldParams(ROOT::RFieldBase &field, const
    return ROOT::RResult<void>::Success();
 }
 
+// Late model extension creates the destination columns of a new field from its in-memory type, but fills them with
+// the source's pages, which keep the member layout on disk. If the loaded class differs from that layout, e.g. a member
+// was inserted or reordered after the file was written, one member's pages would end up in another, so the field
+// cannot be fast merged.
+static void VerifyLateFieldLayout(const ROOT::RFieldBase &field, const ROOT::RFieldDescriptor &fieldDesc,
+                                  const ROOT::RNTupleDescriptor &srcDesc, std::vector<std::string> &errors)
+{
+   const auto subfields = field.GetConstSubfields();
+   const auto &links = fieldDesc.GetLinkIds();
+   bool matches = ROOT::Internal::GetRenormalizedTypeName(field.GetTypeName()) ==
+                     ROOT::Internal::GetRenormalizedTypeName(fieldDesc.GetTypeName()) &&
+                  field.GetStructure() == fieldDesc.GetStructure() && subfields.size() == links.size();
+   for (std::size_t i = 0; matches && i < links.size(); ++i)
+      matches = subfields[i]->GetOnDiskId() == links[i];
+   if (!matches) {
+      errors.push_back("Field `" + srcDesc.GetQualifiedFieldName(fieldDesc.GetId()) +
+                       "` has a different layout in memory (`" + field.GetTypeName() + "`) than on disk");
+      return;
+   }
+   for (std::size_t i = 0; i < links.size(); ++i)
+      VerifyLateFieldLayout(*subfields[i], srcDesc.GetFieldDescriptor(links[i]), srcDesc, errors);
+}
+
+// Adds an error to `descCmp.fFastMergeErrors` for each late field whose in-memory layout differs from the source's.
+static void AddLateFieldLayoutErrors(RDescriptorsComparison &descCmp, const ROOT::RNTupleDescriptor &srcDesc)
+{
+   ROOT::RCreateFieldOptions cfOpts;
+   cfOpts.SetEmulateUnknownTypes(true);
+   std::vector<std::string> errors;
+   for (const auto *fieldDesc : descCmp.fExtraSrcFields)
+      VerifyLateFieldLayout(*fieldDesc->CreateField(srcDesc, cfOpts), *fieldDesc, srcDesc, errors);
+   for (const auto &err : errors) {
+      if (!descCmp.fFastMergeErrors.empty())
+         descCmp.fFastMergeErrors += "\n";
+      descCmp.fFastMergeErrors += "  * " + err;
+   }
+}
+
 // Applies late model extension to `mergeData.fDestination`, adding all `descCmp.fExtraSrcFields` to it.
 [[nodiscard]]
 static ROOT::RResult<void>
@@ -1946,6 +1984,8 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
                        descCmpRes.GetError()->GetReport())
       }
       auto descCmp = descCmpRes.Unwrap();
+      if (mergeOpts.fMergingMode == ENTupleMergingMode::kUnion)
+         AddLateFieldLayoutErrors(descCmp, source->GetSharedDescriptorGuard().GetConstRef());
       // TODO: switch to slow merge if we cannot "fast" merge
       if (!doSlowMerge && !descCmp.fFastMergeErrors.empty()) {
          SKIP_OR_ABORT(std::string("Source RNTuple has an incompatible schema with the destination:\n") +
