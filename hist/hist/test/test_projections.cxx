@@ -85,3 +85,38 @@ TEST(Projections, Issue_6658_Profile2D)
    EXPECT_EQ(xaxis_2d_nbins, xaxis_pxy_nbins);
    expect_list_eq_names(*labels_2d, *labels_pxy);
 }
+
+TEST(Projections, WidthWeightedTH2Statistics)
+{
+   double edges[] = {0., 1., 4.};
+   TH2D x("width_x", "", 2, 0., 2., 2, edges);
+   x.Fill(0.5, 0.5);
+   x.Fill(1.5, 2.);
+   auto px = x.ProjectionX("width_px", 1, 2, "width");
+   EXPECT_DOUBLE_EQ(px->GetBinContent(1), 1.);
+   EXPECT_DOUBLE_EQ(px->GetBinContent(2), 3.);
+   EXPECT_DOUBLE_EQ(px->GetMean(), 1.25);
+   TH2D y("width_y", "", 2, edges, 2, 0., 2.);
+   y.Fill(0.5, 0.5);
+   y.Fill(2., 1.5);
+   auto py = y.ProjectionY("width_py", 1, 2, "width");
+   EXPECT_DOUBLE_EQ(py->GetMean(), 1.25);
+   delete px;
+   delete py;
+}
+
+TEST(Projections, WidthWeightedTH3Statistics)
+{
+   double x[] = {0., 1., 2.}, y[] = {0., 0.5, 2.}, z[] = {0., 1.};
+   TH3D h("width_h3", "", 2, x, 2, y, 1, z);
+   h.Fill(0.5, 0.25, 0.5);
+   h.Fill(1.5, 1., 0.5);
+   auto px = h.ProjectionX("width_px3", 1, 2, 1, 1, "width");
+   auto p2 = static_cast<TH2D *>(h.Project3D("zxwidth"));
+   EXPECT_DOUBLE_EQ(px->GetBinContent(1), 0.5);
+   EXPECT_DOUBLE_EQ(px->GetBinContent(2), 1.5);
+   EXPECT_DOUBLE_EQ(px->GetMean(), 1.25);
+   EXPECT_DOUBLE_EQ(p2->GetMean(1), 1.25);
+   delete px;
+   delete p2;
+}
