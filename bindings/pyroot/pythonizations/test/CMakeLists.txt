@@ -115,10 +115,10 @@ if(roofit)
 endif()
 
 if (dataframe)
-    # Test wrapping Python callables for use in C++ using numba
-    ROOT_ADD_PYUNITTEST(pyroot_numbadeclare numbadeclare.py PYTHON_DEPS numba)
-    ROOT_ADD_PYUNITTEST(pyroot_rdf_filter_pyz rdf_filter_pyz.py PYTHON_DEPS numba)
-    ROOT_ADD_PYUNITTEST(pyroot_rdf_define_pyz rdf_define_pyz.py PYTHON_DEPS numba)
+    # Test declaring C++ functions from Python callables
+    ROOT_ADD_PYUNITTEST(pyroot_pydeclare pydeclare.py)
+    ROOT_ADD_PYUNITTEST(pyroot_rdf_filter_pyz rdf_filter_pyz.py)
+    ROOT_ADD_PYUNITTEST(pyroot_rdf_define_pyz rdf_define_pyz.py)
     # std::string_view in CPyCppyy
     ROOT_ADD_PYUNITTEST(pyroot_string_view string_view.py)
 endif()
