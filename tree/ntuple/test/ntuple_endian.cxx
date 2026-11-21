@@ -31,7 +31,6 @@ using ROOT::Internal::RPage;
 using ROOT::Internal::RPageRef;
 using ROOT::Internal::RPageSink;
 using ROOT::Internal::RPageSource;
-using ROOT::Internal::RPageStorage;
 
 namespace {
 class RPageSinkMock : public RPageSink {

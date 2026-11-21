@@ -58,28 +58,6 @@ struct RNTupleModelChangeset;
 
 // clang-format off
 /**
-\class ROOT::Internal::RPageStorage
-\ingroup NTuple
-\brief Common functionality of an ntuple storage for both reading and writing
-
-The RPageStore provides access to a storage container that keeps the bits of pages and clusters comprising
-an ntuple.  Concrete implementations can use a TFile, a raw file, an object store, and so on.
-*/
-// clang-format on
-class RPageStorage {
-public:
-
-public:
-   RPageStorage() = default;
-   RPageStorage(const RPageStorage &other) = delete;
-   RPageStorage &operator=(const RPageStorage &other) = delete;
-   RPageStorage(RPageStorage &&other) = default;
-   RPageStorage &operator=(RPageStorage &&other) = default;
-   virtual ~RPageStorage() = default;
-}; // class RPageStorage
-
-// clang-format off
-/**
 \class ROOT::Internal::RWritePageMemoryManager
 \ingroup NTuple
 \brief Helper to maintain a memory budget for the write pages of a set of columns
@@ -134,7 +112,7 @@ An object of this class may either be a wrapper (for example a RPageSinkBuf) or 
 inheriting from RPagePersistentSink.
 */
 // clang-format on
-class RPageSink : public RPageStorage {
+class RPageSink {
 public:
    using Callback_t = std::function<void(RPageSink &)>;
 
@@ -223,7 +201,7 @@ public:
    RPageSink &operator=(const RPageSink &) = delete;
    RPageSink(RPageSink &&) = default;
    RPageSink &operator=(RPageSink &&) = default;
-   ~RPageSink() override;
+   virtual ~RPageSink();
 
    const std::string &GetNTupleName() const { return fNTupleName; }
    const ROOT::RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
@@ -477,7 +455,7 @@ corresponding physical columns. Pages from the columns of interest can then be m
 The page source also gives access to the ntuple's metadata.
 */
 // clang-format on
-class RPageSource : public RPageStorage {
+class RPageSource {
    // Decompress pages smaller than 4kB directly in the main thread, not in a TBB thread
    static constexpr std::size_t kInlineDecompressionThreshold = 4096;
 
@@ -815,7 +793,7 @@ public:
    RPageSource &operator=(const RPageSource &) = delete;
    RPageSource(RPageSource &&) = delete;
    RPageSource &operator=(RPageSource &&) = delete;
-   ~RPageSource() override;
+   virtual ~RPageSource();
    /// Guess the concrete derived page source from the file name (location)
    static std::unique_ptr<RPageSource> Create(std::string_view ntupleName, std::string_view location,
                                               const ROOT::RNTupleReadOptions &options = ROOT::RNTupleReadOptions());
