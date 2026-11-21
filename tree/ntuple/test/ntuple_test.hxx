@@ -110,7 +110,6 @@ using RPageSinkBuf = ROOT::Internal::RPageSinkBuf;
 using RPageSinkFile = ROOT::Internal::RPageSinkFile;
 using RPageSource = ROOT::Internal::RPageSource;
 using RPageSourceFile = ROOT::Internal::RPageSourceFile;
-using RPageStorage = ROOT::Internal::RPageStorage;
 using RPrepareVisitor = ROOT::Internal::RPrepareVisitor;
 using RPrintSchemaVisitor = ROOT::Internal::RPrintSchemaVisitor;
 using RRawFile = ROOT::Internal::RRawFile;

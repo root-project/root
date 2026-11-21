@@ -49,7 +49,6 @@ using ROOT::Internal::RNTupleSerializer;
 using ROOT::Internal::RPageSink;
 using ROOT::Internal::RPageSource;
 using ROOT::Internal::RPageSourceFile;
-using ROOT::Internal::RPageStorage;
 
 using namespace ROOT::Internal;
 
