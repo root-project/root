@@ -56,6 +56,10 @@ public:
       /// \brief Build each channel as a RooHistFactoryPdf of RooHistFactorySample objects (default `true`). If
       /// `false`, the channels are built as before ROOT 6.44, with several RooFit objects for each histogram.
       bool useHistFactoryPdf = true;
+      /// \brief Control whether the Measurement is written to the ROOT files next to the workspaces (default `true`),
+      /// together with copies of its histograms. The workspaces don't need it. Like any object in a ROOT file, the
+      /// Measurement, which holds all histograms, is limited to 1 GB.
+      bool writeMeasurement = true;
    };
 
       HistoToWorkspaceFactoryFast() {}

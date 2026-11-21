@@ -83,6 +83,11 @@ by the 1 GB size limit of single objects in ROOT files. `hist2workspace` writes
 its workspaces like this. With `TDirectory::WriteObject()`, the histograms stay
 in the workspace object.
 
+The `Measurement` that HistFactory writes next to the workspaces holds all
+histograms as well, so it is subject to the same limit. Since the workspaces
+don't need it, writing it can be disabled with the new `writeMeasurement`
+member of `RooStats::HistFactory::HistoToWorkspaceFactoryFast::Configuration`.
+
 The HS3 importer also creates `RooHistFactoryPdf` objects for the
 `histfactory_dist` distributions, and the exporter writes them with the names
 of their modifiers.

@@ -804,3 +804,57 @@ TEST(HistFactory, GammaSystConstraint)
    ASSERT_TRUE(toys);
    EXPECT_NEAR(toys->mean(nom), tau * 1.05, 1.);
 }
+
+// With HistoToWorkspaceFactoryFast::Configuration::writeMeasurement, the files of the channels and of the combined
+// model have the Measurement and the directories with its histograms next to the workspace; without, only the
+// workspace.
+TEST(HistFactory, WriteMeasurement)
+{
+   using namespace RooStats::HistFactory;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string inputFileName = "TestWriteMeasurement_input.root";
+   {
+      TFile f(inputFileName.c_str(), "RECREATE");
+      TH1D data{"data", "data", 2, 1, 2};
+      TH1D signal{"signal", "signal", 2, 1, 2};
+      data.SetBinContent(1, 12);
+      data.SetBinContent(2, 21);
+      signal.SetBinContent(1, 10);
+      signal.SetBinContent(2, 20);
+      f.WriteTObject(&data);
+      f.WriteTObject(&signal);
+   }
+
+   for (bool writeMeasurement : {true, false}) {
+      SCOPED_TRACE(writeMeasurement ? "with Measurement" : "without Measurement");
+      const std::string prefix = std::string("TestWriteMeasurement_") + (writeMeasurement ? "with" : "without");
+
+      Measurement meas("meas", "meas");
+      meas.SetOutputFilePrefix(prefix);
+      meas.SetPOI("mu");
+      meas.SetLumi(1.0);
+      meas.SetLumiRelErr(0.1);
+      Channel chan("channel1");
+      chan.SetData("data", inputFileName);
+      Sample sig("signal", "signal", inputFileName);
+      sig.AddNormFactor("mu", 1, 0, 3);
+      chan.AddSample(sig);
+      meas.AddChannel(chan);
+      meas.CollectHistograms();
+
+      HistoToWorkspaceFactoryFast::Configuration cfg;
+      cfg.writeMeasurement = writeMeasurement;
+      ASSERT_NE(std::unique_ptr<RooWorkspace>{MakeModelAndMeasurementFast(meas, cfg)}, nullptr);
+
+      for (auto const &[fileSuffix, wsName] : std::vector<std::pair<std::string, std::string>>{
+              {"_channel1_meas_model.root", "channel1"}, {"_combined_meas_model.root", "combined"}}) {
+         SCOPED_TRACE(fileSuffix);
+         std::unique_ptr<TFile> file{TFile::Open((prefix + fileSuffix).c_str())};
+         ASSERT_TRUE(file && file->IsOpen());
+         EXPECT_NE(std::unique_ptr<RooWorkspace>{file->Get<RooWorkspace>(wsName.c_str())}, nullptr);
+         EXPECT_EQ(std::unique_ptr<Measurement>{file->Get<Measurement>("meas")} != nullptr, writeMeasurement);
+         EXPECT_EQ(file->GetKey("channel1_hists") != nullptr, writeMeasurement);
+      }
+   }
+}
