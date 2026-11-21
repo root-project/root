@@ -82,7 +82,7 @@ private:
 
    /// Set as the page source's scheduler for parallel page decompression if implicit multi-threading (IMT) is on.
    /// Needs to be destructed after the page source is destructed (and thus be declared before)
-   std::unique_ptr<Internal::RPageStorage::RTaskScheduler> fUnzipTasks;
+   std::unique_ptr<Internal::RNTupleTaskScheduler> fUnzipTasks;
 
    std::unique_ptr<Internal::RPageSource> fSource;
    /// Needs to be destructed before fSource
