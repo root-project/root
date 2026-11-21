@@ -16,7 +16,6 @@ class RModel;
 class ROperator {
 
 public:
-   virtual std::vector<std::string> GetBlasRoutines() { return {}; }
    virtual std::vector<std::string> GetStdLibs() { return {}; }
    virtual void Initialize(RModel&) = 0;
    virtual std::string Generate(std::string OpName) = 0;  //expect unique opName for each operator within the same RModel
@@ -31,8 +30,6 @@ public:
    /// check if the output of the operator is Constant and is evaluated at initialization time
    bool IsOutputConstant() const { return fIsOutputConstant; }
 
-   //virtual void Forward_reference() = 0;
-   //virtual void Forward_blas() = 0;
    virtual ~ROperator(){}
 
 protected:

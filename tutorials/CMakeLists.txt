@@ -362,11 +362,6 @@ else()
   ROOT_FIND_PYTHON_MODULE(keras)
   ROOT_FIND_PYTHON_MODULE(onnx)
 
-
-  if (NOT BLAS_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
-  endif()
   # These SOFIE tutorials take the ONNX HiggsModel trained with PyTorch as input
   if (NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py)

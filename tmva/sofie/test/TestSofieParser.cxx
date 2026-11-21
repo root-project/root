@@ -152,8 +152,8 @@ std::string FloatValueInfo(const TestTensor &tensor, int elemType = 1)
 
 // Write a model holding a single Gemm node and return the code SOFIE generates
 // for it. Every operand is a graph input, which keeps the model file tiny.
-std::string
-GenerateGemmCode(const std::string &fileName, const std::vector<TestTensor> &inputs, const TestTensor &output)
+std::string GenerateGemmCode(const std::string &fileName, const std::vector<TestTensor> &inputs,
+                             const TestTensor &output, bool useBLAS = false)
 {
    std::string node;
    for (const TestTensor &input : inputs)
@@ -181,6 +181,7 @@ GenerateGemmCode(const std::string &fileName, const std::vector<TestTensor> &inp
    file.close();
 
    RModel rmodel = RModelParser_ONNX{}.Parse(fileName);
+   rmodel.SetUseBLAS(useBLAS);
    rmodel.Generate(Options::kNoWeightFile);
    std::ostringstream code;
    rmodel.PrintGenerated(code);
@@ -316,6 +317,22 @@ TEST(SOFIEParser, GemmDoesNotBroadcastABiasThatHasTheOutputShape)
 
    EXPECT_EQ(code.find("Copy(tensor_y"), std::string::npos);
    EXPECT_NE(code.find(",tensor_c);"), std::string::npos);
+}
+
+// The matrix multiplication calls BLAS only if requested with
+// RModel::SetUseBLAS(true); by default, the generated code has no BLAS
+// dependency.
+TEST(SOFIEParser, GemmCallsBLASOnlyIfRequested)
+{
+   const std::vector<TestTensor> inputs{{"x", {"1", "10"}}, {"w", {"10", "32"}}, {"b", {"32"}}};
+   const TestTensor output{"y", {"1", "32"}};
+
+   const std::string builtinCode = GenerateGemmCode("gemm_builtin.onnx", inputs, output);
+   EXPECT_EQ(builtinCode.find("sgemm_"), std::string::npos);
+
+   const std::string blasCode = GenerateGemmCode("gemm_blas.onnx", inputs, output, /*useBLAS=*/true);
+   EXPECT_NE(blasCode.find("extern \"C\" void sgemm_("), std::string::npos);
+   EXPECT_NE(blasCode.find("BLAS::sgemm_("), std::string::npos);
 }
 
 // An input of a type that SOFIE does not support (FLOAT16) must make
