@@ -140,7 +140,6 @@ public:
    };
 
 protected:
-   std::string fNTupleName;
    RTaskScheduler *fTaskScheduler = nullptr;
    void WaitForAllTasks()
    {
@@ -150,15 +149,12 @@ protected:
    }
 
 public:
-   explicit RPageStorage(std::string_view name);
+   RPageStorage() = default;
    RPageStorage(const RPageStorage &other) = delete;
    RPageStorage &operator=(const RPageStorage &other) = delete;
    RPageStorage(RPageStorage &&other) = default;
    RPageStorage &operator=(RPageStorage &&other) = default;
-   virtual ~RPageStorage();
-
-   /// Returns the NTuple name.
-   const std::string &GetNTupleName() const { return fNTupleName; }
+   virtual ~RPageStorage() = default;
 
    void SetTaskScheduler(RTaskScheduler *taskScheduler) { fTaskScheduler = taskScheduler; }
 }; // class RPageStorage
@@ -224,6 +220,7 @@ public:
    using Callback_t = std::function<void(RPageSink &)>;
 
 private:
+   std::string fNTupleName;
    /// May contain a derived class of RNTupleWriteOptions
    std::unique_ptr<ROOT::RNTupleWriteOptions> fOptions;
    /// Used in ReservePage to maintain the page buffer budget
@@ -309,6 +306,7 @@ public:
    RPageSink &operator=(RPageSink &&) = default;
    ~RPageSink() override;
 
+   const std::string &GetNTupleName() const { return fNTupleName; }
    const ROOT::RNTupleWriteOptions &GetWriteOptions() const { return *fOptions; }
    bool IsInitialized() const { return fIsInitialized; }
    ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
@@ -844,6 +842,7 @@ protected:
       ROOT::Experimental::Detail::RNTupleCalcPerf &fCompressionRatio;
    };
 
+   std::string fNTupleName; ///< Initially empty if the page source is created from an anchor
    std::unique_ptr<RCounters> fCounters;
    RStructureBuffer fStructureBuffer; ///< Populated by LoadStructureImpl(), reset at the end of Attach()
 
@@ -910,6 +909,7 @@ public:
                                                     const ROOT::Internal::RColumnElementBase &element,
                                                     ROOT::Internal::RPageAllocator &pageAlloc);
 
+   const std::string GetNTupleName() const { return fNTupleName; }
    const ROOT::RNTupleReadOptions &GetReadOptions() const { return fOptions; }
    ROOT::Experimental::Detail::RNTupleMetrics &GetMetrics() { return fMetrics; }
 
