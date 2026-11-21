@@ -284,7 +284,6 @@ struct RChangeCompressionFunc {
    ROOT::Internal::RPageAllocator &fPageAlloc;
    std::byte *fBuffer;
    std::size_t fBufSize;
-   const ROOT::RNTupleWriteOptions &fWriteOpts;
 
    void operator()() const
    {
@@ -303,7 +302,7 @@ struct RChangeCompressionFunc {
       ROOT::Internal::RNTupleDecompressor::Unzip(fSealedPage.GetBuffer(), fSealedPage.GetDataSize(), bytesPacked,
                                                  unzipBuf);
 
-      const auto checksumSize = fWriteOpts.GetEnablePageChecksums() * sizeof(std::uint64_t);
+      const auto checksumSize = fSealedPage.GetHasChecksum() * RPageStorage::kNBytesPageChecksum;
       std::size_t nBytesZipped;
       if (fCompressionSettings != 0) {
          assert(fBuffer != unzipBuf);
@@ -1468,8 +1467,7 @@ ROOT::RResult<void> RNTupleMergeStrategyDefault::MergeCommonColumns(ROOT::Intern
                sealedPage,
                *fPageAlloc,
                buffer.get(),
-               bufSize,
-               fDestination.GetWriteOptions()
+               bufSize
             });
             // clang-format on
          }
