@@ -1231,7 +1231,7 @@ bool ROOT::Internal::RWritePageMemoryManager::TryUpdate(RWriteColumn &column, st
 //------------------------------------------------------------------------------
 
 ROOT::Internal::RPageSink::RPageSink(std::string_view name, const ROOT::RNTupleWriteOptions &options)
-   : RPageStorage(name), fOptions(options.Clone()), fWritePageMemoryManager(options.GetPageBufferBudget())
+   : RPageStorage(name), fWritePageMemoryManager(options.GetPageBufferBudget()), fOptions(options.Clone())
 {
    ROOT::Internal::EnsureValidNameForRNTuple(name, "RNTuple").ThrowOnError();
 }
