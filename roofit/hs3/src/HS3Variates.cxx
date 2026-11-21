@@ -28,9 +28,11 @@
 
 #include <algorithm>
 #include <functional>
+#include <cstdio>
 #include <iterator>
 #include <map>
 #include <set>
+#include <sstream>
 #include <string>
 #include <utility>
 #include <variant>
@@ -299,14 +301,19 @@ void addShared(PartVariates const &parts, std::string const &what, std::string c
    }
 }
 
-// The axes of the components of a combined data set, by component.
+// The axes of the components of a combined data set, by component. A component that is a combined data set itself has
+// the axes of all of its components.
 PartVariates componentAxes(HS3Document const &doc, CombinedData const &combined)
 {
    PartVariates parts;
    for (auto const &component : combined.components) {
       std::set<std::string> axes;
       if (Data const *found = findByName(doc.data, component.ref.name)) {
-         std::visit(overloaded{[](CombinedData const &) {},
+         std::visit(overloaded{[&](CombinedData const &inner) {
+                                  for (auto const &[name, innerAxes] : componentAxes(doc, inner)) {
+                                     axes.insert(innerAxes.begin(), innerAxes.end());
+                                  }
+                               },
                                [&](PointData const &data) {
                                   for (ContinuousAxis const &axis : data.axes) {
                                      axes.insert(axis.name);
@@ -432,23 +439,35 @@ std::vector<std::string> unlistedConstraints(HS3Document const &doc, std::vector
          };
       // The components of a combined distribution, each with the entries of the component of the paired combined data
       // set that has the same key. Without paired data (a pure model), every component contributes once.
-      auto contributeCombined = [&](std::string const &distName, CombinedDist const &dist, Data const *data) {
-         auto const *combinedData = data ? std::get_if<CombinedData>(&data->body) : nullptr;
-         for (auto const &component : dist.components) {
-            int entries = 1;
-            if (combinedData) {
-               auto const *dataComponent = combinedData->find(component.key);
-               entries = dataComponent ? numDataEntries(doc, dataComponent->ref.name) : 0;
-               if (!dataComponent && warnings) {
-                  warnings->push_back("the component '" + component.ref.name + "' of the combined distribution '" +
-                                      distName + "' has no component in the data set '" + data->name +
-                                      "' that the likelihood '" + likelihood.name +
-                                      "' pairs it with, so it does not contribute to the likelihood");
+      // A component that is a combined distribution itself (HS3 #161) contributes its own components, with the
+      // component of the data set that is paired with it.
+      std::function<void(std::string const &, CombinedDist const &, Data const *)> contributeCombined =
+         [&](std::string const &distName, CombinedDist const &dist, Data const *data) {
+            auto const *combinedData = data ? std::get_if<CombinedData>(&data->body) : nullptr;
+            for (auto const &component : dist.components) {
+               int entries = 1;
+               Data const *componentData = nullptr;
+               if (combinedData) {
+                  auto const *dataComponent = combinedData->find(component.key);
+                  entries = dataComponent ? numDataEntries(doc, dataComponent->ref.name) : 0;
+                  componentData = dataComponent ? findByName(doc.data, dataComponent->ref.name) : nullptr;
+                  if (!dataComponent && warnings) {
+                     warnings->push_back("the component '" + component.ref.name + "' of the combined distribution '" +
+                                         distName + "' has no component in the data set '" + data->name +
+                                         "' that the likelihood '" + likelihood.name +
+                                         "' pairs it with, so it does not contribute to the likelihood");
+                  }
                }
+               if (auto const *nested = distributions.find<CombinedDist>(component.ref.name)) {
+                  contributions[component.ref.name] += entries;
+                  if (entries > 0) {
+                     contributeCombined(component.ref.name, *nested, componentData);
+                  }
+                  continue;
+               }
+               contribute(component.ref.name, entries, distName);
             }
-            contribute(component.ref.name, entries, distName);
-         }
-      };
+         };
       for (LikelihoodTerm const &term : likelihood.terms) {
          // The paired data: a data set, a value given in-line, or nothing (a pure model).
          auto const *dataRef = std::get_if<DataRef>(&term.data);
@@ -493,64 +512,202 @@ std::set<std::string> componentsWithData(HS3Document const &doc)
 {
    Distributions distributions{doc};
    std::set<std::string> out;
+   // The components of the combined distribution `distName` that the combined data set `combinedData` has entries
+   // for, also those of a component that is a combined distribution itself (HS3 #161).
+   std::function<void(std::string const &, CombinedData const *)> collect = [&](std::string const &distName,
+                                                                                CombinedData const *combinedData) {
+      auto const *dist = distributions.find<CombinedDist>(distName);
+      if (!dist || !combinedData) {
+         return;
+      }
+      for (auto const &component : dist->components) {
+         auto const *dataComponent = combinedData->find(component.key);
+         if (dataComponent && numDataEntries(doc, dataComponent->ref.name) > 0) {
+            out.insert(component.ref.name);
+            collect(component.ref.name, find<CombinedData>(doc.data, dataComponent->ref.name));
+         }
+      }
+   };
    for (Likelihood const &likelihood : doc.likelihoods) {
       for (LikelihoodTerm const &term : likelihood.terms) {
          auto const *dataRef = std::get_if<DataRef>(&term.data);
-         auto const *combinedData = dataRef ? find<CombinedData>(doc.data, dataRef->name) : nullptr;
-         auto const *dist = distributions.find<CombinedDist>(term.distribution.name);
-         if (!dist || !combinedData) {
-            continue;
-         }
-         for (auto const &component : dist->components) {
-            auto const *dataComponent = combinedData->find(component.key);
-            if (dataComponent && numDataEntries(doc, dataComponent->ref.name) > 0) {
-               out.insert(component.ref.name);
-            }
-         }
+         collect(term.distribution.name, dataRef ? find<CombinedData>(doc.data, dataRef->name) : nullptr);
       }
    }
    return out;
+}
+
+std::string arrayComponentForm(std::string const &componentType, JSONNode const &component, JSONNode const *defaults)
+{
+   // A value in canonical form: numbers as the double they represent (two literals are identical if they are the same
+   // number), names as they are, anything else as written.
+   auto canonical = [](JSONNode const &value) {
+      if (value.is_number()) {
+         char buffer[32];
+         std::snprintf(buffer, sizeof(buffer), "%.17g", value.val_double());
+         return std::string{"#"} + buffer;
+      }
+      if (value.has_val()) {
+         return "$" + value.val();
+      }
+      std::stringstream ss;
+      value.writeJSON(ss);
+      return ss.str();
+   };
+   std::map<std::string, std::string> fields;
+   if (defaults) {
+      for (auto const &field : defaults->children()) {
+         fields[field.key()] = canonical(field);
+      }
+   }
+   for (auto const &field : component.children()) {
+      fields[field.key()] = canonical(field);
+   }
+   std::string form = componentType;
+   for (auto const &[key, value] : fields) {
+      form += ";" + key + "=" + value;
+   }
+   return form;
 }
 
 std::vector<std::string> sharedVariates(HS3Document const &doc)
 {
    Distributions distributions{doc};
    std::vector<std::string> messages;
-   auto withVariates = [&](std::vector<std::string> const &names) {
+   // The parts of a distribution, with their variates, as union composition (HS3) defines them: the components of a
+   // combined distribution, recursively, and the components of an array distribution are parts of their own; any other
+   // distribution is one part. Identical parts (the same distribution, or array components with the same canonical
+   // form, see arrayComponentForm()) are one part, named after the first of them ("<array>[<x>]" for an array
+   // component); the variates of such parts are added to `identical`. `reached` gets every distribution on the way.
+   // A combined distribution that is paired with the combined data set `data` has a factor only for the components with
+   // a component of the data set that has entries (HS3); without paired data, every component counts.
+   std::function<void(std::string const &, Data const *, PartVariates &, std::map<std::string, std::string> &,
+                      std::set<std::string> &, std::set<std::string> &)>
+      addUnionParts = [&](std::string const &name, Data const *data, PartVariates &parts,
+                          std::map<std::string, std::string> &nameOfForm, std::set<std::string> &identical,
+                          std::set<std::string> &reached) {
+         reached.insert(name);
+         auto addPart = [&](std::string const &part, std::set<std::string> const &variates) {
+            auto found = std::find_if(parts.begin(), parts.end(), [&](auto const &p) { return p.first == part; });
+            if (found != parts.end()) {
+               identical.insert(variates.begin(), variates.end());
+               return;
+            }
+            parts.emplace_back(part, variates);
+         };
+         if (auto const *combined = distributions.find<CombinedDist>(name)) {
+            auto const *combinedData = data ? std::get_if<CombinedData>(&data->body) : nullptr;
+            for (auto const &component : combined->components) {
+               Data const *componentData = nullptr;
+               if (combinedData) {
+                  auto const *dataComponent = combinedData->find(component.key);
+                  componentData = dataComponent ? findByName(doc.data, dataComponent->ref.name) : nullptr;
+                  if (!componentData || numDataEntries(doc, componentData->name) == 0) {
+                     continue;
+                  }
+               }
+               addUnionParts(component.ref.name, componentData, parts, nameOfForm, identical, reached);
+            }
+            return;
+         }
+         JSONNode const *array = distributions.nodeOf(name, "array_dist");
+         JSONNode const *components = array ? array->find("components") : nullptr;
+         if (!components) {
+            std::set<std::string> variates;
+            std::set<std::string> visited;
+            distributions.addVariates(name, variates, visited);
+            addPart(name, variates);
+            return;
+         }
+         std::string const componentType = array->has_child("component_type") ? (*array)["component_type"].val() : "";
+         JSONNode const *defaults = array->find("default_parameters");
+         for (JSONNode const &component : components->children()) {
+            std::set<std::string> x;
+            if (JSONNode const *xNode = component.find("x")) {
+               addNames(*xNode, x);
+            }
+            std::string const form = arrayComponentForm(componentType, component, defaults);
+            auto found = nameOfForm.find(form);
+            if (found == nameOfForm.end()) {
+               found = nameOfForm.emplace(form, name + "[" + (x.empty() ? "" : *x.begin()) + "]").first;
+            }
+            addPart(found->second, x);
+         }
+      };
+   // The variates of identical factors of a combined distribution, by name: they may occur in several sub-data sets of
+   // the paired combined data set.
+   std::map<std::string, std::set<std::string>> identicalOfCombined;
+   auto unionOf = [&](std::string const &name, Data const *data, std::set<std::string> &reached) {
       PartVariates parts;
-      for (std::string const &name : names) {
-         std::set<std::string> visited;
-         distributions.addVariates(name, parts.emplace_back(name, std::set<std::string>{}).second, visited);
+      std::map<std::string, std::string> nameOfForm;
+      std::set<std::string> identical;
+      addUnionParts(name, data, parts, nameOfForm, identical, reached);
+      if (distributions.find<CombinedDist>(name)) {
+         identicalOfCombined[name] = identical;
       }
       return parts;
    };
    std::set<std::string> inLikelihoods;
    for (Likelihood const &likelihood : doc.likelihoods) {
+      // The likelihood is the plain product of its terms (HS3): union composition applies within a term, not across
+      // terms, so that a variate of two terms is shared, also by identical factors. Each part is named after its term.
+      PartVariates parts;
+      std::set<std::string> reached;
+      std::vector<std::string> named;
+      auto addTerm = [&](std::string const &term, Data const *data) {
+         inLikelihoods.insert(term);
+         std::set<std::string> reachedByTerm;
+         PartVariates termParts = unionOf(term, data, reachedByTerm);
+         // The same distribution as a part of another term is a factor of its own as well.
+         for (auto &part : termParts) {
+            bool again = std::any_of(parts.begin(), parts.end(), [&](auto const &p) { return p.first == part.first; });
+            parts.emplace_back(again ? part.first + "' (again in the term '" + term : part.first, part.second);
+         }
+         reached.insert(reachedByTerm.begin(), reachedByTerm.end());
+      };
       for (LikelihoodTerm const &term : likelihood.terms) {
-         inLikelihoods.insert(term.distribution.name);
+         auto const *dataRef = std::get_if<DataRef>(&term.data);
+         addTerm(term.distribution.name, dataRef ? findByName(doc.data, dataRef->name) : nullptr);
       }
       for (DistributionRef const &aux : likelihood.auxDistributions) {
-         inLikelihoods.insert(aux.name);
+         addTerm(aux.name, nullptr);
       }
-      addShared(withVariates(distributions.likelihoodTerms(likelihood)), "terms",
-                "the likelihood '" + likelihood.name + "'", messages);
+      // The constraint terms named by the HistFactory channels that no term reaches are terms of their own: RooFit adds
+      // them itself for documents before HS3 0.3.
+      for (std::string const &term : distributions.likelihoodTerms(likelihood)) {
+         if (!reached.count(term) && !inLikelihoods.count(term)) {
+            addTerm(term, nullptr);
+         }
+      }
+      addShared(parts, "terms", "the likelihood '" + likelihood.name + "'", messages);
    }
    for (Distribution const &dist : doc.distributions) {
-      auto const *combined = std::get_if<CombinedDist>(&dist.body);
-      if (combined && !inLikelihoods.count(dist.name)) {
-         addShared(withVariates(componentsOf(*combined)), "components", "the combined_dist '" + dist.name + "'",
+      if (std::holds_alternative<CombinedDist>(dist.body) && !inLikelihoods.count(dist.name)) {
+         std::set<std::string> reached;
+         addShared(unionOf(dist.name, nullptr, reached), "components", "the combined_dist '" + dist.name + "'",
                    messages);
       }
    }
-   // The axes of the components of every combined data set, also of those that a likelihood lists.
-   std::map<std::string, std::set<std::string>> const bookkeeping = bookkeepingColumns(doc);
+   // The axes of the components of every combined data set, also of those that a likelihood lists. The axes for the
+   // variates of identical factors of the combined distribution that a likelihood pairs it with may occur in several
+   // components.
+   std::map<std::string, std::set<std::string>> exempt = bookkeepingColumns(doc);
+   for (Likelihood const &likelihood : doc.likelihoods) {
+      for (LikelihoodTerm const &term : likelihood.terms) {
+         auto const *dataRef = std::get_if<DataRef>(&term.data);
+         auto identical = identicalOfCombined.find(term.distribution.name);
+         if (dataRef && identical != identicalOfCombined.end()) {
+            exempt[dataRef->name].insert(identical->second.begin(), identical->second.end());
+         }
+      }
+   }
    for (Data const &data : doc.data) {
       auto const *combined = std::get_if<CombinedData>(&data.body);
       if (!combined) {
          continue;
       }
       PartVariates parts = componentAxes(doc, *combined);
-      if (auto found = bookkeeping.find(data.name); found != bookkeeping.end()) {
+      if (auto found = exempt.find(data.name); found != exempt.end()) {
          for (auto &part : parts) {
             for (std::string const &column : found->second) {
                part.second.erase(column);

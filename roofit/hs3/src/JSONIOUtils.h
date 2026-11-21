@@ -47,10 +47,13 @@ inline constexpr const char *helperObjectTag = "hs3_helper";
 // True if `arg` is a RooConstVar whose name is a plain number (i.e. a literal constant).
 bool isLiteralConstVar(RooAbsArg const &arg);
 
-// Whether `arg` is a helper (see helperObjectTag) that the export of the workspace `ws` does not write: nothing that
-// is written refers to it, i.e. it has no clients in the workspace other than helpers that are skipped themselves and
-// no ModelConfig names it, and the HS3 object that it stands for is not written either. Such an object is treated as
-// if it were not in the workspace.
+// Whether the export of the workspace `ws` does not write `arg`: a helper (see helperObjectTag) that nothing written
+// refers to, i.e. it has no clients in the workspace other than helpers that are skipped themselves and no ModelConfig
+// names it; a helper that stands for an HS3 object of its own (an array distribution) and that nothing in the
+// workspace uses is written as that object. The property is weakly transitive: any other object whose clients in the
+// workspace are all skipped, and that no ModelConfig names, is skipped as well, so that what only a skipped helper
+// uses is not written either. An array distribution that is skipped dissolves into its components, which are written
+// on their own: it doesn't count as a user of them. Such an object is treated as if it were not in the workspace.
 bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws);
 
 // The HS3 type, the observable and the other fields of `pdf` as a component of an array distribution (RooPoisson,
