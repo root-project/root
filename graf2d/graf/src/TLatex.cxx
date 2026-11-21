@@ -2149,9 +2149,13 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 {
    if (size<=0 || strlen(text1) <= 0) return; // do not paint empty text or text with size <= 0
 
+   auto pp = gPad->GetPainter();
+   if (!pp)
+      return;
+
    TAttText::Modify();  // Change text attributes only if necessary.
 
-   auto ps = gPad->GetPainter()->GetPS();
+   auto ps = pp->GetPS();
 
    if (ps && ps->InheritsFrom("TTeXDump")) {
       TString t(text1);
@@ -2228,7 +2232,7 @@ void TLatex::PaintLatex(Double_t x, Double_t y, Double_t angle, Double_t size, c
 
 Int_t TLatex::PaintLatex1(Double_t x, Double_t y, Double_t angle, Double_t size, const Char_t *text1)
 {
-   if (!gPad)
+   if (!gPad || !gPad->GetPainter())
       return 0;
    TString newText = text1;
    if(newText.Length() == 0)

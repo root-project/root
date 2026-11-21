@@ -552,7 +552,7 @@ void TMathText::Paint(Option_t *)
 void TMathText::PaintMathText(Double_t x, Double_t y, Double_t angle,
                               Double_t size, const Char_t *text1)
 {
-   if (!gPad) return;
+   if (!gPad || !gPad->GetPainter()) return;
    Double_t saveSize = size;
    Int_t saveFont    = fTextFont;
    Short_t saveAlign = fTextAlign;
