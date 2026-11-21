@@ -54,7 +54,10 @@ if(asimage)
 
 endif()
 
-set(ASIMAGEUTILS_HEADERS TASUtils.h)
+set(ASIMAGEUTILS_HEADERS
+  TASImageUtils.h
+  TASUtils.h
+)
 
 ROOT_STANDARD_LIBRARY_PACKAGE(ASImageUtils
   NO_GLOB_HEADERS

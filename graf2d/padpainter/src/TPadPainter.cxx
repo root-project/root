@@ -10,6 +10,7 @@
  *************************************************************************/
 
 #include <algorithm>
+#include <cstring>
 #include <limits>
 #include <memory>
 #include <vector>
@@ -17,16 +18,36 @@
 #include "TPadPainter.h"
 #include "TVirtualX.h"
 #include "TSystem.h"
-#include "TASUtils.h"
 #include "TCanvas.h"
+#include "TClass.h"
+#include "TClassTable.h"
 #include "TPoint.h"
 #include "TError.h"
 #include "TImage.h"
 #include "TROOT.h"
 #include "TMath.h"
 #include "TPad.h"
+#include "TVirtualImageUtils.h"
 
 namespace {
+
+Bool_t InheritsFromLoadedClass(const char *className)
+{
+   // The string overload of InheritsFrom can autoload an unused graphics backend.
+   // Its dictionary is already registered if the backend is in use.
+   auto backendClass = gVirtualX->IsA();
+   if (std::strcmp(backendClass->GetName(), className) == 0)
+      return kTRUE;
+   auto dict = TClassTable::GetDictNorm(className);
+   return dict && backendClass->InheritsFrom(dict());
+}
+
+// Image helpers must not become a load-time dependency of ordinary pad painting.
+TVirtualImageUtils *GetImageUtils()
+{
+   static const std::unique_ptr<TVirtualImageUtils> imageUtils(TVirtualImageUtils::Create());
+   return imageUtils.get();
+}
 
 //Typedef is fine, but let's pretend we look cool and modern:
 using size_type = std::vector<TPoint>::size_type;
@@ -121,7 +142,7 @@ Int_t TPadPainter::ResizeDrawable(Int_t device, UInt_t w, UInt_t h)
 
 Bool_t TPadPainter::IsX11() const
 {
-   return gVirtualX->InheritsFrom("TGX11");
+   return InheritsFromLoadedClass("TGX11");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -129,7 +150,7 @@ Bool_t TPadPainter::IsX11() const
 
 Bool_t TPadPainter::IsCocoa() const
 {
-   return gVirtualX->InheritsFrom("TGCocoa");
+   return InheritsFromLoadedClass("TGCocoa");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -137,7 +158,7 @@ Bool_t TPadPainter::IsCocoa() const
 
 Bool_t TPadPainter::IsSupportAlpha() const
 {
-   return gVirtualX->InheritsFrom("TGQuartz");
+   return InheritsFromLoadedClass("TGQuartz");
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -229,11 +250,13 @@ void TPadPainter::DrawImage(TImage *img, Int_t x, Int_t y, Int_t flags)
 {
    Window_t wid = gVirtualX->GetWindowID(fPad->GetPixmapID());
 
-   // use old API to draw image on gVirtualX window
-   // img->PaintImage(wid, x, y, 0, 0, 0, 0, flags ? "" : "opaque");
+   auto imageUtils = GetImageUtils();
+   if (!imageUtils) {
+      ::Error("TPadPainter::DrawImage", "Cannot load image utility plugin");
+      return;
+   }
 
-   // new API invokes
-   TASUtils::PaintImage(img, wid, x, y, !flags);
+   imageUtils->PaintImage(img, wid, x, y, !flags);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -578,21 +601,28 @@ TVirtualPadPainter::ESaveImageResult TPadPainter::SaveAsImage(TVirtualPad *pad, 
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Fill image object with the pixel data from the pad
-/// Use TASUtils::FillImageFromWindow method which provides native X11 handling
+/// Use the image utility plugin, which provides native X11 handling.
 
 Bool_t TPadPainter::FillImageFromPad(TImage *image, TVirtualPad *pad) const
 {
    if (!image || !pad)
       return kFALSE;
 
-   auto width = pad->GetPadWidth();
-   auto height = pad->GetPadHeight();
+   auto imageUtils = GetImageUtils();
+   if (!imageUtils) {
+      ::Error("TPadPainter::FillImageFromPad", "Cannot load image utility plugin");
+      return kFALSE;
+   }
+
+   Int_t width = pad->GetPadWidth();
+   Int_t height = pad->GetPadHeight();
 
    Int_t wid = (pad == pad->GetCanvas()) ? pad->GetCanvasID() : pad->GetPixmapID();
    gVirtualX->SelectWindow(wid);
 
    Window_t wd = gVirtualX->GetCurrentWindow();
-   return TASUtils::FillImageFromWindow(image, wd, width, height);
+
+   return imageUtils->FillImageFromWindow(image, wd, width, height);
 }
 
 //Aux. private functions.
