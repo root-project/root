@@ -737,6 +737,20 @@ int testTransform3D() {
   return iret;
 }
 
+// A foreign vector whose result from ProjVector() is built with its constructor, not its SetXYZ().
+struct ProjForeignVector {
+   double fX, fY, fZ;
+   ProjForeignVector(double x, double y, double z) : fX(x), fY(y), fZ(z) {}
+   double X() const { return fX; }
+   double Y() const { return fY; }
+   double Z() const { return fZ; }
+   void SetXYZ(double, double, double) { fX = fY = fZ = -1; }
+   template <class V>
+   double Dot(const V &u) const
+   {
+      return fX * u.X() + fY * u.Y() + fZ * u.Z();
+   }
+};
 
 int testVectorUtil() {
 
@@ -775,6 +789,37 @@ int testVectorUtil() {
    iret |= compare(vp.X(), vp2.X(),"x",10 );
    iret |= compare(vp.Y(), vp2.Y(),"y",10 );
    iret |= compare(vp.Z(), vp2.Z(),"z",10 );
+
+   // vectors in other coordinate systems (the projection was built with their own coordinates)
+   Polar3DVector vpolar(v);
+   XYZVector vpx2(ProjVector(vpolar, XYZVector(3, 0, 0)));
+   iret |= compare(vpx2.X(), v.X(), "x", 10);
+   iret |= compare(vpx2.Y(), 0, "y", 10);
+   iret |= compare(vpx2.Z(), 0, "z", 10);
+   XYZVector vpp2(PerpVector(vpolar, XYZVector(3, 0, 0)));
+   iret |= compare(vpp2.X(), 0, "x", 10);
+   iret |= compare(vpp2.Y(), v.Y(), "y", 10);
+   iret |= compare(vpp2.Z(), v.Z(), "z", 10);
+   XYZVector vlc(ProjVector(RhoZPhiVector(v), u));
+   iret |= compare(vlc.X(), vl2.X(), "x", 10);
+   iret |= compare(vlc.Y(), vl2.Y(), "y", 10);
+   iret |= compare(vlc.Z(), vl2.Z(), "z", 10);
+   XYZPoint vlp(ProjVector(Polar3DPoint(XYZPoint(v)), XYZVector(u)));
+   iret |= compare(vlp.X(), vl2.X(), "x", 10);
+   iret |= compare(vlp.Y(), vl2.Y(), "y", 10);
+   iret |= compare(vlp.Z(), vl2.Z(), "z", 10);
+   XYZVector vz(ProjVector(vpolar, XYZVector(0, 0, 0)));
+   iret |= compare(vz.R(), 0, "zero", 1);
+   XYZPoint pz(ProjVector(Polar3DPoint(XYZPoint(v)), XYZVector(0, 0, 0)));
+   iret |= compare(pz.R(), 0, "zero", 1);
+   ProjForeignVector vf = ProjVector(ProjForeignVector(1, 2, 3), XYZVector(3, 0, 0));
+   iret |= compare(vf.X(), 1, "x", 1);
+   iret |= compare(vf.Y(), 0, "y", 1);
+   iret |= compare(vf.Z(), 0, "z", 1);
+   XYZVector vle(ProjVector(RhoEtaPhiVector(v), u));
+   iret |= compare(vle.X(), vl2.X(), "x", 10);
+   iret |= compare(vle.Y(), vl2.Y(), "y", 10);
+   iret |= compare(vle.Z(), vl2.Z(), "z", 10);
 
    double perp = Perp(v,u);
    iret |= compare(perp, vp.R(),"perp",1 );

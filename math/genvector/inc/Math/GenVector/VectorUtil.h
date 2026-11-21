@@ -23,6 +23,13 @@
 #include "Math/GenVector/Boost.h"
 
 namespace ROOT {
+namespace Math {
+template <class CoordSystem, class Tag>
+class PositionVector3D;
+} // namespace Math
+} // namespace ROOT
+
+namespace ROOT {
 
    namespace Math {
 
@@ -186,6 +193,37 @@ namespace ROOT {
             if (magU2 == 0) return Vector1(0,0,0);
             double d = v.Dot(u)/magU2;
             return Vector1( u.X() * d, u.Y() * d, u.Z() * d);
+         }
+         namespace Impl {
+         template <class Vector, class Vector2>
+         Vector ProjVectorThroughSetXYZ(const Vector &v, const Vector2 &u)
+         {
+            Vector proj;
+            double magU2 = u.X() * u.X() + u.Y() * u.Y() + u.Z() * u.Z();
+            if (magU2 == 0)
+               return proj;
+            double d = v.Dot(u) / magU2;
+            proj.SetXYZ(u.X() * d, u.Y() * d, u.Z() * d);
+            return proj;
+         }
+         } // namespace Impl
+
+         /**
+          Find the projection of a GenVector vector or point v along the given direction u, in the coordinate system
+          of v. Its constructor takes the coordinates of that system, e.g. (r, theta, phi) for Polar3D, so the
+          projection is set through SetXYZ().
+          */
+         template <class CoordSystem, class Tag, class Vector2>
+         DisplacementVector3D<CoordSystem, Tag>
+         ProjVector(const DisplacementVector3D<CoordSystem, Tag> &v, const Vector2 &u)
+         {
+            return Impl::ProjVectorThroughSetXYZ(v, u);
+         }
+
+         template <class CoordSystem, class Tag, class Vector2>
+         PositionVector3D<CoordSystem, Tag> ProjVector(const PositionVector3D<CoordSystem, Tag> &v, const Vector2 &u)
+         {
+            return Impl::ProjVectorThroughSetXYZ(v, u);
          }
 
          /**
