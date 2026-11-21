@@ -10,6 +10,9 @@ if(NOT MSVC OR win_broken_tests)
                                          -e .L\ CoralAttributeList.C+)
 endif()
 
+  ROOTTEST_ADD_TEST(gh_20952
+                    MACRO gh_20952.py)
+
   ROOTTEST_ADD_TEST(root_6023
                     MACRO exec_root_6023.py
                     COPY_TO_BUILDDIR root_6023.h
