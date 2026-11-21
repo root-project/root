@@ -656,6 +656,8 @@ void RLoopManager::RunDataSource()
       ROOT::Internal::RDF::RDSRangeRAII __{*this, 0u, 0ull};
 
       ranges = fDataSource->GetEntryRanges();
+      if (ranges.empty())
+         break;
 
       fSampleInfos[0] = ROOT::Internal::RDF::CreateSampleInfo(*fDataSource, /*slot*/ 0, fSampleMap);
 
