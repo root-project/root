@@ -403,6 +403,9 @@ public:
     // drop this interpreter's atfork entries.
     compat::JitGlibcHandlerRegistry::instance().flushOwner(inner.get());
 #endif
+    // Destroy the clang::Interpreter (and its JIT) before unloading libraries.
+    inner.reset();
+    sDLM.reset();
   }
 
   operator const clang::Interpreter&() const { return *inner; }
