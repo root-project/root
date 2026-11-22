@@ -2222,6 +2222,34 @@ std::unique_ptr<RooDataHist> RooFit::HS3::createDataHist(std::string const &name
    return dh;
 }
 
+namespace {
+
+// Import the RooSimultaneous `name` of `pdfMap` over `indexCat`. In ROOT 6.42, the constructor still flattens
+// components that are RooSimultaneous themselves into a RooSimultaneous over a RooSuperCategory. The import of the
+// likelihood flattens them on its own (flatModelOfLikelihood()), so stand-ins of the same name take their place in
+// the constructor and are replaced afterwards.
+void importSimultaneous(RooJSONFactoryWSTool &tool, std::string const &name, std::map<std::string, RooAbsPdf *> pdfMap,
+                        RooAbsCategoryLValue &indexCat)
+{
+   RooArgSet nested;
+   RooArgSet standIns;
+   for (auto &item : pdfMap) {
+      if (dynamic_cast<RooSimultaneous *>(item.second)) {
+         const char *nestedName = item.second->GetName();
+         nested.add(*item.second, /*silent=*/true);
+         if (!standIns.find(nestedName)) {
+            standIns.addOwned(std::make_unique<RooProdPdf>(nestedName, nestedName, RooArgList{}));
+         }
+         item.second = static_cast<RooAbsPdf *>(standIns.find(nestedName));
+      }
+   }
+   RooSimultaneous simPdf{name.c_str(), name.c_str(), pdfMap, indexCat};
+   simPdf.redirectServers(nested);
+   tool.wsImport(simPdf);
+}
+
+} // namespace
+
 // A combined distribution is a RooSimultaneous. Its index category is the single column, or a RooSuperCategory over the
 // columns in the order of the document.
 void RooFit::HS3::buildCombinedDist(RooJSONFactoryWSTool &tool, std::string const &name, CombinedDist const &dist,
@@ -2265,7 +2293,7 @@ void RooFit::HS3::buildCombinedDist(RooJSONFactoryWSTool &tool, std::string cons
    }
 
    if (columns.size() == 1) {
-      tool.wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, *columns.front()});
+      importSimultaneous(tool, name, pdfMap, *columns.front());
       return;
    }
    RooArgSet inputs;
@@ -2274,7 +2302,7 @@ void RooFit::HS3::buildCombinedDist(RooJSONFactoryWSTool &tool, std::string cons
    }
    std::string const indexName = name + "_index";
    RooSuperCategory indexCat{indexName.c_str(), indexName.c_str(), inputs};
-   tool.wsImport(RooSimultaneous{name.c_str(), name.c_str(), pdfMap, indexCat});
+   importSimultaneous(tool, name, pdfMap, indexCat);
 }
 
 bool isSkippedHelper(RooAbsArg const &arg, RooWorkspace const &ws)
