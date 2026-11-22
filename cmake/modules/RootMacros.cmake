@@ -2565,19 +2565,6 @@ endfunction()
 
 #-------------------------------------------------------------------------------
 #
-#  function ROOTTEST_SET_TESTOWNER(owner)
-#
-#  Specify the owner of the tests in the current directory. Note, that the owner
-#  can be specified for each test individually, as well.
-#
-#-------------------------------------------------------------------------------
-function(ROOTTEST_SET_TESTOWNER owner)
-  set_property(DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
-               PROPERTY ROOTTEST_TEST_OWNER ${owner})
-endfunction(ROOTTEST_SET_TESTOWNER)
-
-#-------------------------------------------------------------------------------
-#
 # function ROOTTEEST_TARGETNAME_FROM_FILE(<resultvar> <filename>)
 #
 # Construct a target name for a given file <filename> and store its name into
@@ -3146,40 +3133,6 @@ macro(ROOTTEST_SETUP_MACROTEST)
 endmacro(ROOTTEST_SETUP_MACROTEST)
 
 #-------------------------------------------------------------------------------
-# macro ROOTTEST_SETUP_EXECTEST()
-#
-# A helper macro to define the command to run an executable
-#-------------------------------------------------------------------------------
-macro(ROOTTEST_SETUP_EXECTEST)
-
-  find_program(realexec ${ARG_EXEC}
-               HINTS $ENV{PATH}
-               PATH ${CMAKE_CURRENT_BINARY_DIR}
-               PATH ${CMAKE_CURRENT_SOURCE_DIR})
-
-  # If no program was found, take it as is.
-  if(NOT realexec)
-    set(realexec ${ARG_EXEC})
-  endif()
-
-  if(MSVC)
-    if(${realexec} MATCHES "[.]py" AND NOT ${realexec} MATCHES "[.]exe")
-      set(realexec ${Python3_EXECUTABLE} ${realexec})
-    else()
-      set(realexec ${realexec})
-    endif()
-  endif()
-
-  set(command ${realexec})
-
-  unset(realexec CACHE)
-
-  set(checkstdout CHECKOUT)
-  set(checkstderr CHECKERR)
-
-endmacro(ROOTTEST_SETUP_EXECTEST)
-
-#-------------------------------------------------------------------------------
 #
 # function ROOTTEST_ADD_TEST(testname
 #                            MACRO|EXEC macro_or_command
@@ -3251,7 +3204,30 @@ function(ROOTTEST_ADD_TEST testname)
 
   # Setup executable test.
   if(ARG_EXEC)
-    ROOTTEST_SETUP_EXECTEST()
+    find_program(realexec ${ARG_EXEC}
+                 HINTS $ENV{PATH}
+                 PATH ${CMAKE_CURRENT_BINARY_DIR}
+                 PATH ${CMAKE_CURRENT_SOURCE_DIR})
+
+    # If no program was found, take it as is.
+    if(NOT realexec)
+      set(realexec ${ARG_EXEC})
+    endif()
+
+    if(MSVC)
+      if(${realexec} MATCHES "[.]py" AND NOT ${realexec} MATCHES "[.]exe")
+        set(realexec ${Python3_EXECUTABLE} ${realexec})
+      else()
+        set(realexec ${realexec})
+      endif()
+    endif()
+
+    set(command ${realexec})
+
+    unset(realexec CACHE)
+
+    set(checkstdout CHECKOUT)
+    set(checkstderr CHECKERR)
   endif()
 
   if(ARG_COMMAND)
