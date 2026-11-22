@@ -1135,3 +1135,25 @@ TEST(RooSimultaneous, NestedSimultaneousFlatteningIsDeprecated)
       EXPECT_EQ(hijack.str().find("copied"), std::string::npos) << hijack.str();
    }
 }
+
+/// A RooSimultaneous component that the constructor didn't flatten, here
+/// because it replaced a stand-in, is not supported if its index category is
+/// an observable. Creating the likelihood should fail with a clear error
+/// instead of silently giving wrong results.
+TEST(RooSimultaneous, NestedObservableIndexThrows)
+{
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::FATAL);
+
+   AnalysisCombination m;
+
+   RooSimultaneous anaA{"anaA", "anaA", {{"SR", &m.pdf_A_SR}, {"CR", &m.pdf_A_CR}}, m.region};
+   RooProdPdf standIn{"anaA", "anaA", RooArgList{}};
+   RooSimultaneous comb{"comb", "comb", {{"A", &standIn}, {"B", &m.pdf_B}}, m.analysis};
+   comb.redirectServers(RooArgSet{anaA});
+   ASSERT_EQ(comb.getPdf("A"), &anaA);
+
+   RooDataSet data{"data", "data", {m.x, m.analysis, m.region}};
+   data.add({m.x, m.analysis, m.region});
+
+   EXPECT_THROW(std::unique_ptr<RooAbsReal>{comb.createNLL(data)}, std::runtime_error);
+}
