@@ -193,11 +193,6 @@ workaround definition and a introduce a variable that can be checked to see,
 if a workaround is active.
 
 
-### Set test owner
-
-The owner of a test can be set by calling ROOTTEST_SET_TESTOWNER("Test Owner").
-
-
 ### Ignoring tests
 
 An existing test may be marked to be ignored. This is done by adding its name
