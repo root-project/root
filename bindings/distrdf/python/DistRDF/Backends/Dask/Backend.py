@@ -27,6 +27,22 @@ except ImportError:
         ("cannot import a Dask component. Refer to the Dask documentation for installation instructions.")
     )
 
+try:
+    # The 'dask_jobqueue' package is only needed when the client is connected to
+    # a batch system, so it is an optional dependency. However, it must be
+    # imported eagerly at module load time (i.e. from the main thread of the
+    # user process, when creating a distributed RDataFrame) rather than lazily
+    # in `get_total_cores`. The top-level code of 'dask_jobqueue' calls
+    # `signal.signal`, which can only be done from the main thread and would
+    # raise `ValueError: signal only works in main thread of the main
+    # interpreter` if the first import happened in one of the threads that
+    # `ROOT.RDF.RunGraphs` uses to run the computation graphs.
+    import dask_jobqueue
+except Exception:
+    # Either 'dask_jobqueue' is not installed or it cannot be imported in this
+    # process. Fall back to the generic behaviour (e.g. a local cluster).
+    dask_jobqueue = None
+
 if TYPE_CHECKING:
     from dask_jobqueue import JobQueueCluster
     from ROOT._distrdf import Ranges
@@ -82,16 +98,11 @@ def get_total_cores(client: Client) -> int:
     """
     Retrieve the total number of cores of the Dask cluster.
     """
-    try:
-        # It may happen that the user is connected to a batch system. We try
-        # to import the 'dask_jobqueue' module lazily to avoid a dependency.
-        from dask_jobqueue import JobQueueCluster
-
-        if isinstance(client.cluster, JobQueueCluster):
-            return get_total_cores_jobqueuecluster(client.cluster)
-    except ModuleNotFoundError:
-        # We are not using 'dask_jobqueue', fall through to generic case
-        pass
+    # It may happen that the user is connected to a batch system, in which case
+    # the cluster object is a JobQueueCluster from the optional 'dask_jobqueue'
+    # dependency (imported eagerly at module load time, see above)
+    if dask_jobqueue is not None and isinstance(client.cluster, dask_jobqueue.JobQueueCluster):
+        return get_total_cores_jobqueuecluster(client.cluster)
 
     return get_total_cores_generic(client)
 
