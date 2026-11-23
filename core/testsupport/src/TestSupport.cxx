@@ -58,13 +58,6 @@ static struct ForbidDiagnostics {
         return;
       }
 
-      // FIXME: DOAS backend is experimental.
-      if (level == kWarning
-          && strstr(msg, "The DAOS backend is experimental and still under development") != nullptr) {
-        std::cerr << "Warning in " << location << " " << msg << std::endl;
-        return;
-      }
-
       // FIXME: RooNaNPacker warns about not being implemented for big endian
       if (level == kWarning
 	  && strcmp(msg, "Fast recovery from undefined function values only implemented for little-endian machines. If necessary, request an extension of functionality on https://root.cern") == 0) {
