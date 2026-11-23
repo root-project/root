@@ -36,6 +36,7 @@
 #include "TObjArray.h"
 #include "TVirtualPadEditor.h"
 #include "TVirtualViewer3D.h"
+#include "TPluginManager.h"
 #include "TPadPainterPS.h"
 #include "TVirtualGL.h"
 #include "TVirtualPS.h"
@@ -2790,9 +2791,15 @@ Bool_t TCanvas::SaveAll(const std::vector<TPad *> &pads, const char *filename, O
       }
 
       if (isSupported) {
-         auto cmd = TString::Format("TWebCanvas::ProduceImages( *((std::vector<TPad *> *) 0x%zx), \"%s\");", (size_t) &pads, fname.Data());
-
-         return (Bool_t) gROOT->ProcessLine(cmd);
+         Long_t res = 0;
+         auto h = gPluginMgr->FindHandler("TCanvasImp", "TWebCanvasImages");
+         if (h && h->LoadPlugin() != -1)
+            res = h->ExecPlugin(4, &pads, fname.Data(), 0, 0);
+         if (!res)
+            ::Error("TCanvas::SaveAll", "Fail create file %s", fname.Data());
+         else if (!gSystem->AccessPathName(fname.Data()))
+            ::Info("TCanvas::SaveAll", "file %s has been created", fname.Data());
+         return (Bool_t) res;
       }
 
       if ((ext != "root") && (ext != "xml"))

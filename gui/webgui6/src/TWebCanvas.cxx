@@ -2695,6 +2695,18 @@ bool TWebCanvas::ProduceImages(std::vector<TPad *> pads, const char *filename, I
    return FlushBatchImages();
 }
 
+//////////////////////////////////////////////////////////////////////////////////////////
+/// Create images for several pads using batch (headless) capability of Chrome or Firefox browsers
+/// Declared only to be able invoke from plugin manager
+
+bool TWebCanvas::ProduceImagesP(std::vector<TPad *> *pads, const char *filename, Int_t width, Int_t height)
+{
+   if (!pads)
+      return false;
+   return TWebCanvas::ProduceImages(*pads, filename, width, height);
+}
+
+
 
 //////////////////////////////////////////////////////////////////////////////////////////
 /// Process data for single primitive

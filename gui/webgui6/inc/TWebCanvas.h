@@ -274,6 +274,8 @@ public:
 
    static bool ProduceImages(std::vector<TPad *> pads, const char *filename, Int_t width = 0, Int_t height = 0);
 
+   static bool ProduceImagesP(std::vector<TPad *> *pads, const char *filename, Int_t width = 0, Int_t height = 0);
+
    static void BatchImageMode(UInt_t n = 100);
 
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
