@@ -33,6 +33,7 @@
 
 #include <vector>
 #include <utility>
+#include <memory>
 
 // WM Atoms are initialized in TGClient
 R__EXTERN Atom_t gWM_DELETE_WINDOW;
@@ -115,6 +116,39 @@ public:
 
 
    //---- New graphics interface -----
+   class XDrawable {
+   private:
+      Int_t fId = 0;
+   public:
+      XDrawable(Int_t id) : fId(id) {}
+      virtual ~XDrawable() = default;
+              Int_t     GetId() const { return fId; }
+      virtual Bool_t    IsNull() const { return kTRUE; }
+      virtual void      SetAttFill(const TAttFill &) = 0;
+      virtual void      SetAttLine(const TAttLine &) = 0;
+      virtual void      SetAttMarker(const TAttMarker &) = 0;
+      virtual void      SetAttText(const TAttText &) = 0;
+      virtual void      SetDrawMode(EDrawMode) = 0;
+      virtual EDrawMode GetDrawMode() = 0;
+      virtual void      ClearWindow() = 0;
+      virtual void      CloseWindow() = 0;
+      virtual void      UpdateWindow(Int_t) = 0;
+      virtual void      SetOpacity(Int_t) = 0;
+      virtual void      CopyPixmap(Int_t, Int_t, Int_t) = 0;
+
+      virtual void      DrawBox(Int_t, Int_t, Int_t, Int_t, EBoxMode) = 0;
+      virtual void      DrawFillArea(Int_t, TPoint *) = 0;
+      virtual void      DrawLine(Int_t, Int_t, Int_t, Int_t) = 0;
+      virtual void      DrawPolyLine(Int_t, TPoint *) = 0;
+      virtual void      DrawLinesSegments(Int_t, TPoint *) = 0;
+      virtual void      DrawPolyMarker(Int_t, TPoint *) = 0;
+      virtual void      DrawText(Int_t, Int_t, Float_t, Float_t, const char *, ETextMode) = 0;
+      virtual void      DrawText(Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) = 0;
+      virtual void      DrawTTFglyphs(Int_t, Int_t, TTFhandle &, ETextMode) = 0;
+      virtual Int_t     WriteGIF(const char *) = 0;
+   };
+
+   virtual std::shared_ptr<XDrawable> GetDrawable(Int_t /* wid */) { return nullptr; }
 
    virtual WinContext_t GetWindowContext(Int_t wid);
    virtual void      SetAttFill(WinContext_t wctxt, const TAttFill &att);
