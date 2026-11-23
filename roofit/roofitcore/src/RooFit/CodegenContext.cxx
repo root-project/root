@@ -297,12 +297,10 @@ std::string CodegenContext::buildArg(RooAbsCollection const &in, std::string con
 
 std::string CodegenContext::buildArg(std::span<const double> arr)
 {
-   unsigned int n = arr.size();
    std::string offset = std::to_string(_xlArr.size());
-   _xlArr.reserve(_xlArr.size() + n);
-   for (unsigned int i = 0; i < n; i++) {
-      _xlArr.push_back(arr[i]);
-   }
+   // No reserve() of the exact new size here: it would defeat the geometric growth of the vector, so that every call
+   // copies the whole array, which is quadratic in the number of calls for large models.
+   _xlArr.insert(_xlArr.end(), arr.begin(), arr.end());
    return "xlArr + " + offset;
 }
 
