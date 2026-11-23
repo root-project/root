@@ -52,7 +52,7 @@ typedef struct _GdkRectangle   GdkRectangle;
 
 typedef unsigned long KeySym;
 
-struct XWindow_t;
+class Win32Drawable;
 
 struct XColor_t {
    GdkColor color;
@@ -63,24 +63,22 @@ struct XColor_t {
 class TExMap;
 
 class TGWin32 : public TVirtualX {
+friend class Win32Drawable;
 
 private:
    GdkImage *GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
 
-   template<typename CharType>
-   void      DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle,
-                            const CharType *text, ETextMode mode);
-
-   std::unordered_map<Int_t,std::unique_ptr<XWindow_t>> fWindows; // map of windows
+   std::unordered_map<Int_t,std::shared_ptr<Win32Drawable>> fWindows; // map of windows
    TExMap          *fColors;                ///< Hash list of colors
    GdkCursor       *fCursors[kNumCursors];  ///< List of cursors
 
    Int_t AddWindowHandle();
+   void  RemoveWindowHandle(Win32Drawable *ctxt);
    void  PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                   Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                   UChar_t *image, Drawable_t id);
    void  RemovePixmap(GdkDrawable *pix);
-   void  SetColor(XWindow_t *ctxt, GdkGC *gc, Int_t ci);
+   void  SetColor(Win32Drawable *ctxt, GdkGC *gc, Int_t ci);
    void  SetInput(Int_t inp);
 
    //---- Private methods used for GUI ----
@@ -201,6 +199,7 @@ public:
    void      GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess) override;
 
    //---- Methods used for new graphics -----
+   std::shared_ptr<XDrawable> GetDrawable(Int_t wid) override;
    WinContext_t GetWindowContext(Int_t wid) override;
    void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
    void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;

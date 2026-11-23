@@ -115,6 +115,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(Win32gdk
   SOURCES
     ../gifencode/gifdecode.cxx
     ../gifencode/gifencode.cxx
+    src/Win32Drawable.cxx
     src/TGWin32.cxx
     src/TGWin32GL.cxx
     src/TGWin32ProxyBase.cxx
@@ -138,7 +139,7 @@ target_sources(Win32gdk
 PRIVATE
   FILE_SET private_header_files
   TYPE HEADERS
-  BASE_DIRS inc/ ../gifencode
+  BASE_DIRS inc/ src/ ../gifencode
   FILES
     ${RELATIVE_INC_HEADERS}
     inc/TGWin32ProxyBase.h
@@ -149,6 +150,7 @@ PRIVATE
     inc/LinkDef.h
     ../gifencode/gifencode.h
     ../gifencode/gifdecode.h
+    src/Win32Drawable.h
 )
 
 target_include_directories(Win32gdk PRIVATE ../gifencode)
