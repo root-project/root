@@ -79,4 +79,10 @@ if(NOT MSVC)
                     COPY_TO_BUILDDIR dupSymJIT.h
                     DEPENDS dupSymJIT
                     LABELS roottest regression cling)
+
 endif()
+
+ROOTTEST_ADD_TEST(excessiveUnloading
+                  MACRO excessiveUnloading.C
+                  PASSRC 0
+                  LABELS roottest regression cling)
