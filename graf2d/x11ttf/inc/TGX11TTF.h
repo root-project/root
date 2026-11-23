@@ -29,11 +29,8 @@ private:
    static Bool_t  gXftInit;            ///< does xft was initialized
 #endif
 
-   RXImage *GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
-
-   template<typename CharType>
-   void   DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                         const CharType *text, ETextMode mode);
+protected:
+   void CreateWindowHandle(Int_t id) override;
 
 public:
    TGX11TTF(TGX11 &&org);
