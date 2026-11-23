@@ -1694,6 +1694,14 @@ TEST(ONNX, Pad) {
 
    expectEqual(output, correct);
 }
+TEST(ONNX, If) {
+   // If with two outputs per branch: cond = true selects the then branch
+   std::vector<uint8_t> cond = {true};
+   std::vector<std::vector<float>> correct = { {1, 2}, {3, 4} };
+   ASSERT_INCLUDE_AND_RUN(std::vector<std::vector<float>>, "If", cond);
+
+   expectNear(output, correct, DEFAULT_TOLERANCE);
+}
 TEST(ONNX, Where) {
    // test of Where using [[1,2]] and [[3,4],[5,6],[7,8]] with condition [[true],[false],[true]] -> [[1,2],[5,6],[1,2]]
    // test also the broadcast of boolean tensors
