@@ -36,6 +36,10 @@ ROOT_ADD_GTEST(overlap_navigation
   test_overlap_navigation.cxx
   LIBRARIES Geom)
 
+ROOT_ADD_GTEST(overlap_checker
+  test_overlap_checker.cxx
+  LIBRARIES Geom GeomChecker)
+
 ROOT_ADD_GTEST(thread_navigation
   test_thread_navigation.cxx
   LIBRARIES Geom)
