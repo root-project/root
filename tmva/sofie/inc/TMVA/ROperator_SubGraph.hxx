@@ -78,26 +78,23 @@ public:
          throw std::runtime_error("TMVA If operator called to Generate without being initialized first");
       }
       std::stringstream out;
-      //size_t length = ConvertShapeToLength(fShape);
-      std::string typeName = ConvertTypeToString(fType);
       out << "\n//------ If operator\n";
-      out << SP << "std::vector<std::vector<" << typeName << ">> outputs_" << opName << ";\n";
-      // use the std::vector since is a boolean
-      out << SP << "if (fTensor_" << fNX << "[0] ) { \n";
-      // then branch
-      out << SP << SP << "outputs_" << opName << " = "
-         << "fSession_" <<  fModel_then->GetName() << ".infer(" << fInputSignature_modelThen << ");\n";
-       // else branch
-      out << SP << "} else {\n";
-      out << SP << SP << "outputs_" << opName << " = "
-         << "fSession_" + fModel_else->GetName() + ".infer(" << fInputSignature_modelElse << ");\n";
-      out << SP << "}\n";
-      // copy the outputs
-      out << SP << "if (outputs_" << opName << ".size() != " << fNYs.size() << ")\n";
-      out << SP << SP << "throw std::runtime_error(\" If operator: invalid output size!\");\n\n";
+      // the subgraphs write directly into the output tensors of the If operator
+      std::string outputs;
       for (size_t i = 0; i < fNYs.size(); i++) {
-         out << SP << "std::copy(outputs_" << opName << "[" << i << "].begin(), outputs_" << opName << "[" << i << "].end(), fTensor_" << fNYs[i] << ".begin());\n";
+         if (i > 0)
+            outputs += ", ";
+         outputs += "tensor_" + fNYs[i];
       }
+      auto callBranch = [&](const std::shared_ptr<RModel> &model, const std::string &signature) {
+         return "doInfer(session.fSession_" + model->GetName() + ", " + signature + ", " + outputs + ");\n";
+      };
+      // the condition is a boolean tensor, only its first element is used
+      out << SP << "if (tensor_" << fNX << "[0]) {\n";
+      out << SP << SP << callBranch(fModel_then, fInputSignature_modelThen);
+      out << SP << "} else {\n";
+      out << SP << SP << callBranch(fModel_else, fInputSignature_modelElse);
+      out << SP << "}\n";
       return out.str();
    }
 

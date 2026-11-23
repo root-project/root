@@ -833,7 +833,15 @@ void RModel::InitializeSubGraph(std::shared_ptr<RModel>  graph) {
    graph->Initialize(fBatchSize, fVerbose);
    // set the same options as parent model
    graph->fWeightFile = fWeightFile;
-   graph->fUseWeightFile = fUseWeightFile;
+   // a subgraph without weights has no weight file to read, as in Initialize()
+   bool graphHasWeights = false;
+   for (auto &it : graph->fInitializedTensors) {
+      if (it.second.IsWeightTensor()) {
+         graphHasWeights = true;
+         break;
+      }
+   }
+   graph->fUseWeightFile = fUseWeightFile && graphHasWeights;
    // add needed blas routines and libs
    std::vector<std::string> blasRoutines;
    for (auto & e : graph->fNeededBlasRoutines)
@@ -1590,7 +1598,10 @@ void RModel::GenerateSessionCode()
    // end of session
    fGC += "};   // end of Session\n\n";
 
-   GenerateRequiredInputTensorInfo();
+   // the input/output tensor info is emitted at namespace scope under fixed names,
+   // so it must be emitted only once, for the main model and not for its subgraphs
+   if (!fIsSubGraph)
+      GenerateRequiredInputTensorInfo();
 
    fGC += doInferSignature + " {\n";
    fGC += "\n";
