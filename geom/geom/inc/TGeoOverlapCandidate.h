@@ -15,6 +15,9 @@
 #include "TBuffer3D.h"
 #include "TString.h"
 #include "TGeoMatrix.h"
+#include <array>
+#include <vector>
+
 class TGeoShape;
 class TGeoVolume;
 
