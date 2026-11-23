@@ -158,6 +158,13 @@ def RunGraphs(proxies: Iterable) -> int:
         futures = [executor.submit(execute_graph, proxy.proxied_node) for proxy in uniqueproxies]
         concurrent.futures.wait(futures)
 
+        # Retrieve the result of each graph execution. This re-raises any
+        # exception that was raised while executing a graph, which would
+        # otherwise be silently discarded by `concurrent.futures.wait` and make
+        # this function return as if all graphs had been processed correctly.
+        for future in futures:
+            future.result()
+
     return len(uniqueproxies)
 
 
