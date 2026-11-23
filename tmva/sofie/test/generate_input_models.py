@@ -5858,6 +5858,36 @@ def make_TopK():
     return _model(graph, opset=17, ir_version=8, producer_name='pytorch', producer_version='2.3.0')
 
 
+def make_If():
+    """Ops: If. Two outputs per branch, so the operator must expose one output
+    tensor name per output of the If node."""
+    def branch(name, v0, v1):
+        return helper.make_graph(
+            [
+                helper.make_node('Constant', [], [name + '_a'], value=_tensor(name + '_a', FLOAT, [2], v0)),
+                helper.make_node('Constant', [], [name + '_b'], value=_tensor(name + '_b', FLOAT, [2], v1)),
+            ],
+            name,
+            inputs=[],
+            outputs=[_vi(name + '_a', FLOAT, [2]), _vi(name + '_b', FLOAT, [2])],
+        )
+
+    nodes = [
+        helper.make_node(
+            'If', ['cond'], ['out_a', 'out_b'],
+            then_branch=branch('then', [1.0, 2.0], [3.0, 4.0]),
+            else_branch=branch('else', [5.0, 6.0], [7.0, 8.0]),
+        ),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        'IfGraph',
+        inputs=[_vi('cond', BOOL, [1])],
+        outputs=[_vi('out_a', FLOAT, [2]), _vi('out_b', FLOAT, [2])],
+    )
+    return _model(graph, opset=21, ir_version=10, producer_name='onnx-example')
+
+
 def make_Where():
     """Ops: Where"""
     nodes = [
@@ -6683,6 +6713,7 @@ MODELS = {
     "TopK": make_TopK,
     "TopKLargestUnsorted": make_TopKLargestUnsorted,
     "TopKWithDynShapeK": make_TopKWithDynShapeK,
+    "If": make_If,
     "Where": make_Where,
     "WhereMultidirectionalBroadcast": make_WhereMultidirectionalBroadcast,
     "WhereBroadcastHighRankCond": make_WhereBroadcastHighRankCond,
