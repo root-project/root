@@ -64,7 +64,7 @@ TEST_F(TClingTests, GenerateDictionaryRegression)
    EXPECT_TRUE(gInterpreter->GenerateDictionary("std::set<int>", "set"));
 
    // FIXME: This makes the linkdef parser go in an infinite loop.
-   //EXPECT_TRUE(gInterpreter->GenerateDictionary("std::vector<std::array<int, 5>>", ""));
+   // EXPECT_TRUE(gInterpreter->GenerateDictionary("std::vector<std::array<int, 5>>", ""));
 }
 
 #if !defined(_MSC_VER) || defined(R__ENABLE_BROKEN_WIN_TESTS)

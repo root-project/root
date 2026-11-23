@@ -715,9 +715,7 @@ static clang::ClassTemplateDecl* FindTemplateInNamespace(clang::Decl* decl)
 //
 
 int TCling_GenerateDictionary(const std::vector<std::string> &classes,
-                              const std::vector<std::string> &headers,
-                              const std::vector<std::string> &fwdDecls,
-                              const std::vector<std::string> &unknown)
+                              const std::vector<std::string> &headers)
 {
    //This function automatically creates the "LinkDef.h" file for templated
    //classes then executes CompileMacro on it.
@@ -769,24 +767,6 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
       for (it = headers.begin(); it != headers.end(); ++it) {
          fileContent += "#include \"" + *it + "\"\n";
       }
-      for (it = unknown.begin(); it != unknown.end(); ++it) {
-         TClass* cl = TClass::GetClass(it->c_str());
-         if (cl && cl->GetDeclFileName()) {
-            TString header = gSystem->BaseName(cl->GetDeclFileName());
-            TString dir = gSystem->GetDirName(cl->GetDeclFileName());
-            TString dirbase(gSystem->BaseName(dir));
-            while (dirbase.Length() && dirbase != "."
-                   && dirbase != "include" && dirbase != "inc"
-                   && dirbase != "prec_stl") {
-               gSystem->PrependPathName(dirbase, header);
-               dir = gSystem->GetDirName(dir);
-            }
-            fileContent += TString("#include \"") + header + "\"\n";
-         }
-      }
-      for (it = fwdDecls.begin(); it != fwdDecls.end(); ++it) {
-         fileContent += "class " + *it + ";\n";
-      }
       fileContent += "#ifdef __CLING__ \n";
       fileContent += "#pragma link C++ nestedclasses;\n";
       fileContent += "#pragma link C++ nestedtypedefs;\n";
@@ -836,9 +816,7 @@ int TCling_GenerateDictionary(const std::vector<std::string> &classes,
 }
 
 int TCling_GenerateDictionary(const std::string& className,
-                              const std::vector<std::string> &headers,
-                              const std::vector<std::string> &fwdDecls,
-                              const std::vector<std::string> &unknown)
+                              const std::vector<std::string> &headers)
 {
    //This function automatically creates the "LinkDef.h" file for templated
    //classes then executes CompileMacro on it.
@@ -846,7 +824,7 @@ int TCling_GenerateDictionary(const std::string& className,
    //if the file exist.
    std::vector<std::string> classes;
    classes.push_back(className);
-   return TCling_GenerateDictionary(classes, headers, fwdDecls, unknown);
+   return TCling_GenerateDictionary(classes, headers);
 }
 
 //______________________________________________________________________________
@@ -4971,8 +4949,7 @@ Int_t TCling::GenerateDictionary(const char* classes, const char* includes /* = 
       }
    }
    // Generate the temporary dictionary file
-   return !TCling_GenerateDictionary(listClasses, listIncludes,
-      std::vector<std::string>(), std::vector<std::string>());
+   return !TCling_GenerateDictionary(listClasses, listIncludes);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
