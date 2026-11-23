@@ -5014,8 +5014,10 @@ void TPad::Print(const char *filename, Option_t *option)
 
    //==============Save pad/canvas as a HTML==============================
    if (gtype == TImage::kHtml) {
-      auto cmd = TString::Format("TWebCanvas::ProduceImage((TPad *) 0x%zx, \"%s\");", (size_t) this, psname.Data());
-      Long_t res = gROOT->ProcessLine(cmd);
+      Long_t res = 0;
+      auto h = gPluginMgr->FindHandler("TCanvasImp", "TWebCanvasImage");
+      if (h && h->LoadPlugin() != -1)
+         res = h->ExecPlugin(4, this, psname.Data(), 0, 0);
       if (!res)
          Error("Print", "Fail create HTML file %s", psname.Data());
       else if (!gSystem->AccessPathName(psname.Data()))
