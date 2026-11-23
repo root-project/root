@@ -1170,7 +1170,7 @@ Bool_t TGeoChecker::ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapRes
       // loop all points of the mother (vol1)
       for (Int_t ip = 0; ip < numPoints1; ++ip) {
          memcpy(local, &points1[3 * ip], 3 * sizeof(Double_t));
-         if (local[0] < 1e-10 && local[1] < 1e-10)
+         if (TMath::Abs(local[0]) < 1e-10 && TMath::Abs(local[1]) < 1e-10)
             continue;
 
          mat1.LocalToMaster(local, point);
@@ -1208,7 +1208,7 @@ Bool_t TGeoChecker::ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapRes
    // loop all points of first candidate (vol1) in vol2
    for (Int_t ip = 0; ip < numPoints1; ++ip) {
       memcpy(local, &points1[3 * ip], 3 * sizeof(Double_t));
-      if (local[0] < 1e-10 && local[1] < 1e-10)
+      if (TMath::Abs(local[0]) < 1e-10 && TMath::Abs(local[1]) < 1e-10)
          continue;
 
       mat1.LocalToMaster(local, point);
@@ -1233,7 +1233,7 @@ Bool_t TGeoChecker::ComputeOverlap(const TGeoOverlapCandidate &c, TGeoOverlapRes
    // loop all points of second candidate (vol2) in vol1
    for (Int_t ip = 0; ip < numPoints2; ++ip) {
       memcpy(local, &points2[3 * ip], 3 * sizeof(Double_t));
-      if (local[0] < 1e-10 && local[1] < 1e-10)
+      if (TMath::Abs(local[0]) < 1e-10 && TMath::Abs(local[1]) < 1e-10)
          continue;
 
       mat2.LocalToMaster(local, point);
