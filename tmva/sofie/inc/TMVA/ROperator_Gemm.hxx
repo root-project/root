@@ -515,7 +515,19 @@ namespace SOFIE{
          // initializing output Y vector with bias values
          if (fBroadcastBias) {
 
-            fAttrBeta = 1.;
+            // Y is initialized with beta * C here, so the Gemm call below uses beta = 1
+            std::string betaTimes;
+            if (fAttrBeta != 1.) {
+               std::stringstream ss;
+               ss << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << " * ";
+               betaTimes = ss.str();
+            }
+            auto copyBias = [&](const std::string &indent) {
+               if (betaTimes.empty())
+                  return indent + "Copy(tensor_" + fNY + " + y_index, tensor_" + fNC + ", " + sY[1].GetVal() + ");\n";
+               return indent + "for (size_t k = 0; k < " + sY[1].GetVal() + "; k++) tensor_" + fNY + "[y_index + k] = " +
+                      betaTimes + "tensor_" + fNC + "[k];\n";
+            };
 
             // loop on first output dimension
             out << SP2 << "for (size_t j = 0; j < " << sY[0] << "; j++) { \n";
@@ -532,22 +544,22 @@ namespace SOFIE{
             if (sC.size() != 2) {
                throw std::runtime_error("TMVA SOFIE Gemm Op - invalid rank for bias tensor " + ConvertDimShapeToString(fDimShapeC) + ConvertDimShapeToString(sC));
             } if (sC[0].GetVal() == "1" && sC[1].GetVal() == sY[1].GetVal()) {
-               out << prefix << "Copy(" << target << " + y_index, tensor_" << fNC << ", " << sY[1] << ");\n";
+               out << copyBias(prefix);
             } else if (sC[1].GetVal() == "1" && sC[0].GetVal() == sY[0].GetVal()) {
-               out << prefix << "Fill(" << target << " + y_index, tensor_" << fNC << "[j], " << sY[1] << ");\n";
+               out << prefix << "Fill(" << target << " + y_index, " << betaTimes << "tensor_" << fNC << "[j], " << sY[1] << ");\n";
             } else if (sC[0].GetVal() == "1" && sC[1].GetVal() == "1") {
                // scalar case
-               out << prefix << "Fill(" << target << " + y_index, tensor_" << fNC << "[0], " << sY[1] << ");\n";
+               out << prefix << "Fill(" << target << " + y_index, " << betaTimes << "tensor_" << fNC << "[0], " << sY[1] << ");\n";
             } else if (fCheckBiasShapeAtRuntime) {
                // in the generic dynamic case we check at run time that bias is compatible
                // we check that bias[0] = 1 or equal to SY[0] and that bias[1] = 1 or equal to SY[1]
                // tbd: this run-time check coul;d be moved outside the loop for better run time efficiency
                out << SP2 << SP << "if (" << biasShapeType << " == 1)\n";   // case vector of columns
-               out << SP << prefix << "Copy(" << target << " + y_index, tensor_" << fNC << ", " << sY[1] << ");\n";
+               out << copyBias(SP + prefix);
                out << SP2 << SP << "else if (" << biasShapeType << " == 2)\n";  // case vector of rows
-               out << SP << prefix << "Fill(" << target << " + y_index, tensor_" << fNC << "[j], " << sY[1] << ");\n";
+               out << SP << prefix << "Fill(" << target << " + y_index, " << betaTimes << "tensor_" << fNC << "[j], " << sY[1] << ");\n";
                out << SP2 << SP << "else \n";  // scalar case
-               out << SP << prefix << "Fill(" << target << " + y_index, tensor_" << fNC << "[0], " << sY[1] << ");\n";
+               out << SP << prefix << "Fill(" << target << " + y_index, " << betaTimes << "tensor_" << fNC << "[0], " << sY[1] << ");\n";
             } else {
                throw std::runtime_error("TMVA SOFIE Gemm Op - invalid shape for bias tensor " + ConvertDimShapeToString(fDimShapeC));
             }
@@ -567,7 +579,7 @@ namespace SOFIE{
             if (extraB) out << " + " << opName << "_B_offset";
             out << ", tensor_" << fNA;
             if (extraA) out << " + " << opName << "_A_offset";
-            out << ", " << std::setprecision(std::numeric_limits<float>::max_digits10) << fAttrBeta << ",";
+            out << ", " << std::setprecision(std::numeric_limits<float>::max_digits10) << (fBroadcastBias ? 1.f : fAttrBeta) << ",";
             // in the case of bias and no broadcasting needed - I need to add bias as an extra tensor in Gemm call
             if (!fNC.empty() && !fBroadcastBias) {
                out << "tensor_" << fNC;

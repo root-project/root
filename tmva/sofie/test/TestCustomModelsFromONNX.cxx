@@ -2381,6 +2381,25 @@ TEST(ONNX, RangeCleanName)
    expectNear(output, correct_output, DEFAULT_TOLERANCE);
 }
 
+// A Gemm bias that is broadcast to the output is still scaled by beta.
+TEST(ONNX, GemmBroadcastBiasBeta)
+{
+   SofieReference ref = readReference("GemmBroadcastBiasBeta");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GemmBroadcastBiasBeta", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
+TEST(ONNX, GemmBroadcastColumnBiasBeta)
+{
+   SofieReference ref = readReference("GemmBroadcastColumnBiasBeta");
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "GemmBroadcastColumnBiasBeta", ref.f32("input0"));
+
+   expectNear(output, ref.f32("output0"), DEFAULT_TOLERANCE);
+}
+
 // A Gemm bias that already has the shape of the output needs no broadcasting,
 // which Initialize cannot see while the output is dynamic.
 TEST(ONNX, GemmDynBias)
