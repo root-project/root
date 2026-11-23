@@ -55,12 +55,6 @@ private:
 
    WeightFileType fWeightFile = WeightFileType::Text;
 
-   std::unordered_set<std::string> fNeededBlasRoutines;
-   // Set to true once GenerateHeaderInfo has emitted the extern "C" declaration
-   // of the BLAS sgemm_ routine (from fNeededBlasRoutines). It lets the
-   // standalone Gemm_Call helper skip emitting a second, duplicate declaration.
-   bool fBlasSgemmDeclared = false;
-
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
    std::unordered_set<std::string> fCustomOpHeaders;
 
@@ -83,6 +77,7 @@ private:
    bool fIsInitialized = false;
    bool fIsSubGraph = false;
    bool fUseVDT = false;
+   bool fUseBLAS = false;
    int fVerbose = 0;
    int fBatchSize = -1;
    size_t fConstantTensorSize = 0; // size  (in Bytes) of the allocated constant tensors
@@ -313,12 +308,6 @@ public:
    std::string GetFilename() { return fName; }
    const std::string &GetName() const { return fName; }
 
-   void AddBlasRoutines(std::vector<std::string> routines)
-   {
-      for (auto &routine : routines) {
-         fNeededBlasRoutines.insert(routine);
-      }
-   }
    void AddNeededStdLib(std::string libname)
    {
       // if the library is already in the set, insert does nothing, so we don't need to check before inserting
@@ -353,6 +342,18 @@ public:
       fUseVDT = on;
    }
    bool UseVDT() const { return fUseVDT;}
+
+   // flag to do the matrix multiplications in the generated code with the BLAS
+   // routines sgemm_ and saxpy_ instead of the built-in implementations (the
+   // default), which is faster for large batches. The generated code then has to
+   // be linked against a BLAS library, or one has to be loaded in the ROOT
+   // session. Clad treats the BLAS routines as constants and only warns about
+   // it, so gradients through them are silently zero: then only the operators
+   // that use Gemm_Call (Gemm and Conv), which has hand-written derivatives, give
+   // correct gradients, and only if Clad uses these derivatives. Has to be set
+   // before Generate().
+   void SetUseBLAS(bool on) { fUseBLAS = on; }
+   bool UseBLAS() const { return fUseBLAS; }
 
    // RModel is an internal representation that doesn't support ROOT IO (if you need model IO, use ONNX directly).
    ClassDefNV(RModel, 0);

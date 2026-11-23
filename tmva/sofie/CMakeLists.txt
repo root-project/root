@@ -103,7 +103,4 @@ PRIVATE
     inc/LinkDef.h
 )
 
-# Tests are not enabled unconditionally because they require BLAS
-if(test_tmva_sofie)
-  ROOT_ADD_TEST_SUBDIRECTORY(test)
-endif()
+ROOT_ADD_TEST_SUBDIRECTORY(test)
