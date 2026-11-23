@@ -111,7 +111,6 @@ jobs:
         shell: bash -leo pipefail {0} # Use login shell, so profile scripts get sourced
 
     env:
-      MACOSX_DEPLOYMENT_TARGET: ${{ matrix.platform == 'mac-beta' && '27' || '' }} # Problems with gfortran falling back 18 (unsupported)
       HOME: /Users/sftnight
 
     strategy:
