@@ -477,8 +477,6 @@ jobs:
     container:
       image: registry.cern.ch/root-ci/${{ matrix.image }}:buildready # KEEP IN SYNC WITH env key below
       options: --security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }} # KEEP IN SYNC WITH env key below
-      volumes:
-        - ${{ matrix.image }}_ccache_volume:/github/home/.cache/ccache
       env:
         CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
         CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
@@ -492,7 +490,6 @@ jobs:
     steps:
       - name: Set up environment
         run: |
-          ccache -o max_size=${{ matrix.is_special && '5G' || '1.5G' }}
           ccache -s || true
           if [ -d "$PYTHON_VENV/bin/" ]; then
             . "$PYTHON_VENV/bin/activate" && echo PATH=$PATH >> $GITHUB_ENV;
