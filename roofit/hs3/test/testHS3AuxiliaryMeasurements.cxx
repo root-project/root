@@ -229,8 +229,8 @@ const char *toString(ModelKind kind)
 
 // The Base model with a RooLognormal constraint on the free normfactor "k_bkg1" added as a factor of the channel CR1,
 // in a fresh workspace. This is not what HistFactory builds, but the only way to get all three constraint types into
-// channel products that the exporter recognizes: Measurement::AddLogNormSyst() creates a function of the parameter
-// with a Gaussian constraint, which can't be exported (see the test NormSysWithFunctionAsParameter).
+// channel products that the exporter recognizes: Measurement::AddLogNormSyst() keeps a Gaussian constraint and makes
+// the input of the normsys a function of the parameter.
 std::unique_ptr<RooWorkspace> addLogNormalConstraint(RooWorkspace &base, bool standard)
 {
    auto *mc = modelConfig(base);

@@ -782,7 +782,7 @@ void importFlexibleInterpVar(RooJSONFactoryWSTool *tool, const JSONNode &p)
 
    RooArgList vars;
    for (std::string const &var : in.parameters) {
-      vars.add(*tool->request<RooRealVar>(var, name));
+      vars.add(*tool->request<RooAbsReal>(var, name));
    }
    tool->wsEmplace<RooStats::HistFactory::FlexibleInterpVar>(
       name, vars, in.nominal, in.low, in.high,
@@ -929,15 +929,6 @@ void collectElements(RooArgList &elems, RooAbsArg *arg)
 bool allRooRealVar(const RooAbsCollection &list)
 {
    return std::all_of(list.begin(), list.end(), [](RooAbsArg *arg) { return dynamic_cast<RooRealVar *>(arg); });
-}
-
-// The parameters of normsys and histosys modifiers must be variables.
-void checkModifierParameter(RooAbsReal const &param, RooAbsPdf const *constraint)
-{
-   if (!constraint && !param.isConstant() && !dynamic_cast<RooRealVar const *>(&param)) {
-      RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(param.GetName()) +
-                                  ": functions are not supported as parameters of this modifier");
-   }
 }
 
 std::vector<double> contents(RooDataHist const &dataHist)
@@ -1102,7 +1093,6 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
 
       auto addNormSys = [&](RooAbsReal &param, double hi, double lo, HS3::Interpolation interpolation,
                             RooAbsPdf const *pdf) {
-         checkModifierParameter(param, pdf);
          std::string sysname(param.GetName());
          erasePrefix(sysname, "alpha_");
          normSys.push_back({sysname, {param.GetName()}, hi, lo, constraint(pdf), interpolation});
@@ -1162,9 +1152,25 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
                phfs.push_back(phf);
             } else if (auto fip = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(e)) {
                // some (modified) histfactory models have several instances of FlexibleInterpVar
-               // we collect and merge them
-               for (size_t i = 0; i < fip->variables().size(); ++i) {
-                  RooAbsReal *var = static_cast<RooAbsReal *>(fip->variables().at(i));
+               // we collect and merge them. A function input, like the ones of Measurement::AddGammaSyst() and
+               // AddLogNormSyst(), is not a parameter: its variation is a custom modifier, and its constraint a
+               // constraint term of the channel.
+               auto isFunction = [](RooAbsArg *v) { return !dynamic_cast<RooRealVar *>(v) && !v->isConstant(); };
+               RooArgList const &inputs = fip->variables();
+               if (!inputs.empty() && std::all_of(inputs.begin(), inputs.end(), isFunction)) {
+                  custom.push_back({fip->GetName()});
+                  channel.customModifiers.push_back(fip);
+                  continue;
+               }
+               for (size_t i = 0; i < inputs.size(); ++i) {
+                  RooAbsReal *var = static_cast<RooAbsReal *>(inputs.at(i));
+                  if (isFunction(var)) {
+                     custom.push_back({std::string(fip->GetName()) + "_" + var->GetName()});
+                     channel.temporaries.push_back(std::make_unique<RooStats::HistFactory::FlexibleInterpVar>(
+                        custom.back().name.c_str(), "", RooArgList{*var}, 1., std::vector<double>{fip->low()[i]},
+                        std::vector<double>{fip->high()[i]}, std::vector<int>{fip->interpolationCodes()[i]}));
+                     continue;
+                  }
                   std::string sysname(var->GetName());
                   erasePrefix(sysname, "alpha_");
                   const std::string context = "normsys modifier '" + sysname + "' in sample '" + sample.name +
@@ -1245,7 +1251,10 @@ ExportedChannel readChannel(RooJSONFactoryWSTool *tool, const std::string &pdfna
             erasePrefix(sysname, "alpha_");
             // A parameter without constraint is unconstrained.
             const auto *pdf = findConstraint(var, channelConstraints);
-            checkModifierParameter(*var, pdf);
+            if (!pdf && !var->isConstant() && !dynamic_cast<RooRealVar *>(var)) {
+               RooJSONFactoryWSTool::error("cannot find constraint for " + std::string(var->GetName()) +
+                                           ": functions are not supported as parameters of histosys modifiers");
+            }
             const std::string context =
                "histosys modifier '" + sysname + "' in sample '" + sample.name + "' of channel '" + channel.name + "'";
             histoSys.push_back(
