@@ -4376,9 +4376,9 @@ TEST(RooFitHS3, AnalysisInitWithSeveralSnapshots)
    expectSnapshotValue("ModelConfig_with_poi_0", 0.0);
 }
 
-// A normsys parameter that is a function, as created by HistFactory::Measurement::AddLogNormSyst(), can't be exported.
-// It would come back as a free parameter.
-TEST(RooFitHS3, NormSysWithFunctionAsParameter)
+// A histosys parameter that is a function can't be exported: it would come back as a free parameter. As a normsys
+// parameter, it is written as a custom modifier, see HistFactoryGammaAndLogNormSyst.
+TEST(RooFitHS3, HistoSysWithFunctionAsParameter)
 {
    RooRealVar x{"x", "x", 0.0, 2.0};
    x.setBins(2);
@@ -4388,8 +4388,9 @@ TEST(RooFitHS3, NormSysWithFunctionAsParameter)
    RooFormulaVar alphaOfBeta{"alphaOfBeta_sys", "(beta_sys-1)/0.05", RooArgList{beta}};
    RooStats::HistFactory::FlexibleInterpVar norm{"sig_norm", "", RooArgList{alphaOfBeta}, 1.0, {0.95}, {1.05}};
    RooHistFunc hist{"hist_sig", "hist_sig", RooArgSet{x}, makeDataHist("hist_sig_data", x, {100.0, 200.0})};
+   PiecewiseInterpolation shape{"sig_shape", "", hist, RooArgList{hist}, RooArgList{hist}, RooArgList{alphaOfBeta}};
    RooBinWidthFunction binWidth{"sig_binWidth", "sig_binWidth", hist, true};
-   RooProduct shapes{"model_ch_sig_shapes", "", RooArgList{hist, binWidth}};
+   RooProduct shapes{"model_ch_sig_shapes", "", RooArgList{shape, binWidth}};
    RooRealSumPdf sum{"ch_model", "ch_model", RooArgList{shapes}, RooArgList{norm}, true};
    RooGaussian constraint{"beta_sysConstraint", "", beta, nominal, sigma};
    RooProdPdf prod{"model_ch", "model_ch", RooArgSet{constraint}, RooFit::Conditional(sum, x)};
@@ -8346,11 +8347,12 @@ namespace {
 
 // A HistFactory workspace with the given channels, each with a signal scaled by `mu` and a background with the
 // systematics `shared` and the one of the channel, and statistical uncertainties for both. The luminosity has the
-// relative uncertainty `lumiRelErr`.
+// relative uncertainty `lumiRelErr`. The function `configure` can change the measurement.
 std::unique_ptr<RooWorkspace>
 makeMergeableHistFactoryWorkspace(std::string const &name,
                                   std::vector<std::pair<std::string, std::string>> const &channels,
-                                  double lumiRelErr = 0.1)
+                                  double lumiRelErr = 0.1,
+                                  std::function<void(RooStats::HistFactory::Measurement &)> const &configure = {})
 {
    using namespace RooStats::HistFactory;
    Measurement meas(name.c_str(), name.c_str());
@@ -8385,6 +8387,9 @@ makeMergeableHistFactoryWorkspace(std::string const &name,
       channel.AddSample(signal);
       channel.AddSample(background);
       meas.AddChannel(channel);
+   }
+   if (configure) {
+      configure(meas);
    }
    RooHelpers::LocalChangeMsgLevel quiet(RooFit::WARNING, 0u, RooFit::ObjectHandling, false);
    return std::unique_ptr<RooWorkspace>{RooStats::HistFactory::MakeModelAndMeasurementFast(meas)};
@@ -8596,6 +8601,30 @@ std::set<std::string> namesOf(RooArgSet const *set)
 }
 
 } // namespace
+
+// Measurement::AddGammaSyst() and AddLogNormSyst() make the input of a normsys a function of the constrained parameter
+// (#24304). Its variation is written as a custom modifier: the FlexibleInterpVar if it has no other inputs (channel
+// "B"), else one with only this input. The FlexibleInterpVar of channel A is split, so its name stands for less after
+// the import, and only the likelihood is compared.
+TEST(RooFitHS3, HistFactoryGammaAndLogNormSyst)
+{
+   auto ws = makeMergeableHistFactoryWorkspace("syst", {{"A", "ownA"}, {"B", "ownB"}}, 0.1, [](auto &meas) {
+      meas.AddGammaSyst("shared", 0.1);
+      meas.AddLogNormSyst("ownB", 0.05);
+   });
+   Doc doc{*ws};
+   EXPECT_TRUE(matches(doc, "distributions/model_A/samples/background_A/modifiers",
+                       R"([{}, {"type": "normsys", "parameters": ["alpha_ownA"]},
+                           {"type": "custom", "name": "background_A_A_epsilon_alphaOfBeta_shared"}, {}])"));
+   EXPECT_TRUE(matches(doc, "distributions/model_B/samples/background_B/modifiers",
+                       R"([{}, {"type": "custom", "name": "background_B_B_epsilon"}, {}])"));
+   EXPECT_TRUE(matches(doc, "distributions/beta_sharedConstraint", R"({"type": "gamma_dist", "x": "beta_shared"})"));
+   Imported imported{doc};
+   EXPECT_TRUE(sameNumbers(likelihoodScan(*ws, "ModelConfig", "obsData"),
+                           likelihoodScan(imported, "ModelConfig", "obsData"), 0.));
+   const std::string json = toJSON(imported);
+   EXPECT_EQ(reexport(json), json);
+}
 
 // Two documents written by RooFit, each with a HistFactory model whose constraint terms are collected in array
 // distributions, are combined. The systematic `shared` and the luminosity are in both: the arrays of both documents
