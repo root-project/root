@@ -253,10 +253,10 @@ if(ccache)
 
   if(EXISTS ${CCACHE_COMMAND})
     message(STATUS "Found ccache: ${CCACHE_COMMAND}")
-    set_property(GLOBAL PROPERTY RULE_LAUNCH_COMPILE ${CCACHE_COMMAND})
+    set(CMAKE_CXX_COMPILER_LAUNCHER ${CCACHE_COMMAND})
+    set(CMAKE_C_COMPILER_LAUNCHER ${CCACHE_COMMAND})
   else()
-    message(STATUS "Could NOT find ccache")
-    set(ccache OFF CACHE BOOL "Use ccache (disabled since ccache was not found)" FORCE)
+    message(WARNING "Could NOT find ccache (but ccache=${ccache})")
   endif()
 endif()
 
