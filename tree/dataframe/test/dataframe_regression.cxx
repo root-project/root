@@ -140,20 +140,52 @@ TEST_P(RDFRegressionTests, EmptyTree)
 
 // check that rdfentry_ contains all expected values,
 // also in multi-thread runs over multiple ROOT files
-TEST_P(RDFRegressionTests, UniqueEntryNumbers)
+// check that rdfentry_ contains all expected values,
+// also in multi-thread runs over multiple ROOT files
+TEST_P(RDFRegressionTests, UniqueEntryNumbersTTree)
 {
-   const auto treename = "t";
-   const auto fname = "df_uniqueentrynumbers.root";
-   ROOT::RDataFrame(10).Snapshot(treename, fname, {"rdfslot_"}); // does not matter what column we write
+   const auto datasetName = "t";
+   const auto fname = "df_uniqueentrynumbers_ttree.root";
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kTTree;
+   ROOT::RDataFrame(10).Snapshot(datasetName, fname, {"rdfslot_"}, opts); // does not matter what column we write
 
-   ROOT::RDataFrame df(treename, {fname, fname});
+   ROOT::RDataFrame df(datasetName, {fname, fname});
    auto entries = *df.Take<ULong64_t>("rdfentry_");
    std::sort(entries.begin(), entries.end());
    const auto nEntries = entries.size();
    for (auto i = 0u; i < nEntries; ++i)
       EXPECT_EQ(i, entries[i]);
 
-   gSystem->Unlink(fname);
+   std::remove(fname);
+}
+
+TEST_P(RDFRegressionTests, UniqueEntryNumbersEmpty)
+{
+   ROOT::RDataFrame df{20};
+   auto entries = *df.Take<ULong64_t>("rdfentry_");
+   std::sort(entries.begin(), entries.end());
+   const auto nEntries = entries.size();
+   for (auto i = 0u; i < nEntries; ++i)
+      EXPECT_EQ(i, entries[i]);
+}
+
+TEST_P(RDFRegressionTests, UniqueEntryNumbersRNTuple)
+{
+   const auto datasetName = "rnt";
+   const auto fname = "df_uniqueentrynumbers_rntuple.root";
+   ROOT::RDF::RSnapshotOptions opts;
+   opts.fOutputFormat = ROOT::RDF::ESnapshotOutputFormat::kRNTuple;
+   ROOT::RDataFrame(10).Snapshot(datasetName, fname, {"rdfslot_"}, opts); // does not matter what column we write
+
+   ROOT::RDataFrame df(datasetName, {fname, fname});
+   auto entries = *df.Take<ULong64_t>("rdfentry_");
+   std::sort(entries.begin(), entries.end());
+   const auto nEntries = entries.size();
+   for (auto i = 0u; i < nEntries; ++i)
+      EXPECT_EQ(i, entries[i]);
+
+   std::remove(fname);
 }
 
 // ROOT-9731
