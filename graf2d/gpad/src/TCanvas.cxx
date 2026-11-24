@@ -1458,7 +1458,7 @@ void TCanvas::HandleInput(EEventType event, Int_t px, Int_t py)
    if (fPadSave && event != kButton2Down)
       fPadSave->cd();
 
-   if (event != kMouseLeave) { // signal was already emitted for this event
+   if ((event != kMouseLeave) && fSelected) { // signal was already emitted for this event
       ProcessedEvent(event, px, py, fSelected);  // emit signal
       DrawEventStatus(event, px, py, fSelected);
    }
