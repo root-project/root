@@ -37,6 +37,8 @@ try:
     # raise `ValueError: signal only works in main thread of the main
     # interpreter` if the first import happened in one of the threads that
     # `ROOT.RDF.RunGraphs` uses to run the computation graphs.
+    # This workaround will no longer be necessary once a Dask-jobqueue release
+    # with https://github.com/dask/dask-jobqueue/pull/697 will be available
     import dask_jobqueue
 except Exception:
     # Either 'dask_jobqueue' is not installed or it cannot be imported in this
