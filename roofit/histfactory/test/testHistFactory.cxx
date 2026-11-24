@@ -11,6 +11,7 @@
 
 #include <RooFit/Detail/NormalizationHelpers.h>
 #include <RooDataHist.h>
+#include <RooDataSet.h>
 #include <RooWorkspace.h>
 #include <RooArgSet.h>
 #include <RooSimultaneous.h>
@@ -24,6 +25,7 @@
 #include <TROOT.h>
 #include <TFile.h>
 #include <TH1D.h>
+#include <TMath.h>
 #include <TCanvas.h>
 #include <TSystem.h>
 #include <gtest/gtest.h>
@@ -751,4 +753,45 @@ TEST(HistFactory, ShapeFactorValueAndRange)
          EXPECT_DOUBLE_EQ(gamma->getMax(), sfHigh) << name;
       }
    }
+}
+
+// Issue #24304: the global observable of Measurement::AddGammaSyst() is tau = 1/relErr^2, which its range clamped to
+// 10 for relative uncertainties below 1/sqrt(10).
+TEST(HistFactory, GammaSystConstraint)
+{
+   using namespace RooStats::HistFactory;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   auto hist = [](const char *name) {
+      auto *h = new TH1D(name, name, 1, 0, 1); // owned by the channel and sample
+      h->SetDirectory(nullptr);
+      h->SetBinContent(1, 100.);
+      return h;
+   };
+   Measurement meas("meas", "meas");
+   meas.SetOutputFilePrefix("TestGammaSyst");
+   meas.SetPOI("mu");
+   meas.AddConstantParam("Lumi");
+   meas.SetLumi(1.0);
+   meas.AddGammaSyst("syst", 0.1);
+   Channel chan("channel1");
+   chan.SetData(hist("data"));
+   Sample signal("signal");
+   signal.SetHisto(hist("signal"));
+   signal.AddNormFactor("mu", 1, 0, 3);
+   signal.AddOverallSys("syst", 0.9, 1.1);
+   chan.AddSample(signal);
+   meas.AddChannel(chan);
+   std::unique_ptr<RooWorkspace> ws{MakeModelAndMeasurementFast(meas)};
+
+   const double tau = 100.;
+   EXPECT_DOUBLE_EQ(ws->var("nom_beta_syst")->getVal(), tau);
+   // A Gamma distribution of beta with shape tau + 1 and scale 1 / tau.
+   ws->var("beta_syst")->setVal(1.05);
+   EXPECT_DOUBLE_EQ(ws->pdf("beta_systConstraint")->getVal(), TMath::GammaDist(1.05, tau + 1., 0., 1. / tau));
+   // Toys of the global observable need a finite range that covers tau * beta.
+   RooRealVar &nom = *ws->var("nom_beta_syst");
+   std::unique_ptr<RooDataSet> toys{ws->pdf("beta_systConstraint")->generate(nom, 1000)};
+   ASSERT_TRUE(toys);
+   EXPECT_NEAR(toys->mean(nom), tau * 1.05, 1.);
 }
