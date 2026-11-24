@@ -46,7 +46,6 @@ set(RDATAFRAME_HEADERS
   ROOT/RNTupleProcessorDS.hxx
   ROOT/RResultHandle.hxx
   ROOT/RResultPtr.hxx
-  ROOT/RRootDS.hxx
   ROOT/RSnapshotOptions.hxx
   ROOT/RTrivialDS.hxx
   ROOT/RTTreeDS.hxx
@@ -148,7 +147,6 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ROOTDataFrame
     src/RVariationBase.cxx
     src/RVariationReader.cxx
     src/RVariationsDescription.cxx
-    src/RRootDS.cxx
     src/RTrivialDS.cxx
     src/RDFDescription.cxx
     src/RNTupleDS.cxx
