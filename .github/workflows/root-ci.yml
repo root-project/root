@@ -483,6 +483,7 @@ jobs:
 
     env:
       BUILD_DIR: /github/home/ROOT-CI/build
+      CCACHE_DISABLE: 1
       INSTALL_DIR: /github/home/ROOT-CI/install
       POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
       PYTHON_VENV: ${{ matrix.python_venv || '/py-venv/ROOT-CI' }}
