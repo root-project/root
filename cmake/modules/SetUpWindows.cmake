@@ -94,6 +94,20 @@ elseif(MSVC)
   set(CMAKE_MODULE_LINKER_FLAGS "${CMAKE_MODULE_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
   set(CMAKE_EXE_LINKER_FLAGS "${CMAKE_EXE_LINKER_FLAGS} -ignore:4049,4206,4217,4221 -incremental:no")
 
+  #---Compile the sources of a project in parallel with the Visual Studio generators---------
+  # Without this, MSBuild only builds different projects in parallel and each project compiles
+  # its sources one after the other, which serializes long dependency chains such as
+  # clingInterpreter -> Core -> RIO -> ... -> RooFitCore. The MultiToolTask schedules single
+  # source files instead, and EnforceProcessCountAcrossBuilds makes all projects share one
+  # limit of CL_MPCount compiler processes (the number of cores by default), so the machine
+  # is not oversubscribed when combined with 'cmake --build --parallel N' (MSBuild /m:N).
+  if(CMAKE_GENERATOR MATCHES "Visual Studio")
+    set(ROOT_VS_PARALLEL_CL ON CACHE BOOL "Compile sources of each project in parallel with MSBuild's MultiToolTask")
+    if(ROOT_VS_PARALLEL_CL)
+      list(APPEND CMAKE_VS_GLOBALS "UseMultiToolTask=true" "EnforceProcessCountAcrossBuilds=true")
+    endif()
+  endif()
+
   string(TIMESTAMP CURRENT_YEAR "%Y")
   set(ROOT_RC_SCRIPT ${CMAKE_BINARY_DIR}/etc/root.rc)
   set(ROOT_MANIFEST ${CMAKE_BINARY_DIR}/etc/root-manifest.xml)
