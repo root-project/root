@@ -1,41 +1,53 @@
-#include <iostream>
 #include "TFile.h"
 #include "TTree.h"
 #include "ROOT/RDataFrame.hxx"
 #include "Sentinel.h"
+
+unsigned int Sentinel::fCtorCalls{};
+unsigned int Sentinel::fDtorCalls{};
+unsigned int Sentinel::fCopyCtorCalls{};
+
 // test objects read from tree are constructed once per entry
-void FillTree(const char* filename, const char* treeName) {
-   TFile f(filename, "RECREATE");
-   TTree t(treeName, treeName);
+void FillTree(const char *filename, const char *treeName)
+{
+   auto f = std::make_unique<TFile>(filename, "RECREATE");
+   auto t = std::make_unique<TTree>(treeName, treeName);
    Sentinel o;
-   t.Branch("obj", &o);
+   t->Branch("obj", &o);
    o.set(1);
-   t.Fill();
+   t->Fill();
    o.set(2);
-   t.Fill();
-   t.Write();
-   f.Close();
+   t->Fill();
+   f->Write();
 }
 
-void test_ctors() {
-   // Prepare an input tree to run on
-   auto fileName = "test_ctors.root";
-   auto treeName = "myTree";
-   std::cout << "filling tree...\n";
-   FillTree(fileName,treeName);
-   std::cout << "done\n";
+int test_ctors()
+{
+   // Run the test in a scope and inspect results afterwards
+   std::uint64_t entries{};
+   {
+      // Prepare an input tree to run on
+      auto fileName = "test_ctors.root";
+      auto treeName = "myTree";
+      FillTree(fileName, treeName);
 
-   // Filter, Define, Count and Foreach. We want one printout
-   std::cout << "building dataframe...\n";
-   ROOT::RDataFrame d(treeName, fileName, {"obj"});
-   std::cout << "done\nbuilding chain...\n";
-   auto dd = d.Filter([](const Sentinel& o) { std::cout << "filter\n"; return o.get() > 0; })
-              .Define("ox", [](const Sentinel& o) { std::cout << "addbranch\n"; return o.get(); });
-   auto r = dd.Count();
-   std::cout << "done\n";
-   std::cout << "running chain...\n";
-   dd.Foreach([](const Sentinel& o) { std::cout << "foreach: " << o.get() << std::endl; });
-   auto c = *r;
-   std::cout << "done\n";
-   std::cout << "count: " << c << std::endl;
+      ROOT::RDataFrame d(treeName, fileName);
+      auto dd = d.Filter([](const Sentinel &o) { return o.get() > 0; }, {"obj"})
+                   .Define("ox", [](const Sentinel &o) { return o.get(); }, {"obj"});
+      auto r = dd.Count();
+      dd.Foreach([](const Sentinel &) {}, {"obj"});
+      entries = *r;
+   }
+
+   auto ctor_calls = Sentinel::GetCtorCalls();
+   auto copy_ctor_calls = Sentinel::GetCopyCtorCalls();
+   auto dtor_calls = Sentinel::GetDtorCalls();
+
+   // Exactly 2 Sentinel objects should have been constructed/destroyed: one in the FillTree function and one by the
+   // TTreeReaderValue associated with the column reader for "obj", since the readers keeps the same TTreeReaderValue
+   // alive for the duration of the computation graph run, the same Sentinel object can be re-used.
+   if (entries == 2 && ctor_calls == 2 && dtor_calls == 2 && copy_ctor_calls == 0)
+      return 0;
+
+   return 1;
 }

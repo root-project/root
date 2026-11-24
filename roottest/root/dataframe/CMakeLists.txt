@@ -219,9 +219,7 @@ ROOTTEST_ADD_TEST(typeguessing
 
 ROOT_ADD_GTEST(misc test_misc.cxx LIBRARIES ROOT::ROOTDataFrame ROOT::GenVector)
 
-ROOTTEST_ADD_TEST(ctors
-                  MACRO test_ctors.C+
-                  OUTREF test_ctors.ref)
+ROOTTEST_ADD_TEST(ctors MACRO test_ctors.C+)
 
 ROOTTEST_GENERATE_EXECUTABLE(branchoverwrite
                              test_branchoverwrite.cxx
