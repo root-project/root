@@ -18,13 +18,9 @@ ROOT_ADD_PYUNITTEST(pyroot_root_no_implicit_cppyy root_no_implicit_cppyy.py)
 # General pythonizations
 ROOT_ADD_PYUNITTEST(pyroot_pyz_pretty_printing pretty_printing.py)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_array_interface array_interface.py PYTHON_DEPS numpy)
-ROOT_ADD_PYUNITTEST(uhi_plotting uhi_plotting.py GENERIC PYTHON_DEPS uhi numpy)
-ROOT_ADD_PYUNITTEST(uhi_indexing uhi_indexing.py GENERIC PYTHON_DEPS uhi numpy)
-ROOT_ADD_PYUNITTEST(uhi_serialization_json uhi_serialization_json.py GENERIC PYTHON_DEPS uhi numpy)
-if(Python3_VERSION VERSION_GREATER_EQUAL 3.9)
-    # Enable uhi testing helper for Python 3.9+
-    ROOT_ADD_PYUNITTEST(uhi_test_suite uhi_test_suite.py GENERIC PYTHON_DEPS uhi numpy)
-endif()
+
+# UHI tests
+add_subdirectory(uhi)
 
 # STL containers pythonizations (std::vector and std::set)
 ROOT_ADD_PYUNITTEST(pyroot_pyz_stl stl.py)
@@ -128,13 +124,7 @@ ROOT_ADD_PYUNITTEST(pyroot_memory memory.py)
 
 # ML dataloader tests
 if (dataframe)
-  ROOT_ADD_PYUNITTEST(ml_dataloader_single_dataframe ml_dataloader_single_dataframe.py GENERIC PYTHON_DEPS jax numpy pytest tensorflow torch)
-  ROOT_ADD_PYUNITTEST(ml_dataloader_multiple_dataframes ml_dataloader_multiple_dataframes.py GENERIC PYTHON_DEPS numpy pytest tensorflow torch)
-  ROOT_ADD_PYUNITTEST(ml_dataloader_undersampling ml_dataloader_undersampling.py GENERIC PYTHON_DEPS numpy pytest tensorflow torch)
-  ROOT_ADD_PYUNITTEST(ml_dataloader_oversampling ml_dataloader_oversampling.py GENERIC PYTHON_DEPS numpy pytest tensorflow torch)
-  ROOT_ADD_PYUNITTEST(ml_dataloader_save ml_dataloader_save.py GENERIC PYTHON_DEPS numpy pytest)
-  ROOT_ADD_PYUNITTEST(ml_dataloader_implicit_mt ml_dataloader_implicit_mt.py GENERIC PYTHON_DEPS numpy pytest)
-  ROOT_ADD_PYUNITTEST(ml_dataloader_from_files ml_dataloader_from_files.py GENERIC PYTHON_DEPS numpy pytest)
+  add_subdirectory(rdataloader)
 endif()
 
 ROOT_ADD_PYUNITTEST(regression_18441 regression_18441.py)
