@@ -1353,40 +1353,16 @@ TEST(RooFitHS3, UnbinnedDatasetAxisRange)
    EXPECT_TRUE(matches(doc, "data/ds/axes", R"([{"name": "x", "min": -2.5, "max": 7.5, "value": "<absent>"}])"));
 }
 
-TEST(RooFitHS3, StandaloneFlexibleInterpVarStructuredInterpolations)
+// Standalone FlexibleInterpVar and PiecewiseInterpolation have one interpolation for all parameters, or one per
+// parameter.
+TEST(RooFitHS3, StandaloneInterpolationsStructuredInterpolations)
 {
+   using RooStats::HistFactory::FlexibleInterpVar;
    RooRealVar alpha{"alpha", "alpha", 0.25, -2.0, 2.0};
    RooRealVar beta{"beta", "beta", -0.4, -2.0, 2.0};
    RooArgList parameters{alpha, beta};
-   RooStats::HistFactory::FlexibleInterpVar shared{"fiv_shared", "", parameters, 1.0, {0.8, 0.7}, {1.2, 1.4}, {4, 5}};
-   RooStats::HistFactory::FlexibleInterpVar mixed{"fiv_mixed", "", parameters, 1.0, {0.8, 0.7}, {1.2, 1.4}, {0, 1}};
-
-   RooWorkspace source;
-   source.import(shared, RooFit::Silence());
-   source.import(mixed, RooFit::RecycleConflictNodes(), RooFit::Silence());
-
-   // One interpolation for all parameters, or one per parameter.
-   Doc doc{source};
-   EXPECT_TRUE(matches(doc, "functions/fiv_shared", R"({
-      "interpolationCodes": "<absent>", "interpolations": [{"type": "mult", "in": "poly6", "out": "exp"}]})"));
-   EXPECT_TRUE(matches(doc, "functions/fiv_mixed", R"({
-      "interpolationCodes": "<absent>",
-      "interpolations": [{"type": "add", "in": "poly1", "out": null}, {"type": "mult", "in": "exp", "out": null}]})"));
-
-   Imported imported{doc};
-   auto *importedShared = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(imported.function("fiv_shared"));
-   auto *importedMixed = dynamic_cast<RooStats::HistFactory::FlexibleInterpVar *>(imported.function("fiv_mixed"));
-   ASSERT_NE(importedShared, nullptr);
-   ASSERT_NE(importedMixed, nullptr);
-   EXPECT_EQ(importedShared->interpolationCodes(), (std::vector<int>{4, 4}));
-   EXPECT_EQ(importedMixed->interpolationCodes(), (std::vector<int>{0, 1}));
-   expectRoundTrip(source);
-}
-
-TEST(RooFitHS3, StandalonePiecewiseInterpolationStructuredInterpolations)
-{
-   RooRealVar alpha{"alpha", "alpha", 0.25, -2.0, 2.0};
-   RooRealVar beta{"beta", "beta", -0.4, -2.0, 2.0};
+   FlexibleInterpVar fivShared{"fiv_shared", "", parameters, 1.0, {0.8, 0.7}, {1.2, 1.4}, {4, 5}};
+   FlexibleInterpVar fivMixed{"fiv_mixed", "", parameters, 1.0, {0.8, 0.7}, {1.2, 1.4}, {0, 1}};
    RooRealVar nominal{"nominal", "nominal", 10.0};
    RooRealVar low1{"low1", "low1", 8.0};
    RooRealVar low2{"low2", "low2", 7.0};
@@ -1394,17 +1370,20 @@ TEST(RooFitHS3, StandalonePiecewiseInterpolationStructuredInterpolations)
    RooRealVar high2{"high2", "high2", 14.0};
    RooArgList lows{low1, low2};
    RooArgList highs{high1, high2};
-
-   PiecewiseInterpolation shared{"pip_shared", "", nominal, lows, highs, RooArgList{alpha, beta}, {4, 4}};
-   PiecewiseInterpolation mixedRepeated{"pip_mixed_repeated",     "",    nominal, lows, highs,
-                                        RooArgList{alpha, alpha}, {0, 2}};
-   mixedRepeated.setPositiveDefinite();
+   PiecewiseInterpolation pipShared{"pip_shared", "", nominal, lows, highs, parameters, {4, 4}};
+   PiecewiseInterpolation pipMixed{"pip_mixed_repeated", "", nominal, lows, highs, RooArgList{alpha, alpha}, {0, 2}};
+   pipMixed.setPositiveDefinite();
 
    RooWorkspace source;
-   source.import(shared, RooFit::Silence());
-   source.import(mixedRepeated, RooFit::RecycleConflictNodes(), RooFit::Silence());
+   source.import(RooArgSet{fivShared, fivMixed, pipShared, pipMixed}, RooFit::RecycleConflictNodes(),
+                 RooFit::Silence());
 
    Doc doc{source};
+   EXPECT_TRUE(matches(doc, "functions/fiv_shared", R"({
+      "interpolationCodes": "<absent>", "interpolations": [{"type": "mult", "in": "poly6", "out": "exp"}]})"));
+   EXPECT_TRUE(matches(doc, "functions/fiv_mixed", R"({
+      "interpolationCodes": "<absent>",
+      "interpolations": [{"type": "add", "in": "poly1", "out": null}, {"type": "mult", "in": "exp", "out": null}]})"));
    EXPECT_TRUE(matches(doc, "functions/pip_shared", R"({
       "interpolationCodes": "<absent>", "interpolations": [{"type": "add", "in": "poly6", "out": "poly1"}]})"));
    EXPECT_TRUE(matches(doc, "functions/pip_mixed_repeated", R"({
@@ -1413,11 +1392,10 @@ TEST(RooFitHS3, StandalonePiecewiseInterpolationStructuredInterpolations)
                          {"type": "add", "in": "poly2", "out": "poly1"}]})"));
 
    Imported imported{doc};
-   auto *importedShared = dynamic_cast<PiecewiseInterpolation *>(imported.function("pip_shared"));
-   auto *importedMixed = dynamic_cast<PiecewiseInterpolation *>(imported.function("pip_mixed_repeated"));
-   ASSERT_NE(importedShared, nullptr);
-   ASSERT_NE(importedMixed, nullptr);
-   EXPECT_EQ(importedShared->interpolationCodes(), (std::vector<int>{4, 4}));
+   EXPECT_EQ(object<FlexibleInterpVar>(imported, "fiv_shared")->interpolationCodes(), (std::vector<int>{4, 4}));
+   EXPECT_EQ(object<FlexibleInterpVar>(imported, "fiv_mixed")->interpolationCodes(), (std::vector<int>{0, 1}));
+   EXPECT_EQ(object<PiecewiseInterpolation>(imported, "pip_shared")->interpolationCodes(), (std::vector<int>{4, 4}));
+   auto *importedMixed = object<PiecewiseInterpolation>(imported, "pip_mixed_repeated");
    EXPECT_EQ(importedMixed->interpolationCodes(), (std::vector<int>{0, 2}));
    ASSERT_EQ(importedMixed->paramList().size(), 2u);
    EXPECT_STREQ(importedMixed->paramList().at(0)->GetName(), "alpha");
@@ -4231,6 +4209,11 @@ TEST(RooFitHS3, FormulaNormSysConstraint)
       constrained |= dynamic_cast<RooGaussian *>(pdf) && pdf->dependsOn(*ws2.var("alpha_sys"));
    }
    EXPECT_TRUE(constrained);
+
+   // The +1 and -1 sigma variations survive the round trip. In between, the formula is linear and the normsys that it
+   // is written as interpolates exponentially. The import enables the binned likelihood, which the first export
+   // doesn't have.
+   expectRoundTrip(ws1, formulaChannel("ch_model", "alpha_sys", {-1.0, 0.0, 1.0}).stableFromSecondExport());
 }
 
 // A histfactory_dist is a product of Poisson distributions of the bin counts: the imported RooRealSumPdf uses RooFit's
@@ -4298,16 +4281,6 @@ TEST(RooFitHS3, FormulaIsNotSplitIfThatMakesTheChannelInvalid)
       // The yield depends on the parameters in the same way.
       expectRoundTrip(ws, formulaChannel("model_channel0", "b", {0.7}));
    }
-}
-
-// The +1 and -1 sigma variations of a normsys that is encoded in a formula survive the round trip. In between, the
-// formula is linear and the normsys that it is written as interpolates exponentially.
-TEST(RooFitHS3, FormulaNormSysVariations)
-{
-   RooWorkspace ws;
-   importFormulaNormSysChannel(ws);
-   // The import enables the binned likelihood, which the first export doesn't have.
-   expectRoundTrip(ws, formulaChannel("ch_model", "alpha_sys", {-1.0, 0.0, 1.0}).stableFromSecondExport());
 }
 
 // Exporting the snapshot of a ModelConfig doesn't change the variables in the workspace.
@@ -5281,6 +5254,15 @@ TEST(RooFitHS3, HistFactoryLegacyBinWidthFactor)
          EXPECT_NEAR(nllBack->getVal() - nllBack0, nll->getVal() - nll0, 1e-6) << "mu = " << mu;
       }
       ws->var("SigXsecOverSM")->setVal(1.);
+   }
+
+   // Objects outside the workspace don't count: a likelihood created before the export (as for a fit) refers to the
+   // factors from its computation graph.
+   {
+      const std::string before = toJSON(wsRenamed);
+      std::unique_ptr<RooAbsReal> nll{wsRenamed.pdf(model->GetName())->createNLL(*wsRenamed.data("obsData"))};
+      nll->getVal();
+      EXPECT_EQ(toJSON(wsRenamed), before);
    }
 
    // A factor that is floating in a snapshot is not a bin width.
@@ -6922,60 +6904,6 @@ TEST(RooFitHS3, LegacyBinWidthFactorOfRenamedChannel)
       }
       EXPECT_NEAR(nll2->getVal() - ref2, nll->getVal() - ref, 1e-8) << mu << ", " << alpha;
    }
-}
-
-// The constant inverse bin width of HistFactory before ROOT 6.26 is identified by its structure, among other things by
-// being used only by its channel. Objects outside the workspace don't count: e.g. a likelihood created from the model
-// before the export (as for a fit) refers to the constant from its computation graph.
-TEST(RooFitHS3, LegacyBinWidthFactorWithLikelihood)
-{
-   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::NumericIntegration, true};
-
-   std::unique_ptr<RooWorkspace> legacy = makeLegacyHistFactoryWorkspace();
-   auto *mcLegacy = static_cast<RooStats::ModelConfig *>(legacy->obj("ModelConfig"));
-   ASSERT_NE(mcLegacy, nullptr);
-   // Without "binWidth" in their names, the factors are identified only by their structure.
-   std::unique_ptr<RooAbsPdf> model{static_cast<RooAbsPdf *>(mcLegacy->GetPdf()->cloneTree())};
-   RooArgSet nodes;
-   model->treeNodeServerList(&nodes);
-   std::vector<std::string> factors;
-   for (RooAbsArg *arg : nodes) {
-      if (std::string{arg->GetName()}.find("binWidth") != std::string::npos) {
-         factors.push_back("w_" + std::to_string(factors.size()));
-         arg->SetName(factors.back().c_str());
-      }
-   }
-   ASSERT_FALSE(factors.empty());
-   RooWorkspace ws;
-   ws.import(*model, RooFit::Silence());
-   ws.import(*legacy->data("obsData"), RooFit::Silence());
-   RooStats::ModelConfig mc{"ModelConfig", &ws};
-   mc.SetPdf(model->GetName());
-   mc.SetObservables(*mcLegacy->GetObservables());
-   mc.SetParametersOfInterest(*mcLegacy->GetParametersOfInterest());
-   mc.SetNuisanceParameters(*mcLegacy->GetNuisanceParameters());
-   mc.SetGlobalObservables(*mcLegacy->GetGlobalObservables());
-   ws.import(mc);
-
-   auto normfactors = [&](std::string const &json) {
-      int nChannels = 0;
-      const auto modifiers = histFactoryModifiers(json, nChannels);
-      EXPECT_EQ(nChannels, 1) << json;
-      std::size_t n = 0;
-      for (auto const &name : factors) {
-         n += modifiers.count("normfactor:" + name + ",");
-      }
-      return n;
-   };
-   const std::string before = toJSON(ws);
-   EXPECT_EQ(normfactors(before), 0u) << before;
-
-   std::unique_ptr<RooAbsReal> nll{ws.pdf(model->GetName())->createNLL(*ws.data("obsData"))};
-   ASSERT_NE(nll, nullptr);
-   nll->getVal();
-   const std::string withLikelihood = toJSON(ws);
-   EXPECT_EQ(normfactors(withLikelihood), 0u) << withLikelihood;
-   EXPECT_EQ(withLikelihood, before);
 }
 
 namespace {
