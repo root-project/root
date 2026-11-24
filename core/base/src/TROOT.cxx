@@ -1076,6 +1076,8 @@ TROOT::~TROOT()
       fClosedObjects->Delete("slow"); // and closed files
       fFiles->Delete("slow");       // and files
       SafeDelete(fFiles);
+      // Delete the content of `TDirectory::fList` early, before the destruction of TCling,
+      // rather than after (during the `TDirectory` destructor.
       if (fList) {
          fList->Delete("slow");
       }
