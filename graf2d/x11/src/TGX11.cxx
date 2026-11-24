@@ -1396,7 +1396,7 @@ Int_t TGX11::AddWindowHandle()
 {
    Int_t maxid = 0;
    for (auto & pair : fWindows) {
-      if (!pair.second->fOpen) {
+      if (pair.second && !pair.second->fOpen) {
          pair.second->fOpen = 1;
          return pair.first;
       }
@@ -3213,6 +3213,9 @@ Int_t TGX11::SupportsExtension(const char *ext) const
 
 WinContext_t TGX11::GetWindowContext(Int_t wid)
 {
+   if ((wid < 0) || (fWindows.count(wid) == 0))
+      return (WinContext_t) nullptr;
+
    return (WinContext_t) fWindows[wid].get();
 }
 
