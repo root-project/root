@@ -14,10 +14,11 @@ protected:
 
    void SetUp() override
    {
-      for (const auto &fName : fFileNames) {
+      for (std::size_t i = 0; i < fFileNames.size(); ++i) {
+         const auto &fName = fFileNames[i];
          {
             auto modelWrite = ROOT::RNTupleModel::Create();
-            *modelWrite->MakeField<float>("ntuple_pt") = 11.f;
+            *modelWrite->MakeField<float>("ntuple_pt") = 11.f + i;
             auto ntuple = ROOT::RNTupleWriter::Recreate(std::move(modelWrite), fNTupleName, fName);
             ntuple->Fill();
          }
@@ -70,4 +71,23 @@ TEST_F(UnifiedConstructor, FromRNTuples)
    auto pt = df.Take<float>("ntuple_pt");
    EXPECT_EQ(pt->size(), 2);
    EXPECT_EQ(pt->at(0), 11.f);
+}
+
+TEST_F(UnifiedConstructor, FromRNTupleGlob)
+{
+   ROOT::RDataFrame df{fNTupleName, "dataframe_unified_constructor_*.root"};
+   EXPECT_EQ(*df.Take<float>("ntuple_pt"), (std::vector<float>{11.f, 12.f}));
+}
+
+TEST_F(UnifiedConstructor, FromRNTupleGlobsAndFileNames)
+{
+   const std::vector<std::string> inputs{"dataframe_unified_constructor_[1].root", fFileNames[0]};
+   ROOT::RDataFrame df{fNTupleName, inputs};
+   EXPECT_EQ(*df.Take<float>("ntuple_pt"), (std::vector<float>{12.f, 11.f}));
+}
+
+TEST_F(UnifiedConstructor, FromRNTupleUnmatchedGlob)
+{
+   const std::vector<std::string> inputs{fFileNames[0], "dataframe_unified_constructor_missing_*.root"};
+   EXPECT_THROW((ROOT::RDataFrame{fNTupleName, inputs}), std::invalid_argument);
 }

@@ -235,14 +235,12 @@ bool IsObjectInDir<void>(std::string_view objName, TDirectory &dir)
 {
    return dir.GetKey(objName.data());
 }
-} // anonymous namespace
 
 /**
- * \brief Helper function to open a file (or the first file from a glob).
- * This function is used at construction time of an RDataFrame, to check the
- * concrete type of the dataset stored inside the file.
+ * \brief Helper function to expand a filename glob into the list of matching files.
+ * A filename without wildcards is returned as-is.
  */
-std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
+std::vector<std::string> ExpandFileNameGlob(std::string_view fileNameGlob)
 {
    // Follow same logic in TChain::Add to find the correct string to look for globbing:
    // - If the extension ".root" is present in the file name, pass along the basename.
@@ -263,15 +261,28 @@ std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
    auto &&baseName = baseNameAndQuery.first;
    auto &&query = baseNameAndQuery.second;
 
-   std::string fileToOpen{fileNameGlob};
-   if (baseName.find_first_of("[]*?") != std::string_view::npos) { // Wildcards accepted by TChain::Add
-      const auto expanded = ROOT::Internal::TreeUtils::ExpandGlob(std::string{baseName});
-      if (expanded.empty())
-         throw std::invalid_argument{"RDataFrame: The glob expression '" + std::string{baseName} +
-                                     "' did not match any files."};
+   if (baseName.find_first_of("[]*?") == std::string_view::npos) // Wildcards accepted by TChain::Add
+      return {std::string{fileNameGlob}};
 
-      fileToOpen = expanded.front() + std::string{query};
-   }
+   auto expanded = ROOT::Internal::TreeUtils::ExpandGlob(std::string{baseName});
+   if (expanded.empty())
+      throw std::invalid_argument{"RDataFrame: The glob expression '" + std::string{baseName} +
+                                  "' did not match any files."};
+
+   for (auto &fileName : expanded)
+      fileName += query;
+   return expanded;
+}
+} // anonymous namespace
+
+/**
+ * \brief Helper function to open a file (or the first file from a glob).
+ * This function is used at construction time of an RDataFrame, to check the
+ * concrete type of the dataset stored inside the file.
+ */
+std::unique_ptr<TFile> OpenFileWithSanityChecks(std::string_view fileNameGlob)
+{
+   const auto fileToOpen = ExpandFileNameGlob(fileNameGlob).front();
 
    ::TDirectory::TContext ctxt; // Avoid changing gDirectory;
    std::unique_ptr<TFile> inFile{TFile::Open(fileToOpen.c_str(), "READ_WITHOUT_GLOBALREGISTRATION")};
@@ -1287,7 +1298,7 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, std::string_view fileNameGlob,
                                        const ROOT::RDF::ColumnNames_t &defaultColumns)
 {
-   auto dataSource = std::make_unique<ROOT::RDF::RNTupleDS>(datasetName, fileNameGlob);
+   auto dataSource = std::make_unique<ROOT::RDF::RNTupleDS>(datasetName, ExpandFileNameGlob(fileNameGlob));
    auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
    return lm;
 }
@@ -1296,7 +1307,12 @@ std::shared_ptr<ROOT::Detail::RDF::RLoopManager>
 ROOT::Detail::RDF::CreateLMFromRNTuple(std::string_view datasetName, const std::vector<std::string> &fileNameGlobs,
                                        const ROOT::RDF::ColumnNames_t &defaultColumns)
 {
-   auto dataSource = std::make_unique<ROOT::RDF::RNTupleDS>(datasetName, fileNameGlobs);
+   std::vector<std::string> fileNames;
+   for (const auto &fileNameGlob : fileNameGlobs) {
+      for (auto &fileName : ExpandFileNameGlob(fileNameGlob))
+         fileNames.push_back(std::move(fileName));
+   }
+   auto dataSource = std::make_unique<ROOT::RDF::RNTupleDS>(datasetName, fileNames);
    auto lm = std::make_shared<ROOT::Detail::RDF::RLoopManager>(std::move(dataSource), defaultColumns);
    return lm;
 }
