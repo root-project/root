@@ -682,7 +682,7 @@ void TGCocoa::SelectWindow(Int_t windowID)
 //______________________________________________________________________________
 WinContext_t TGCocoa::GetWindowContext(Int_t wid)
 {
-   if (!wid)
+   if (wid <= 0)
       return (WinContext_t) 0;
    auto drawable = fPimpl->GetDrawable(wid);
    return (WinContext_t) drawable;
