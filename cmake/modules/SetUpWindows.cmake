@@ -108,6 +108,11 @@ elseif(MSVC)
     if(ROOT_VS_PARALLEL_CL)
       list(APPEND CMAKE_VS_GLOBALS "UseMultiToolTask=true" "EnforceProcessCountAcrossBuilds=true")
     endif()
+    # By default MSBuild walks all transitive project references (e.g. genreflex -> rootcling
+    # -> Cling -> ~300 LLVM projects) on every build to collect "copy to output directory"
+    # content items. CMake-generated C++ projects have none, but the walk costs ~8 s per
+    # MSBuild invocation, which every roottest build-step test pays.
+    list(APPEND CMAKE_VS_GLOBALS "MSBuildCopyContentTransitively=false")
   endif()
 
   string(TIMESTAMP CURRENT_YEAR "%Y")
