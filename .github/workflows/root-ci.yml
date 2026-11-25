@@ -427,16 +427,17 @@ jobs:
       - name: Set environment for sccache
         if: github.event_name == 'pull_request'
         run: |
+          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
           echo "CMAKE_CXX_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
           echo "CMAKE_C_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
           echo "CMAKE_CUDA_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
-          echo "SCCACHE_S3_RW_MODE=READ_WRITE" >> $GITHUB_ENV"
+          echo "SCCACHE_S3_RW_MODE=READ_WRITE" >> $GITHUB_ENV
 
       - name: Set up environment
         run: |
           ccache -s || true
           if [ -d "$PYTHON_VENV/bin/" ]; then
-            . "$PYTHON_VENV/bin/activate" && echo PATH=$PATH >> $GITHUB_ENV;
+            echo "$PYTHON_VENV/bin/" >> $GITHUB_PATH;
           fi
           if ${{ contains(matrix.property, 'auto-registration off') }}; then
             echo "Disabling ROOT's object auto registration for this job"
@@ -463,7 +464,8 @@ jobs:
       - name: Print debug info
         run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
                ls -la;
-               echo "Path is: $PATH"
+               echo "Path is: $PATH";
+               python3 --version;
               '
 
       - uses: root-project/gcc-problem-matcher-improved@main
@@ -553,8 +555,8 @@ jobs:
 
       - name: sccache post stats
         run: |
-          sccache --show-stats
-          sccache --dist-status
+          ${SCCACHE_PATH} --show-stats
+          ${SCCACHE_PATH} --dist-status
 
       - name: Install
         id: install
