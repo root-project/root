@@ -50,13 +50,6 @@ foreach(policy ${policy_new})
   endif()
 endforeach()
 
-set(policy_old CMP0126)
-foreach(policy ${policy_old})
-  if(POLICY ${policy})
-    cmake_policy(SET ${policy} OLD)
-  endif()
-endforeach()
-
 include(cmake/modules/CaptureCommandLine.cmake)
 
 project(ROOT)
