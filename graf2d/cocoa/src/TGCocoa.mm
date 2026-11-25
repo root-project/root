@@ -37,6 +37,8 @@
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TVirtualMutex.h"
+#include "QuartzDrawable.h"
+
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <OpenGL/OpenGL.h>
@@ -952,6 +954,8 @@ Window_t TGCocoa::CreateWindow(Window_t parentID, Int_t x, Int_t y, UInt_t w, UI
                                                            x, y, w, h, border, depth, clss, visual, attr, wtype);
       const Util::NSScopeGuard<QuartzView> viewGuard(childView);
       const Window_t result = fPimpl->RegisterDrawable(childView);//Can throw.
+      // only child window can be used for drawing
+      fWindows.emplace(result, std::make_shared<QuartzDrawable>(result, *this, childView));
       childView.fID = result;
       [parentWin addChild : childView];
 
@@ -984,6 +988,10 @@ void TGCocoa::DestroyWindow(Window_t wid)
       return;
 
    BOOL needFocusChange = NO;
+
+   auto iter = fWindows.find(wid);
+   if (iter != fWindows.end())
+      fWindows.erase(iter);
 
    {//Block to force autoreleasepool to drain.
    const Util::AutoreleasePool pool;
@@ -2398,8 +2406,10 @@ Int_t TGCocoa::OpenPixmap(UInt_t w, UInt_t h)
    Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h
                                            scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
    if (pixmap.Get()) {
-      pixmap.Get().fID = fPimpl->RegisterDrawable(pixmap.Get());//Can throw.
-      return (Int_t)pixmap.Get().fID;
+      auto id = fPimpl->RegisterDrawable(pixmap.Get());//Can throw.
+      fWindows.emplace(id, std::make_shared<QuartzDrawable>(id, *this, pixmap.Get()));
+      pixmap.Get().fID = id;
+      return (Int_t)id;
    } else {
       //Detailed error message was issued by QuartzPixmap by this point:
       Error("OpenPixmap", "QuartzPixmap initialization failed");
@@ -2601,6 +2611,10 @@ Pixmap_t TGCocoa::CreateBitmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
 //______________________________________________________________________________
 void TGCocoa::DeletePixmapAux(Pixmap_t pixmapID)
 {
+   auto iter = fWindows.find(pixmapID);
+   if (iter != fWindows.end())
+      fWindows.erase(iter);
+
    fPimpl->DeleteDrawable(pixmapID);
 }
 
@@ -2609,6 +2623,11 @@ void TGCocoa::DeletePixmap(Pixmap_t pixmapID)
 {
    // Explicitely deletes the pixmap resource "pmap".
    assert(fPimpl->GetDrawable(pixmapID).fIsPixmap == YES && "DeletePixmap, object is not a pixmap");
+
+   auto iter = fWindows.find(pixmapID);
+   if (iter != fWindows.end())
+      fWindows.erase(iter);
+
    fPimpl->fX11CommandBuffer.AddDeletePixmap(pixmapID);
 }
 

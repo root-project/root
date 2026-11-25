@@ -54,6 +54,8 @@ class CocoaPrivate;
 }
 }
 
+class QuartzDrawable;
+
 class TGCocoa : public TVirtualX {
 public:
    TGCocoa();
@@ -449,6 +451,8 @@ protected:
    Drawable_t fSelectedDrawable;
 
    std::unique_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; ///<!
+   std::unordered_map<Int_t,std::shared_ptr<QuartzDrawable>> fWindows; ///<! map of windows, parallel to fPimpl
+
    Int_t fCocoaDraw;
 
    EDrawMode fDrawMode;
