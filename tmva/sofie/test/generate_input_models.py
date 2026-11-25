@@ -278,6 +278,39 @@ def make_ArgMax_NegAxis_SelectLast():
     return _argmax_model("argmax_select_last_test", [2, 1], axis=-1, keepdims=1, select_last_index=1)
 
 
+def _argmin_model(name, out_shape, **attrs):
+    """ArgMin on a [2, 3] float tensor with the given attributes."""
+    nodes = [
+        helper.make_node("ArgMin", ["input"], ["output"], **attrs),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        name,
+        inputs=[
+            _vi("input", FLOAT, [2, 3]),
+        ],
+        outputs=[
+            _vi("output", INT64, out_shape),
+        ],
+    )
+    return _model(graph, opset=13, ir_version=8)
+
+
+def make_ArgMin():
+    """Ops: ArgMin (default attributes: axis=0, keepdims=1)"""
+    return _argmin_model("argmin_test", [1, 3])
+
+
+def make_ArgMin_Axis1_NoKeepdims():
+    """Ops: ArgMin"""
+    return _argmin_model("argmin_axis1_test", [2], axis=1, keepdims=0)
+
+
+def make_ArgMin_NegAxis_SelectLast():
+    """Ops: ArgMin"""
+    return _argmin_model("argmin_select_last_test", [2, 1], axis=-1, keepdims=1, select_last_index=1)
+
+
 def _prelu_model(name, x_shape, slope_shape, slope_vals):
     """PRelu on a float tensor X with the slope given as an initializer."""
     nodes = [
@@ -6497,6 +6530,9 @@ MODELS = {
     "ArgMax": make_ArgMax,
     "ArgMax_Axis1_NoKeepdims": make_ArgMax_Axis1_NoKeepdims,
     "ArgMax_NegAxis_SelectLast": make_ArgMax_NegAxis_SelectLast,
+    "ArgMin": make_ArgMin,
+    "ArgMin_Axis1_NoKeepdims": make_ArgMin_Axis1_NoKeepdims,
+    "ArgMin_NegAxis_SelectLast": make_ArgMin_NegAxis_SelectLast,
     "Asinh": make_Asinh,
     "Atanh": make_Atanh,
     "AveragePool1d_CeilMode": make_AveragePool1d_CeilMode,
