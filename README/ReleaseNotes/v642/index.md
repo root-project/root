@@ -4,10 +4,10 @@
 
 ## Introduction
 
-Release 6.42.00 (LTS) comes with two major upgrades. LLVM version 22 is now in use as a dependency of Cling's C++ interpreter, and the Python-C++ interoperability layer has been replaced by `cppjit`, therewith directly relying on Clang's AST and Cling and not ROOT's type system. Moreover, Python ROOT wheels in alpha stage will be distributed, for the first time also for macOS and ARM Linux.
-However, far more than that has been achieved: for all the details, please see the release notes below. 
+Release 6.42.00 (LTS) comes with two major upgrades: LLVM version 22 is now used as a dependency of Cling's C++ interpreter, and the Python-C++ interoperability layer has been replaced by cppjit, directly relying on Clang's AST and Cling rather than ROOT's type system. Moreover, Python ROOT wheels in alpha stage will be distributed for the first time for macOS and ARM Linux.
+However, far more than that has been achieved: for full details, please see the release notes below.
 
-According to current ROOT's [Release and Support Plan](https://root.cern/install/all_releases), harmonised with the [public HL-LHC schedule](https://voisins.cern/en/high-luminosity-lhc-hl-lhc/), this is the last but one STS release of ROOT's 6th development cycle, and support will cease in June 2027.
+According to ROOT's current [Release and Support Plan](https://root.cern/install/all_releases), harmonized with the [public HL-LHC schedule](https://voisins.cern/en/high-luminosity-lhc-hl-lhc/), this is the penultimate STS release of ROOT's 6th development cycle, and support will cease in June 2027.
 
 The following people have contributed to this new version:
 
@@ -43,16 +43,16 @@ The following people have contributed to this new version:
 * The option `fail-on-missing=OFF` is no longer honored for opt-in (ie OFF by default) build options requiring external dependencies such as `arrow`, `cocoa`, `daos`, `daos_mock`, `dcache`, `experimental_adaptivecpp`, `fcgi`, `fortran`, `gviz`, `mpi`, `pythia8`, `qt6web`, `tmva-cudnn`, `tmva-pymva`, `tmva-sofie`, `uring` or `vecgeom`. If the respective associated package dependency is not installed, ROOT will always raise a configuration error independent of the value of `fail-on-missing`. The user has to take action by either providing the dependency or manually disabling that option via `-Darrow=OFF`.
   Note that `all=ON` enables several of these options, so building with `-Dall=ON` now requires all of their dependencies to be installed, or the unwanted ones to be disabled explicitly.
   Build options that are enabled by default, such as `pyroot`, `opengl`, `xml`, `sqlite`, `davix`, `curl`, `tmva-cpu` or `tpython` are not affected: they are still disabled automatically when their dependencies are missing.
-* The option `fail-on-missing=OFF` will no longer be honored for CMake ROOT build options that have easy-to-install dependencies (e.g. via homebrew or apt-get), such as those required by options `cfitsio`, `civetweb`, `fftw3`, `imt`, `mathmore`, `nlohmann_json`, `tmva-cpu`, `unuran`, `vdt` or `xrootd`. Before, associated `builtin_option` was automatically turned ON (or the opt-in feature turned to OFF), now, user has to install system package or manually set `builtin_option` to `ON` or opt-in feature to `OFF`.
-* `roofit_multiprocess`: RooFit's multi-process test statistics no longer depend on ZeroMQ and are now always built on non-Windows platforms, so there is no reason for an opt-in build option anymore (see the RooFit section below).
+* The option `fail-on-missing=OFF` will no longer be honored for CMake ROOT build options that have easy-to-install dependencies (e.g. via homebrew or apt-get), such as those required by options `cfitsio`, `civetweb`, `fftw3`, `imt`, `mathmore`, `nlohmann_json`, `tmva-cpu`, `unuran`, `vdt` or `xrootd`. Before, associated `builtin_option` was automatically turned ON (or the opt-in feature turned to OFF); now, the user has to install the system package or manually set `builtin_option` to `ON` or the opt-in feature to `OFF`.
+* `roofit_multiprocess`: RooFit's multi-process test statistics no longer depend on ZeroMQ and are now always built on non-Windows platforms, so there is no longer a reason for an opt-in build option (see the RooFit section below).
 * `shadowpw`: The only package relying on shadowpw was removed in ROOT 6.40.
 * The `builtin_zeromq` and `builtin_cppzmq` build options that were deprecated in ROOT 6.40 are now removed.
 * The bindings to the R programming language that are enabled with the `r=ON` or `tmva-rmva=ON` build options (`TRInterface`, RMVA, and friends) are removed, following deprecation in ROOT 6.40. Their maintenance is no longer justified, given the broader adoption of the scientific Python ecosystem. Users who still rely on R from C++ are encouraged to call R directly via https://cran.r-project.org/package=RInside, which is what the ROOT bindings were using internally.
-* Support for the AIX operating system has been removed from the codebase. This support has not been tested since the late v5 releases and the LLVM JIT is not yet supporting AIX.
+* Support for the AIX operating system has been removed from the codebase. This support has not been tested since the late v5 releases, and the LLVM JIT does not yet support AIX.
 * The target `RCsg` (a library mixture of CSGLib and [SOLID](https://github.com/dtecta/solid3)) is now deprecated and will be fully private after ROOT 6.44, meaning the header `CsgOps.h` with the class `RootCsg::TBaseMesh` will no longer be public. Use instead `TGeoTessellated` public interface. If that public interface doesn't provide what you need, contact the ROOT team to request its extension.
 * The Makefile templates for external projects (`etc/Makefile.arch` and the files generated from `config/Makefile-comp.in` and `config/Makefile.in`) are removed. External projects should migrate to CMake (for example with `find_package(ROOT)`), or obtain compilation and linker flags from `root-config --cflags --libs`.
 * The **TMPIFile** class and the `mpi` build option (not to be confused with `minuit2_mpi`, which is unaffected) are deprecated and will be removed in ROOT 6.44.
-* The header `compiledata.h` will be renamed in ROOT 6.44. It did not have header guards and is not meant to be used directly. It is solely used by ROOT internally to setup `ACLiC`, consider using `gSystem` instead to access its content.
+* The header `compiledata.h` will be renamed in ROOT 6.44. It did not have header guards and is not meant to be used directly. It is solely used by ROOT internally to set up `ACLiC`; consider using `gSystem` instead to access its content.
 * Including `RConfig.h` and `RVersion.h` is now deprecated and will be removed after ROOT 6.44, use instead `ROOT/RConfig.hxx` and `ROOT/RVersion.hxx`.
 * The headers of the `bvh` library in `Geom` are no longer public in ROOT 6.42.
 * Usage of the following headers is now deprecated. These will be removed during the lifetime of ROOT 7:
@@ -117,13 +117,13 @@ The `TMVA_SOFIE_GNN` tutorials have been migrated to this workflow and produce i
 * The use of `CINT`-like implicit declarations such as `i = 0` is deprecated since [ROOT 6.32](https://root.cern/doc/v632/release-notes.html#deprecation-and-removal) and emits warnings `declaration without the 'auto' keyword is deprecated`. ROOT 6.44 will be the last release to support this syntax, after ROOT 6.44, the warning will turn into an error. Update those declarations by explicitly using the `auto` keyword: `auto i = 0`.
 * The ROOT **auth** package together with `TVirtualAuth` and `TROOT::GetListOfSecContexts()`, and the **authenticated sockets** (`TSocket::CreateAuthSocket()`) feature are now removed following deprecation in ROOT 6.40.
 * The following classes have been removed after being deprecated in previous ROOT versions:
-  * `TSSLSocket` class is now removed following deprecation in ROOT 6.40.
+  * The `TSSLSocket` class is now removed following deprecation in ROOT 6.40.
   * `TWebFile`, `TNetFile*`, `TFTP`, `TGrid*`
   * `TS3WebFile`, `TS3HTTPRequest`
-  * Remove outdated `TSQLFile` class, was not tested for very long time, not working with only supported sqlite DB
+  * Removed the outdated `TSQLFile` class, which was not tested for a very long time and was not working with the only supported sqlite DB.
   * The `TMVA::Experimental::RStandardScaler` has been removed. It computed means and standard deviations, which can be easily done without this class.
   * The `TMVA::Experimental::Classification` and `TMVA::Experimental::ClassificationResult` classes are removed. They were the two-class front-end of the 2016–2017 `TMVA::Envelope` modernization campaign that never graduated out of the experimental namespace and saw no adoption. The parts of that effort that did find adoption remain available: `TMVA::Envelope`, `TMVA::CrossValidation`, `TMVA::VariableImportance`, `TMVA::HyperParameterOptimisation` and `TMVA::ROCCurve`, the latter providing the ROC curves that were previously obtained via `ClassificationResult`.
-  * The `TMVA::Experimental::RTensor` class was removed, since it was not much adopted by ROOTs own interfaces and is also getting redundant with `std::mdspan` in C++23.
+  * The `TMVA::Experimental::RTensor` class was removed, since it was not adopted much by ROOT's own interfaces and is also becoming redundant with `std::mdspan` in C++23.
   * The **RooStats::DebuggingSampler** and **RooStats::DebuggingTestStat** classes are removed. They were mock implementations of the `TestStatSampler` and `TestStatistic` interfaces that returned uniform random numbers independent of the data, only meant for debugging the RooStats framework itself during its initial development.
   * The `ROOT::Math::ParamFunctionBase`, `ROOT::Math::ParamFunctorHandler` and `ROOT::Math::ParamMemFunHandler` classes in `Math/ParamFunctor.h` are removed, together with the `ParamFunctor::GetImpl()` and `ParamFunctor::SetFunction()` methods that exposed them. They implemented the type erasure that `ParamFunctor` now gets from `std::function`, mirroring what was already done for `ROOT::Math::Functor`. Constructing and calling a `ParamFunctor` is unchanged, except that the constructor from an object and one of its member functions now takes a plain pointer to the object instead of anything dereferenceable, so smart pointers are no longer accepted there.
 
@@ -137,7 +137,7 @@ After ROOT 6.44, the minimum may rise to 3.31 if an upgrade to LLVM 24 or later 
 
 ### Download of source tarballs and usage of network during build
 
-The source archives of the `builtin_*` options are downloaded during the build, into `ROOT_DOWNLOAD_DIR` (the default value is `${CMAKE_BINARY_DIR}/download`). That path is passed as `DOWNLOAD_DIR` to the `ExternalProject_Add` call of each archive builtin. An archive that is already there, named as on the CERN mirror, the first URL listed by each builtin), is checked against `URL_HASH` and **not downloaded again**. This allows to build ROOT without network access: point `ROOT_DOWNLOAD_DIR` to a directory with the pre-downloaded archives, or copy them into the default location. When the directory already contains archives, the internet connectivity check in `SearchInstalledSoftware.cmake` is skipped.
+The source archives of the `builtin_*` options are downloaded during the build, into `ROOT_DOWNLOAD_DIR` (the default value is `${CMAKE_BINARY_DIR}/download`). That path is passed as `DOWNLOAD_DIR` to the `ExternalProject_Add` call of each archive builtin. An archive that is already there, named as on the CERN mirror (the first URL listed by each builtin), is checked against `URL_HASH` and **not downloaded again**. This allows building ROOT without network access: point `ROOT_DOWNLOAD_DIR` to a directory with the pre-downloaded archives, or copy them into the default location. When the directory already contains archives, the internet connectivity check in `SearchInstalledSoftware.cmake` is skipped.
 
 ### Optimization of ROOT header files
 
@@ -160,7 +160,7 @@ RenderCore, the WebGL engine of the REve client, is fetched at build time as the
 
 ## Python Interface
 
-Interoperability between Python and C++ is now provided by `cppjit` (see [this talk](https://indico.cern.ch/event/1655190/contributions/7267357/)), therewith not relying any more on `cppyy`, and, most importantly, ROOT's type system, `Meta`.
+Interoperability between Python and C++ is now provided by `cppjit` (see [this talk](https://indico.cern.ch/event/1655190/contributions/7267357/)), thereby not relying any more on `cppyy` and, most importantly, ROOT's type system, `Meta`.
 
 ROOT dropped support for Python 3.10, meaning ROOT now requires at least Python 3.11.
 
@@ -267,7 +267,7 @@ The eager loading path avoids most copies of the dataset, and both loading modes
 RFile, ROOT's modern interface to ROOT file, has moved out of the `ROOT::Experimental` namespace. The interface is otherwise unchanged, but the following things were added:
 
 * A new overload of `RFile::Put` has been introduced that accepts a `TNamed` and an optional directory path. This simplifies the common case of writing TNamed-derived objects using their original name and title, meaning what before was `rfile->Put(obj.GetName(), obj, obj.GetTitle())` becomes just `rfile->Put(obj)`.
-* RFile's Python interface was extended to add support for the `__getitem__` and `__contains__` syntax. This means you can now get objects from RFile using `rfile['myObj']` (which will raise an error if the object's not there) and query for the presence of an object using `"myObj" in rfile`.
+* RFile's Python interface was extended to add support for the `__getitem__` and `__contains__` syntax. This means you can now get objects from RFile using `rfile['myObj']` (which will raise an error if the object is not there) and query for the presence of an object using `"myObj" in rfile`.
 * TTree is now explicitly prevented from being written through RFile
 * RFile is now browsable
 
@@ -311,7 +311,7 @@ as "struct of array" (SoA) in memory. This is useful, e.g., for efficient consum
 
 ### HTTP I/O
 
-* The curl based plugin is now the default on all platforms. The Davix plugin can still be used if curl is not available or if the `Curl.ReplaceDavix` is set to `no` in the rootrc configuration.
+* The curl-based plugin is now the default on all platforms. The Davix plugin can still be used if curl is not available or if `Curl.ReplaceDavix` is set to `no` in the rootrc configuration.
 
 ## Core and C++ Interpreter
 
@@ -462,8 +462,8 @@ or read the bin count from the relevant histogram or plot frame instead.
 
 ### Resolution models are no longer imported into the workspace as standalone objects
 
-When a `RooResolutionModel` (like `RooGaussModel` or `RooTruthModel`) is used wi th a
-`RooAbsAnaConvPdf` (like `RooDecay`, `RooBDecay`, etc.), it acts as a *configuration* object that specifies which model to convolve the basis functions with, rather than as a nod
+When a `RooResolutionModel` (like `RooGaussModel` or `RooTruthModel`) is used with a
+`RooAbsAnaConvPdf` (like `RooDecay`, `RooBDecay`, etc.), it acts as a *configuration* object that specifies which model to convolve the basis functions with, rather than as a node
 e of the pdf's computation graph.
 The `RooAbsAnaConvPdf` builds its own internal basis-function convolutions from it and evaluates *those*.
 
@@ -479,28 +479,26 @@ This is not expected to affect typical usage, since the resolution model was nev
 
 ### New POLF and POLN draw options for TH2
 
-Since ROOT 6.36 implementation of "POL" draw option was changed. Angle and radius range automatically scaled to visible histogram range filling full 2*Pi angle and full radius range.
-This let display TH2 in polar coordinates for any provided range settings, but produced plots are not intuitive. Therefore two new options for polar coordinates were introduced.
+Since ROOT 6.36, the implementation of the "POL" draw option was changed. Angle and radius range automatically scale to the visible histogram range, filling the full 2*Pi angle and full radius range.
+This lets TH2 display in polar coordinates for any provided range settings, but produced plots are not intuitive. Therefore, two new options for polar coordinates were introduced.
 
-"POLF" - fixed polar coordinates. In such case full histogram X range mapped to -PI .. +Pi.
-And Y axis mapped to radius. In case of histogram zooming angle and radius of each bin remains
-the same (therefore name "fixed"), just number of displayed bins are reduced.
+"POLF" - fixed polar coordinates. In such a case, the full histogram X range is mapped to -PI .. +Pi. And Y axis is mapped to radius. In case of histogram zooming, the angle and radius of each bin remain the same (therefore named "fixed"), and just the number of displayed bins is reduced.
 
 "POLN" - natural polar coordinates. In this case X axis directly represents angle value in radians (therefore name "natural") and Y axis is just radius.
 
 ### Store canvas as HTML file
 
-Now canvas (or several canvases) can be stored in portable HTML file.
-Just call `c1->SaveAs("canvas.html")` or invoke correspondent menu item.
-To store several canvases in single HTML file one can use:
+Now a canvas (or several canvases) can be stored in a portable HTML file.
+Just call `c1->SaveAs("canvas.html")` or invoke corresponding menu item.
+To store several canvases in a single HTML file, one can use:
 ```cpp
    auto c1 = new TCanvas("c1", "c1", 4);
    auto c2 = new TCanvas("c2", "c2", 4);
    auto c3 = new TCanvas("c3", "c3", 4);
    TCanvas::SaveAll({c1, c2, c3}, "canvases.html");
 ```
-Produced HTML file will include canvas JSON data and JavaScript code to load and display canvas.
-Such file can be loaded locally in any web browser or send as attachment in email to colleagues.
+The produced HTML file will include canvas JSON data and JavaScript code to load and display the canvas.
+Such a file can be loaded locally in any web browser or sent as an attachment in an email to colleagues.
 
 ### REve
 
@@ -521,7 +519,7 @@ Such file can be loaded locally in any web browser or send as attachment in emai
 
 ### Other graphics improvements
 
-* Both vertical and horizontal `TPaletteAxis` provide now interactive zooming with mouse cursor
+* Both vertical and horizontal `TPaletteAxis` now provide interactive zooming with the mouse cursor
 
 ## Geometry
 
@@ -595,7 +593,7 @@ The version of the following packages has been updated:
 
 ## Tracker Items addressed
 
-More than 180 items in ROOT's trackers have been addressed in this release:
+More than 210 items in ROOT's trackers have been addressed in this release:
 
 * [[6432](https://github.com/root-project/root/issues/6432)] - Build performance does not scale to many cores/threads
 * [[6439](https://github.com/root-project/root/issues/6439)] - Failed compilation leaves cling in a "bad state"
@@ -619,6 +617,7 @@ More than 180 items in ROOT's trackers have been addressed in this release:
 * [[10680](https://github.com/root-project/root/issues/10680)] - [Python] Namespace dropped in std::function cppyy binding
 * [[10724](https://github.com/root-project/root/issues/10724)] - PyROOT / cppyy: potentially ineffcicient "member offset" on enumerators
 * [[10970](https://github.com/root-project/root/issues/10970)] - [cling] DynamicLibraryManager finds non-exported symbols on macOS
+* [[11769](https://github.com/root-project/root/issues/11769)] - [TTreeReader] Wrong (empty) arrays silently read for complex data members of TClonesArray elements
 * [[11786](https://github.com/root-project/root/issues/11786)] - TTreePlayer::Scan can't handle left-justified text
 * [[12277](https://github.com/root-project/root/issues/12277)] - Duplicate symbols for the JIT
 * [[12387](https://github.com/root-project/root/issues/12387)] - [RF] Fitting parameter of interest with Gaussian in RooMCStudy in addition to its pull
@@ -626,23 +625,28 @@ More than 180 items in ROOT's trackers have been addressed in this release:
 * [[12701](https://github.com/root-project/root/issues/12701)] - ROOT does not properly recognize if `io_uring` is supported
 * [[12738](https://github.com/root-project/root/issues/12738)] - Windows debug builds of root fail.
 * [[12935](https://github.com/root-project/root/issues/12935)] - [RF] Global correlation coefficients after SumW2Error
+* [[13030](https://github.com/root-project/root/issues/13030)] - [RF] Plotting shifted RooHistPdfs doesn't go well
 * [[13185](https://github.com/root-project/root/issues/13185)] - [RF]  RooFit - Pythonic interaction with the RooWorkspace
 * [[13287](https://github.com/root-project/root/issues/13287)] - [RF][HF] ShapeFactor with initial shape creates invalid HistFactory XML
 * [[14061](https://github.com/root-project/root/issues/14061)] - GitHub Actions don't build exactly the pushed commit
 * [[14121](https://github.com/root-project/root/issues/14121)] - gtest-core-metacling-test-TClingLoadUnloadFile fails sporadically
+* [[14198](https://github.com/root-project/root/issues/14198)] - Value printer confused about valid address
 * [[14255](https://github.com/root-project/root/issues/14255)] - [RF] Asymmetry plots with RooFit
 * [[15080](https://github.com/root-project/root/issues/15080)] - [DF] Add support and tests for concurrent usage of different RDF objects from different threads
 * [[15085](https://github.com/root-project/root/issues/15085)] - PyROOT/cppyy fails  with template functions overload with SFINAE
 * [[15323](https://github.com/root-project/root/issues/15323)] - RDF Progress bar seems to ignore Range() calls
 * [[15378](https://github.com/root-project/root/issues/15378)] - [PyROOT] Problem with templated binary operator implementations like `operator+`
 * [[15818](https://github.com/root-project/root/issues/15818)] - asan segfault due to declaration of function with very long return expression
+* [[16168](https://github.com/root-project/root/issues/16168)] - [PyROOT] C++ lambda function support
 * [[16210](https://github.com/root-project/root/issues/16210)] - [PyROOT] Automatic downcasting of smart pointers to actual type
 * [[16601](https://github.com/root-project/root/issues/16601)] - [6.32/master] Fail to materialise symbols from `libMatrix`
+* [[16613](https://github.com/root-project/root/issues/16613)] - std::function conversion not working with class in nested namespace
 * [[16757](https://github.com/root-project/root/issues/16757)] - [ntuple] Handling of over-aligned types
 * [[16765](https://github.com/root-project/root/issues/16765)] - [ntuple] Wrong alignment with transient class member
 * [[16852](https://github.com/root-project/root/issues/16852)] - [Python] Regression in accessing protected data members in ROOT 6.32 after cppyy upgrade
 * [[16929](https://github.com/root-project/root/issues/16929)] - gtest-tree-ntuple-v7-ntuple-types fails, likely to due fast math.
 * [[17057](https://github.com/root-project/root/issues/17057)] - [RDF] support bar charts in RDataFrame
+* [[17157](https://github.com/root-project/root/issues/17157)] - operator errors in cppyy
 * [[17344](https://github.com/root-project/root/issues/17344)] - [RF] RooFit EvalBackend("cpu") Disables Multi-Core Support During RooMinimizer Minimization
 * [[17483](https://github.com/root-project/root/issues/17483)] - wsl2 menu display issue
 * [[17713](https://github.com/root-project/root/issues/17713)] - [ntuple] fix I/O rule handling for unversioned classes
@@ -653,19 +657,23 @@ More than 180 items in ROOT's trackers have been addressed in this release:
 * [[19230](https://github.com/root-project/root/issues/19230)] - [ntuple] Support storage of a SOA using contiguous memory
 * [[19358](https://github.com/root-project/root/issues/19358)] - cppyy.gbl.std.function(...) fails for template types like std::vector<int>, ROOT::RVec<int>
 * [[19560](https://github.com/root-project/root/issues/19560)] - TTreeIndex fails under Valgrind due to long double emulation
-* [[19622](https://github.com/root-project/root/issues/19622)] - RNTuple creates a DAOS container it canont use
+* [[19622](https://github.com/root-project/root/issues/19622)] - RNTuple creates a DAOS container it cannot use
+* [[19635](https://github.com/root-project/root/issues/19635)] - Wrong result when ROOT::Math::AxisAngle applied to ROOT::Math::Polar3D<double>
 * [[19836](https://github.com/root-project/root/issues/19836)] - Potential CMake ordering issue with -Dasan=ON
 * [[20213](https://github.com/root-project/root/issues/20213)] - Implement RNTuple redirection from FUSE to XRootD
 * [[20245](https://github.com/root-project/root/issues/20245)] - [RooFit] RooResolutionModels create hidden value servers as part of analytical convolutions
+* [[20526](https://github.com/root-project/root/issues/20526)] - [Python] Templated function invoked multiple times with incorrect template arguments
 * [[20635](https://github.com/root-project/root/issues/20635)] - __cling_Destruct_ symbols strip namespaces and cause errors
 * [[20731](https://github.com/root-project/root/issues/20731)] - Investigate/Remove potentially unnecessary explicit linking
 * [[20845](https://github.com/root-project/root/issues/20845)] - Crash when using FromSpec with dask and threads
 * [[20853](https://github.com/root-project/root/issues/20853)] - [ntuple] add several useful performance metrics
 * [[20882](https://github.com/root-project/root/issues/20882)] - [roottest] The stlNoLib test crashes when reading a tree without a dictionary
-* [[20907](https://github.com/root-project/root/issues/20907)] - Spurious rebuilds in some circunstances
+* [[20907](https://github.com/root-project/root/issues/20907)] - Spurious rebuilds in some circumstances
+* [[20952](https://github.com/root-project/root/issues/20952)] - cling failure when accessing `std::map` elements from Python
 * [[21005](https://github.com/root-project/root/issues/21005)] - Strange wrapper code generated in cppyy unit test for `cmake_cxxmodules=OFF` with C++17
 * [[21071](https://github.com/root-project/root/issues/21071)] - [tmva][sofie] Improve numerical stability and overflow protection for Softplus operator
 * [[21203](https://github.com/root-project/root/issues/21203)] - ROOT_GENERATE_DICTIONARY needs to be updated to use DEPFILE instead of IMPLICIT_DEPENDS with add_custom_command
+* [[21329](https://github.com/root-project/root/issues/21329)] - [PyROOT] cppyy selects explicit template instantiation
 * [[21367](https://github.com/root-project/root/issues/21367)] - Stack corruption in TColorGradient with clang 20 to 22
 * [[21371](https://github.com/root-project/root/issues/21371)] - RooFormulaVar @N parameter indices silently shift after workspace serialization
 * [[21457](https://github.com/root-project/root/issues/21457)] - ROOT interpreter doesn't handle `<Insert>` key properly at the prompt
@@ -711,6 +719,7 @@ More than 180 items in ROOT's trackers have been addressed in this release:
 * [[22855](https://github.com/root-project/root/issues/22855)] - [ntuple] double free when resizing small RVec
 * [[22856](https://github.com/root-project/root/issues/22856)] - [ntuple] REntry::BindRawPtr() does not type-check
 * [[22858](https://github.com/root-project/root/issues/22858)] - [RF] RooBinIntegreator gives wrong result for integrals that cut thought bin boundaries
+* [[22895](https://github.com/root-project/root/issues/22895)] - I/O regression since 6.36: member-wise reading/writing of a variable-size array in a base class uses the wrong counter offset
 * [[22938](https://github.com/root-project/root/issues/22938)] - `R__memcompress` fails with limited stack size
 * [[22953](https://github.com/root-project/root/issues/22953)] - [macOS/X11] Rebuilding and reusing TGPopupMenu makes context menus block in XGetGeometry
 * [[22954](https://github.com/root-project/root/issues/22954)] - [DF] Support for RHist with VariationsFor
@@ -719,7 +728,7 @@ More than 180 items in ROOT's trackers have been addressed in this release:
 * [[23014](https://github.com/root-project/root/issues/23014)] - TASImage::DrawCircle() fails with semi-transparent color
 * [[23026](https://github.com/root-project/root/issues/23026)] - ROOT fails to configure with CMake 4.4
 * [[23036](https://github.com/root-project/root/issues/23036)] - system.rootrc ships three settings that nothing reads (WebGui.HttpLoopback, WebGui.WaitForTmout, Browser.StartUrl)
-* [[23081](https://github.com/root-project/root/issues/23081)] - [TMVA][SOFIE] Severe Memory Bloat in ROperator_Pool due to Unused _xpad Vector Allocatio
+* [[23081](https://github.com/root-project/root/issues/23081)] - [TMVA][SOFIE] Severe Memory Bloat in ROperator_Pool due to Unused _xpad Vector Allocation
 * [[23114](https://github.com/root-project/root/issues/23114)] - [CI] publish_binaries maybe using an unset variable.
 * [[23120](https://github.com/root-project/root/issues/23120)] - `TASImage::DrawEllips2()` works incorrectly when filling tilted ellipse
 * [[23125](https://github.com/root-project/root/issues/23125)] - Histograms containing NaN can't be drawn.
@@ -740,12 +749,12 @@ More than 180 items in ROOT's trackers have been addressed in this release:
 * [[23378](https://github.com/root-project/root/issues/23378)] - [interpreter] wrong CLANG_CMAKE_DIR when builtin_llvm=OFF but builtin_clang=ON
 * [[23402](https://github.com/root-project/root/issues/23402)] - Enable `http=ON` on Ubuntu 26.10
 * [[23417](https://github.com/root-project/root/issues/23417)] - RDataLoader hangs with batches_in_memory=1
-* [[23444](https://github.com/root-project/root/issues/23444)] - [RF] Issue of of multi-range fit in RooSimultaneous
+* [[23444](https://github.com/root-project/root/issues/23444)] - [RF] Issue of multi-range fit in RooSimultaneous
 * [[23450](https://github.com/root-project/root/issues/23450)] - `TMath::IsInside()` returns wrong results when Int_t is used
 * [[23459](https://github.com/root-project/root/issues/23459)] - PyROOT crashes when IPython formats an empty std::optional
 * [[23491](https://github.com/root-project/root/issues/23491)] - `TGraphErrors::Draw("3")` changes the error band when the axis range is changed
 * [[23493](https://github.com/root-project/root/issues/23493)] - [cling] Clang is conditionally invoked with the wrong driver mode depending on the executable's name
-* [[23500](https://github.com/root-project/root/issues/23500)] - [tmva][sofie]
+* [[23500](https://github.com/root-project/root/issues/23500)] - [tmva][sofie] RNN ignores the clip attribute (read as integer, always 0)
 * [[23502](https://github.com/root-project/root/issues/23502)] - [tmva][sofie] BatchNormalization ignores the epsilon attribute (hardcoded 1e-5)
 * [[23512](https://github.com/root-project/root/issues/23512)] - [RF] Wrong expected events for extended fits in multiple disjoint ranges with the new evaluation backend
 * [[23523](https://github.com/root-project/root/issues/23523)] - [tmva][sofie] Where computes the wrong output shape when its inputs broadcast
@@ -757,22 +766,47 @@ More than 180 items in ROOT's trackers have been addressed in this release:
 * [[23648](https://github.com/root-project/root/issues/23648)] - root CLI no longer opens files before executing -e commands
 * [[23655](https://github.com/root-project/root/issues/23655)] - [tmva][sofie] Inputs of unsupported type (e.g. float16) give code that does not compile instead of an error
 * [[23664](https://github.com/root-project/root/issues/23664)] - [Windows] `<filesystem>` doesn't work in interpreted code
+* [[23666](https://github.com/root-project/root/issues/23666)] - `hadd -n` omits object from last file for objects in nested TDirectories
 * [[23681](https://github.com/root-project/root/issues/23681)] - Quadratic performance in TH1Merger::LabelMerge
 * [[23706](https://github.com/root-project/root/issues/23706)] - Buffers of 2^24 bytes or slightly more are written uncompressed (RNTuple pages and TTree baskets)
 * [[23712](https://github.com/root-project/root/issues/23712)] - rootcling crashes (SIGSEGV) on Xcode 27 when SDKROOT is set to an empty string
 * [[23716](https://github.com/root-project/root/issues/23716)] - [hist] Merging 3D histograms with alphanumeric labels on the axes is broken
 * [[23724](https://github.com/root-project/root/issues/23724)] - RooExponential: Issue with codegen gradient near zero slope
+* [[23728](https://github.com/root-project/root/issues/23728)] - [PyROOT] Segfault at exit deleting a branch with a Cling-generated collection destructor after cppyy instantiated a template
 * [[23734](https://github.com/root-project/root/issues/23734)] - [tmva][sofie] Selu ignores its alpha and gamma attributes
+* [[23746](https://github.com/root-project/root/issues/23746)] - thisroot.sh: wrong ROOTSYS in zsh when the shell's command line has a newline
 * [[23767](https://github.com/root-project/root/issues/23767)] - out of bound access when building TLegend
 * [[23772](https://github.com/root-project/root/issues/23772)] - [meta] TDataMember::GetOptions() return wrong values for enum member
 * [[23790](https://github.com/root-project/root/issues/23790)] - [RDataFrame] Code that transforms `#var` alias to `R_rdf_sizeof_var` does not respect string literals
 * [[23842](https://github.com/root-project/root/issues/23842)] - RDataLoader: wrong train/validation split with lazy loading, filtered inputs and shuffle=False
 * [[23866](https://github.com/root-project/root/issues/23866)] - stressLinear.cxx cannot be interpreted in 6.40.04
+* [[23904](https://github.com/root-project/root/issues/23904)] - [RF] Deleted nodes are manipulated in RooFit::Evaluator destructor
+* [[23991](https://github.com/root-project/root/issues/23991)] - [hist] Swapped variable title of TF12
+* [[24008](https://github.com/root-project/root/issues/24008)] - Performance regression due to new GetClassAlignment
+* [[24011](https://github.com/root-project/root/issues/24011)] - [ntuple] Streamer field recreation ignores type alias
+* [[24018](https://github.com/root-project/root/issues/24018)] - hadd aborts when merging RNTuples with page checksums disabled
+* [[24044](https://github.com/root-project/root/issues/24044)] - Test requiring TPython not disabled when `tpython=OFF`
+* [[24045](https://github.com/root-project/root/issues/24045)] - gtest-roofit-roofitcore-testRooFitCore runs but fails if `fftw3.h` is not available
+* [[24048](https://github.com/root-project/root/issues/24048)] - tutorial-math-exampleFunction-py is run without MathMore but fails
+* [[24083](https://github.com/root-project/root/issues/24083)] - TClass inadvertently looks up a std::pair with 3 template arguments
+* [[24094](https://github.com/root-project/root/issues/24094)] - [ntuple] Intermittent failure in S3 tests
+* [[24106](https://github.com/root-project/root/issues/24106)] - [RF] `BinnedLikelihood` with unbinned data gives a wrong likelihood instead of an error
+* [[24111](https://github.com/root-project/root/issues/24111)] - [ntuple] std::optional of an untyped record is written as `std::optional<>` but cannot be read back
+* [[24140](https://github.com/root-project/root/issues/24140)] - [Python][RDF] Pure Python callables in Define/Filter deadlock with EnableImplicitMT
+* [[24146](https://github.com/root-project/root/issues/24146)] - Counted array in a split object uses another object's counter when sub-branches are unprefixed (via TTreeReader)
+* [[24202](https://github.com/root-project/root/issues/24202)] - [RF] Stable factorized NLL evaluation for RooProdPdf
+* [[24267](https://github.com/root-project/root/issues/24267)] - Precision of eta at negative z in GenVector
+* [[24293](https://github.com/root-project/root/issues/24293)] - TGeoChecker::ComputeOverlap skips every mesh point with x < 0 and y < 0 (missing TMath::Abs?)
+* [[24308](https://github.com/root-project/root/issues/24308)] - Crash when adopting TCanvas in TRootEmbeddedCanvas
+* [[24333](https://github.com/root-project/root/issues/24333)] - RDataFrame does not consider a data source with a first empty range
+* [[ROOT-5224](https://its.cern.ch/jira/browse/5224)] - Implement variable rebinning multidimensional histogram classes
 * [[ROOT-6035](https://its.cern.ch/jira/browse/6035)] - Counter-intuitive behaviour of RooExtendPdf in fitTo()
 * [[ROOT-6203](https://its.cern.ch/jira/browse/6203)] - Same name classes in different namespaces
 * [[ROOT-8000](https://its.cern.ch/jira/browse/8000)] - TTree::Draw evaluating "innocent" files in the current working directory
+* [[ROOT-8257](https://its.cern.ch/jira/browse/8257)] - Add SetSigned to AsymptoticCalculator
 * [[ROOT-9302](https://its.cern.ch/jira/browse/9302)] - TClingCallbacks::InclusionDirective() re-includes the header for fun
 * [[ROOT-9562](https://its.cern.ch/jira/browse/9562)] - Support UTF-8 at prompt
+* [[ROOT-10066](https://its.cern.ch/jira/browse/10066)] - RooStats::AsymptoticCalculator or bases should store fit result
 * [[ROOT-10069](https://its.cern.ch/jira/browse/10069)] - AsymptoticCalculator.GenerateAsimovData cannot generate dataset when more than one variable is floating
 * [[ROOT-10453](https://its.cern.ch/jira/browse/10453)] - Poor design of the RooIntegralMorph class
 * [[ROOT-10589](https://its.cern.ch/jira/browse/10589)] - Exception silently caught by Jupyter ROOT kernel
