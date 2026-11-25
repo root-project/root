@@ -1,7 +1,7 @@
 #ifndef SOFIE_COMMON
 #define SOFIE_COMMON
 
-#include "ROOT/RSpan.hxx"
+#include "SOFIE/span.hxx"
 
 #include <algorithm>
 #include <cassert>
@@ -281,7 +281,7 @@ std::string ConvertValuesToString(const std::vector<T> & data, size_t maxprint =
 class InitializedTensor {
 public:
    InitializedTensor() = default;
-   InitializedTensor(ETensorType type, std::span<std::size_t> shape, std::shared_ptr<void> data, bool typeConstant = false)
+   InitializedTensor(ETensorType type, span<std::size_t> shape, std::shared_ptr<void> data, bool typeConstant = false)
       : fConstant(typeConstant), fType{type}, fShape{shape.begin(), shape.end()}, fData{data}
    {
    }
@@ -403,7 +403,7 @@ T* BroadcastConvBias(const T* data, const size_t channel, const std::vector<size
 // Broadcast a tensor from shape to targetShape according to numpy broadcasting rules
 // See more at https://numpy.org/doc/stable/user/basics.broadcasting.html
 // and https://github.com/onnx/onnx/blob/main/docs/Broadcasting.md .
-template<typename T, class ConstContT = std::span<const T>>
+template<typename T, class ConstContT = span<const T>>
 void BroadcastTensor(ConstContT data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, T *broadcastedData) {
    // Size of the shapes (tensor input here have shapes with same sizes, we have already added the needed ones )
    size_t size = shape.size();
@@ -493,7 +493,7 @@ T* UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, cons
 template<typename T>
 void UnidirectionalBroadcast(const T* data, const std::vector<size_t>& shape, const std::vector<size_t>& targetShape, T *broadcastedData) {
    size_t curLength = ConvertShapeToLength(shape);
-   std::span<T> inData(const_cast<T*>(data), curLength);
+   span<T> inData(const_cast<T*>(data), curLength);
    // Prepend shape with ones
    if (shape.size() < targetShape.size()) {
       size_t targetSize = targetShape.size();

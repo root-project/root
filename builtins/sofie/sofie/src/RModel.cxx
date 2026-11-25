@@ -474,7 +474,7 @@ void RModel::SetNotWritableInitializedTensor(const std::string & tensor_name) {
       t->second.SetNotWritable();
    }
 
-std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors)
+std::string RModel::AllocateIntermediateMemory(span<const std::string_view> op_output_tensors)
 {
    std::stringstream code;
 
@@ -579,7 +579,7 @@ std::string RModel::AllocateIntermediateMemory(std::span<const std::string_view>
    return code.str();
 }
 
-void RModel::CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_input_tensors, const size_t& op_idx){
+void RModel::CheckAndFlushIntermediateMemory(span<const std::string_view> op_input_tensors, const size_t& op_idx){
    if (fVerbose) std::cout << "*** CheckAndFlushIntermediateMemory: Loop on input tensors for op " << op_idx << "\n";
    //print available chunks
    if (fVerbose) std::cout << "available chunks before freeing them : \n";

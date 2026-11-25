@@ -72,7 +72,7 @@ public:
 
    // Fixed-width fields are little-endian on the wire. Assemble them byte-wise
    // so the result is a correct host-order value on both little- and big-endian
-   // machines (ROOT CI covers big-endian s390x). Varints need no such handling.
+   // machines (CI covers big-endian s390x). Varints need no such handling.
    uint32_t ReadFixed32()
    {
       if (fP + 4 > fEnd) {

@@ -1,4 +1,3 @@
-#include "Byteswap.h"
 #include "SOFIE/RModelParser_ONNX.hxx"
 // The operator base class is a private header: RModelParser_ONNX.hxx only
 // forward-declares it, but this translation unit manages ROperator instances
@@ -140,8 +139,46 @@ struct ExtractDataFromTP<int64_t> {
    }
 };
 
-#ifndef R__BYTESWAP
+// ONNX stores tensor data in little-endian byte order. Only big-endian hosts
+// need to swap the bytes.
+#if defined(__BYTE_ORDER__) && defined(__ORDER_BIG_ENDIAN__) && (__BYTE_ORDER__ == __ORDER_BIG_ENDIAN__)
+#define SOFIE_HOST_IS_BIG_ENDIAN
+#endif
+
+#ifdef SOFIE_HOST_IS_BIG_ENDIAN
 namespace {
+
+template <std::size_t N>
+struct RByteSwap {
+};
+
+template <>
+struct RByteSwap<2> {
+   using value_type = std::uint16_t;
+   static value_type bswap(value_type x) { return static_cast<value_type>((x >> 8) | (x << 8)); }
+};
+
+template <>
+struct RByteSwap<4> {
+   using value_type = std::uint32_t;
+   static value_type bswap(value_type x)
+   {
+      return ((x & 0xff000000u) >> 24) | ((x & 0x00ff0000u) >> 8) | ((x & 0x0000ff00u) << 8) | ((x & 0x000000ffu) << 24);
+   }
+};
+
+template <>
+struct RByteSwap<8> {
+   using value_type = std::uint64_t;
+   static value_type bswap(value_type x)
+   {
+      x = ((x & 0x00000000ffffffffull) << 32) | ((x & 0xffffffff00000000ull) >> 32);
+      x = ((x & 0x0000ffff0000ffffull) << 16) | ((x & 0xffff0000ffff0000ull) >> 16);
+      x = ((x & 0x00ff00ff00ff00ffull) << 8) | ((x & 0xff00ff00ff00ff00ull) >> 8);
+      return x;
+   }
+};
+
 
 // Copy nbytes from source to dest, byte-swapping each N-byte element. The
 // temporary avoids misaligned loads from the protobuf string buffer and makes
@@ -191,8 +228,8 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
             throw std::runtime_error("SOFIE - Failed to read raw data of initialized tensor - actual raw size is " +
                                  std::to_string(tensorproto->raw_data().size()));
 
-#ifdef R__BYTESWAP
-         // R__BYTESWAP is defined for little-endian architectures (most common ones)
+#ifndef SOFIE_HOST_IS_BIG_ENDIAN
+         // little-endian architectures (most common ones)
          std::memcpy(data.get(), tensorproto->raw_data().c_str(), tensor_size);
 #else
          // big-endian architectures - need to swap bytes
@@ -273,7 +310,7 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
 
       fDataFile.seekg(offset);
       fDataFile.read(reinterpret_cast<char *>(data.get()), buffer_size);
-#ifndef R__BYTESWAP
+#ifdef SOFIE_HOST_IS_BIG_ENDIAN
       // external data is stored little-endian like raw_data - swap in place
       CopyLEToHost(data.get(), data.get(), buffer_size, tensor_type);
 #endif

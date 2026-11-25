@@ -17,7 +17,6 @@ class ROperator_Random final : public ROperator
 {
 public:
 
-   bool fUseROOT = true; // use ROOT or std for random number generation
 private:
 
    RandomOpMode fMode;
@@ -51,10 +50,6 @@ public:
 
       model.AddIntermediateTensor(fNY, fType, fShapeY);
 
-      if (fUseROOT) {
-         model.AddNeededCustomHeader("TRandom3.h");
-      }
-
       // use default values
       if (fMode == kNormal) {
          if (fParams.count("mean") == 0 )
@@ -81,20 +76,15 @@ public:
    // generate declaration code for random number generators
    std::string GenerateDeclCode() override {
       std::stringstream out;
-      out << "std::unique_ptr<TRandom> fRndmEngine;   // random number engine\n";
+      out << "std::unique_ptr<std::mt19937> fRndmEngine;   // random number engine\n";
       return out.str();
    }
    // generate initialization code for random number generators
    std::string GenerateInitCode() override {
       std::stringstream out;
       out << "//--- creating random number generator ----\n";
-      if (fUseROOT) {
-         // generate initialization code for creating random number generator
-         out << SP << "fRndmEngine.reset(new TRandom3(" << fSeed << "));\n";
-      }
-      else {
-         // not supported
-      }
+      // generate initialization code for creating the random number generator
+      out << SP << "fRndmEngine.reset(new std::mt19937(" << static_cast<unsigned int>(fSeed) << "u));\n";
       return out.str();
    }
    std::string Generate(std::string OpName) override {
@@ -107,29 +97,30 @@ public:
 
       // generate the random array
       int length = ConvertShapeToLength(fShapeY);
-      out << SP << "for (int i = 0; i < " << length << "; i++) {\n";
-      if (fUseROOT) {
-         if (fMode == kNormal) {
-            if (fParams.count("mean") == 0 || fParams.count("scale") == 0)
-               throw std::runtime_error("SOFIE RandomNormal op : no mean or scale are defined");
-            float mean = fParams["mean"];
-            float scale = fParams["scale"];
-            out << SP << SP << "tensor_" << fNY << "[i] = this->fRndmEngine->Gaus(" << mean << "," << scale << ");\n";
-         } else if (fMode == kUniform) {
-            if (fParams.count("high") == 0 || fParams.count("low") == 0)
-              throw std::runtime_error("SOFIE RandomUniform op : no low or high are defined");
-            float high = fParams["high"];
-            float low = fParams["low"];
-            out << SP << SP << "tensor_" << fNY << "[i] = this->fRndmEngine->Uniform(" << low << "," << high << ");\n";
-         }
+      if (fMode == kNormal) {
+         if (fParams.count("mean") == 0 || fParams.count("scale") == 0)
+            throw std::runtime_error("SOFIE RandomNormal op : no mean or scale are defined");
+         float mean = fParams["mean"];
+         float scale = fParams["scale"];
+         out << SP << "std::normal_distribution<float> distribution_" << OpName << "(static_cast<float>(" << mean
+             << "), static_cast<float>(" << scale << "));\n";
+      } else if (fMode == kUniform) {
+         if (fParams.count("high") == 0 || fParams.count("low") == 0)
+            throw std::runtime_error("SOFIE RandomUniform op : no low or high are defined");
+         float high = fParams["high"];
+         float low = fParams["low"];
+         out << SP << "std::uniform_real_distribution<float> distribution_" << OpName << "(static_cast<float>(" << low
+             << "), static_cast<float>(" << high << "));\n";
       }
+      out << SP << "for (int i = 0; i < " << length << "; i++) {\n";
+      out << SP << SP << "tensor_" << fNY << "[i] = distribution_" << OpName << "(*this->fRndmEngine);\n";
       out << SP << "}\n";
 
       return out.str();
    }
 
    std::vector<std::string> GetStdLibs() override {
-      std::vector<std::string> ret = {"memory"};   // for unique ptr
+      std::vector<std::string> ret = {"memory", "random"};   // for unique ptr, the random number engine and distributions
       return ret;
    }
 

@@ -3,8 +3,6 @@
 
 #include "SOFIE/common.hxx"
 
-#include "Rtypes.h" // for ClassDefNV
-
 #include <ctime>
 #include <fstream>
 #include <iomanip>
@@ -128,10 +126,6 @@ private:
    std::vector<std::string> RuntimeBoundParams(const std::string &name) const;
 
 public:
-   /**
-       Default constructor. Needed to allow serialization of ROOT objects. See
-       https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
-   */
    RModel() = default;
    RModel(std::string name, std::string parsedtime) : fFileName(std::move(name)), fParseTime(std::move(parsedtime))
    {
@@ -255,8 +249,8 @@ public:
    std::string GenerateInferSignature(bool isdecl = true);
 
    // calculate total intermediate memory and position intermediate tensor addresses
-   std::string AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors);
-   void CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_output_tensors, const size_t& op_idx);
+   std::string AllocateIntermediateMemory(span<const std::string_view> op_output_tensors);
+   void CheckAndFlushIntermediateMemory(span<const std::string_view> op_output_tensors, const size_t& op_idx);
 
    void SetOptimizationLevel(OptimizationLevel optim_level) { fOptimizationLevel = optim_level; }
 
@@ -353,9 +347,6 @@ public:
       fUseVDT = on;
    }
    bool UseVDT() const { return fUseVDT;}
-
-   // RModel is an internal representation that doesn't support ROOT IO (if you need model IO, use ONNX directly).
-   ClassDefNV(RModel, 0);
 };
 
 // need to implement here templated member functions and its specialization
