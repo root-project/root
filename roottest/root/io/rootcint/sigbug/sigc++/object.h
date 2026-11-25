@@ -75,7 +75,7 @@ class LIBSIGC_API ObjectBase
       ObjectBase()
         : control_(0) {}
 
-      SIGC_CXX_EXPLICIT_COPY ObjectBase(const ObjectBase& o)
+      SIGC_CXX_EXPLICIT_COPY ObjectBase(const ObjectBase& /* o */)
         : control_(0) {}
 
       virtual ~ObjectBase()=0;
