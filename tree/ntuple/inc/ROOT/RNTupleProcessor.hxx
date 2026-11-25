@@ -31,7 +31,8 @@
 
 namespace ROOT {
 class RNTupleProcessor;
-
+template <typename T>
+class RNTupleProcessorValuePtr;
 namespace Experimental {
 class RNTupleJoinProcessor;
 
@@ -47,6 +48,9 @@ namespace Internal {
 struct RNTupleProcessorEntryLoader; // for unit tests
 const RNTupleProcessorEntry *
 LoadFullRNTupleProcessorEntry(ROOT::RNTupleProcessor &processor, bool includeSubfields); // for unit tests
+// Enables rebinding fields from an RNTupleProcessorValuePtr<void> to a different reading destination. Used in
+// RNTupleProcessorDataSource.
+ROOT::RFieldBase::RValue CreateRValueFromValuePtr(RNTupleProcessorValuePtr<void> &valuePtr);
 } // namespace Internal
 
 class RNTupleProcessorOptions {
@@ -184,6 +188,8 @@ template <>
 class RNTupleProcessorValuePtr<void> {
    friend class RNTupleProcessor;
 
+   friend ROOT::RFieldBase::RValue ROOT::Internal::CreateRValueFromValuePtr(RNTupleProcessorValuePtr<void> &valuePtr);
+
 private:
    ROOT::Internal::RNTupleProcessorEntry *fProcessorEntry;
    ROOT::Internal::RNTupleProcessorEntry::FieldIndex_t fFieldIndex;
@@ -211,6 +217,10 @@ private:
    /// invalid data. After binding a pointer to an `RNTupleProcessorValuePtr`, we *strongly* recommend only accessing
    /// its data through this interface, to ensure that only valid data can be read.
    void BindRawPtr(void *valuePtr) { fProcessorEntry->BindRawPtr(fFieldIndex, valuePtr); }
+
+   /////////////////////////////////////////////////////////////////////////////
+   /// \brief Create an RValue connected to the field managed by the processor's entry.
+   ROOT::RFieldBase::RValue CreateValue() { return fProcessorEntry->CreateValue(fFieldIndex); }
 
 public:
    /////////////////////////////////////////////////////////////////////////////

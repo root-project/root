@@ -1033,6 +1033,78 @@ TEST_F(RNTupleProcessorTest, PrintStructureJoinedChainAsymmetric)
    EXPECT_EQ(exp2, os2.str());
 }
 
+TEST_F(RNTupleProcessorTest, CreateRValueAndBindToVoidPtrSingle)
+{
+   // Check usage of RValue to read field values bound to a user-provided location
+
+   auto proc = RNTupleProcessor::Create({fNTupleNames[0], fFileNames[0]});
+
+   auto x = proc->RequestField<void>("x");
+   auto y = proc->RequestField<void>("y");
+
+   for (auto &idx : *proc) {
+      auto xRValue = ROOT::Internal::CreateRValueFromValuePtr(x);
+      auto yRValue = ROOT::Internal::CreateRValueFromValuePtr(y);
+      x.Bind(xRValue.GetPtr<void>());
+      y.Bind(yRValue.GetPtr<void>());
+
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+
+      EXPECT_FLOAT_EQ(static_cast<float>(*idx), *reinterpret_cast<float *>(xRValue.GetPtr<void>().get()));
+
+      std::vector<float> yExp{static_cast<float>(*idx), static_cast<float>((*idx) * 2)};
+      EXPECT_EQ(yExp, *reinterpret_cast<std::vector<float> *>(yRValue.GetPtr<void>().get()));
+   }
+   EXPECT_EQ(5, proc->GetNEntriesProcessed());
+}
+
+TEST_F(RNTupleProcessorTest, CreateRValueAndBindToVoidPtrChain)
+{
+   // Check usage of RValue to read field values bound to a user-provided location. Create the RValue objects upfront,
+   // once, reuse them when traversing the chain of files. This tests specifically the validity of the RValue objects
+   // even when the fields connected to the RNTupleProcessor change.
+   std::vector<std::unique_ptr<RNTupleProcessor>> innerProcs;
+   innerProcs.push_back(
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}));
+   innerProcs.push_back(
+      RNTupleProcessor::CreateChain({{fNTupleNames[1], fFileNames[1]}, {fNTupleNames[2], fFileNames[2]}}));
+
+   auto proc = RNTupleProcessor::CreateChain(std::move(innerProcs));
+
+   auto i = proc->RequestField<void>("i");
+   auto z = proc->RequestField<void>("z");
+   auto strct_a = proc->RequestField<void>("struct.a");
+
+   auto iRValue = ROOT::Internal::CreateRValueFromValuePtr(i);
+   auto zRValue = ROOT::Internal::CreateRValueFromValuePtr(z);
+   auto strct_aRValue = ROOT::Internal::CreateRValueFromValuePtr(strct_a);
+
+   for (auto &idx : *proc) {
+      i.Bind(iRValue.GetPtr<void>());
+      z.Bind(zRValue.GetPtr<void>());
+      strct_a.Bind(strct_aRValue.GetPtr<void>());
+
+      proc->LoadEntry(idx);
+      EXPECT_EQ(*idx + 1, proc->GetNEntriesProcessed());
+
+      auto iCur = *reinterpret_cast<int *>(iRValue.GetPtr<void>().get());
+      auto zCur = *reinterpret_cast<float *>(zRValue.GetPtr<void>().get());
+      auto strct_aCur = *reinterpret_cast<float *>(strct_aRValue.GetPtr<void>().get());
+
+      if ((*idx >= 5 && *idx < 10) || *idx >= 15) {
+         EXPECT_EQ(iCur, 4 - *idx % 5);
+         EXPECT_EQ(zCur, (4 - *idx % 5) * 3.f);
+      } else {
+         EXPECT_EQ(iCur, *idx % 5);
+         EXPECT_EQ(zCur, (*idx % 5) * 2.f);
+      }
+
+      EXPECT_EQ(strct_aCur, zCur);
+   }
+   EXPECT_EQ(20, proc->GetNEntriesProcessed());
+}
+
 // This test is a translation using RNTupleProcessor of the test
 // introduced by https://github.com/root-project/root/pull/19322,
 // to ensure that the TTree friendship mechanism works equivalently
