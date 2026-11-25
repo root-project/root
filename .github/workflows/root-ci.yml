@@ -489,6 +489,17 @@ jobs:
       PYTHON_VENV: ${{ matrix.python_venv || '/py-venv/ROOT-CI' }}
 
     steps:
+      - name: Set up sccache-cache
+        uses: mozilla-actions/sccache-action@v0.0.11
+
+      - name: Set environment for sccache
+        if: github.event_name == 'pull_request'
+        run: |
+          echo "CMAKE_CXX_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
+          echo "CMAKE_C_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
+          echo "CMAKE_CUDA_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
+          echo "SCCACHE_S3_RW_MODE=READ_WRITE" >> $GITHUB_ENV"
+
       - name: Set up environment
         run: |
           ccache -s || true
@@ -607,6 +618,11 @@ jobs:
       - name: ccache info (post)
         run: |
           ccache -s || true
+
+      - name: sccache post stats
+        run: |
+          sccache --show-stats
+          sccache --dist-status
 
       - name: Install
         id: install
