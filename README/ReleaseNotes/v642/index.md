@@ -7,7 +7,7 @@
 Release 6.42.00 (LTS) comes with two major upgrades. LLVM version 22 is now in use as a dependency of Cling's C++ interpreter, and the Python-C++ interoperability layer has been replaced by `cppjit`, therewith directly relying on Clang's AST and Cling and not ROOT's type system. Moreover, Python ROOT wheels in alpha stage will be distributed, for the first time also for macOS and ARM Linux.
 However, far more than that has been achieved: for all the details, please see the release notes below. 
 
-According to current ROOT's [Release and Support Plan](https://root.cern/install/all_releases), harmonised with the [public HL-LHC schedule](https://voisins.cern/en/high-luminosity-lhc-hl-lhc/), this is the last but one LTS release of ROOT's 6th development cycle, and support will cease in June 2027.
+According to current ROOT's [Release and Support Plan](https://root.cern/install/all_releases), harmonised with the [public HL-LHC schedule](https://voisins.cern/en/high-luminosity-lhc-hl-lhc/), this is the last but one STS release of ROOT's 6th development cycle, and support will cease in June 2027.
 
 The following people have contributed to this new version:
 
