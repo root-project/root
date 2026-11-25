@@ -224,5 +224,22 @@ class TCanvasOwnership(unittest.TestCase):
         self.assertEqual(len(canvases), 1)
 
 
+class TestDeclareCppOwnedArg(unittest.TestCase):
+    """Tests for the declare_cpp_owned_arg pythonization helper."""
+
+    def test_declare_cpp_owned_arg_uses_positional_index(self):
+        """The helper must drop ownership of the argument at `position`, not always the first."""
+        from unittest.mock import patch
+        from ROOT._pythonization._memory_utils import declare_cpp_owned_arg
+
+        first = object()
+        second = object()
+
+        with patch.object(ROOT, "SetOwnership") as set_ownership:
+            declare_cpp_owned_arg(1, "arg", (first, second), {})
+
+        set_ownership.assert_called_once_with(second, False)
+
+
 if __name__ == "__main__":
     unittest.main()

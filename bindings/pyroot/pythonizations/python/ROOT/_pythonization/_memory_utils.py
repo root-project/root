@@ -80,7 +80,7 @@ def declare_cpp_owned_arg(position, name, positional_args, keyword_args, conditi
     if name in keyword_args:
         arg = keyword_args[name]
     elif len(positional_args) > position:
-        arg = positional_args[0]
+        arg = positional_args[position]
     else:
         # This can happen if the function was called with too few arguments.
         # In that case we should not do anything.
