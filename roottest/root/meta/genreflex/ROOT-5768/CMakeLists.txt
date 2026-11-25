@@ -15,11 +15,7 @@ if(NOT MSVC OR win_broken_tests)
 
 
   # build static library only to ensure that generated dictionary can be compiled
-  ROOTTEST_LINKER_LIBRARY(PyCoolLib
-                          TEST
-                          ${CMAKE_CURRENT_BINARY_DIR}/PyCool_rflx.cxx
-                          TYPE STATIC
-                          LIBRARIES ${ROOT_LIBRARIES})
+  add_library(PyCoolLib EXCLUDE_FROM_ALL STATIC ${CMAKE_CURRENT_BINARY_DIR}/PyCool_rflx.cxx)
 
   target_include_directories(PyCoolLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
   # target_include_directories(PyCoolLib PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/CoralBase)
