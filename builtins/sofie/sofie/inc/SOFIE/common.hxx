@@ -540,18 +540,28 @@ struct HelperFunctionsCode {
 /// their inter-dependencies. Recognised keys are: "Im2col", "Im2col_3d",
 /// "col2im", "UnidirectionalBroadcast", "BroadcastConvBias", "Gemm_Call",
 /// "Relu", "Fill", "Copy", "ReadTensorFromStream", "SafetensorsBlob",
-/// "SafetensorsReader", "InputTensorDims", "DynamicMemory".
+/// "SafetensorsReader", "InputTensorDims", "DynamicMemory", "FastExp", "FastLog".
 ///
 /// `modelNamespace` (e.g. "SOFIE_MyModel") is the generated model namespace;
 /// the Clad pullbacks are emitted into clad::custom_derivatives::<modelNamespace>
 /// so the model stays differentiable without common.hxx / CladDerivator.h.
 ///
-/// `sgemmAlreadyDeclared`: set true if the caller already emitted the `extern "C"`
-/// sgemm_ declaration (fNeededBlasRoutines block), so Gemm_Call skips its own and
-/// avoids a duplicate. Default false emits it, keeping the returned code self-contained.
+/// `sgemmAlreadyDeclared`: set true if the caller already emitted sgemm_
+/// (fNeededBlasRoutines block), so Gemm_Call skips its own and avoids a duplicate.
+/// Default false emits it, keeping the returned code self-contained.
+///
+/// `useBlasLibrary`: see GenerateBlasRoutinesCode.
 HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> & neededHelpers,
                                                 const std::string & modelNamespace,
-                                                bool sgemmAlreadyDeclared = false);
+                                                bool sgemmAlreadyDeclared = false,
+                                                bool useBlasLibrary = false);
+
+/// Return the code of the BLAS `routines` ("Gemm", "Gemv", "Axpy", "Copy") used by
+/// the generated code, in a nested BLAS namespace. If `useBlasLibrary` is true,
+/// the routines are only declared, and the BLAS library that provides them must
+/// be loaded when the generated code is used. Otherwise, they are defined in
+/// standard C++, so that the generated code doesn't depend on any library.
+std::string GenerateBlasRoutinesCode(const std::set<std::string> &routines, bool useBlasLibrary);
 
 
 } // namespace SOFIE

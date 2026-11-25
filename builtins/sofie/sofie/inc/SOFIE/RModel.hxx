@@ -54,9 +54,9 @@ private:
    WeightFileType fWeightFile = WeightFileType::Text;
 
    std::unordered_set<std::string> fNeededBlasRoutines;
-   // Set to true once GenerateHeaderInfo has emitted the extern "C" declaration
-   // of the BLAS sgemm_ routine (from fNeededBlasRoutines). It lets the
-   // standalone Gemm_Call helper skip emitting a second, duplicate declaration.
+   // Set to true once GenerateHeaderInfo has emitted the BLAS sgemm_ routine
+   // (from fNeededBlasRoutines). It lets the standalone Gemm_Call helper skip
+   // emitting a second, duplicate one.
    bool fBlasSgemmDeclared = false;
 
    std::unordered_set<std::string> fNeededStdLib = {"vector"};
@@ -81,6 +81,7 @@ private:
    bool fIsInitialized = false;
    bool fIsSubGraph = false;
    bool fUseVDT = false;
+   bool fUseBlasLibrary = false;
    int fVerbose = 0;
    int fBatchSize = -1;
    size_t fConstantTensorSize = 0; // size  (in Bytes) of the allocated constant tensors
@@ -342,11 +343,19 @@ public:
    void PrintDynamicTensors() const;
    void HeadInitializedTensors(std::string name, int n_print = 50);
 
-   // flag to use vdt for fast math functions (e.g. exp in softmax)
+   // flag to use vdt for fast math functions (e.g. exp in softmax). The generated
+   // code uses vdt only if its headers are found when the code is compiled,
+   // otherwise it uses the functions of the standard library.
    void SetUseVDT(bool on) {
       fUseVDT = on;
    }
    bool UseVDT() const { return fUseVDT;}
+
+   // flag to call the routines of a BLAS library in the generated code, which
+   // must then be loaded when the code is used. By default, the generated code
+   // contains a plain C++ implementation of the routines it needs.
+   void SetUseBlasLibrary(bool on) { fUseBlasLibrary = on; }
+   bool UseBlasLibrary() const { return fUseBlasLibrary; }
 };
 
 // need to implement here templated member functions and its specialization

@@ -47,9 +47,9 @@ public:
       }
       fUseVDT = model.UseVDT();
       if (fUseVDT) {
-         model.AddNeededCustomHeader("vdt/exp.h");
+         model.AddNeededHelperFunction("FastExp");
          if (fLogSoftmax)
-            model.AddNeededCustomHeader("vdt/log.h");
+            model.AddNeededHelperFunction("FastLog");
       }
    }
 
@@ -65,8 +65,8 @@ public:
       auto length_str = ConvertDimShapeToLength(fShape);
       size_t axis = fAttrAxis < 0 ? size + fAttrAxis : fAttrAxis;
 
-      std::string expFunction = (fUseVDT) ? "vdt::fast_expf" : "std::exp";
-      std::string logFunction = (fUseVDT) ? "vdt::fast_logf" : "std::log";
+      std::string expFunction = (fUseVDT) ? "FastExp" : "std::exp";
+      std::string logFunction = (fUseVDT) ? "FastLog" : "std::log";
 
       // Check if this is the special case where memory is contiguous.
       if (axis == size - 1) {

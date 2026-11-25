@@ -13,17 +13,132 @@ namespace {
 
 // Standalone helper snippets, each emitted verbatim inside the generated model
 // namespace. They depend only on the C++ stdlib (headers collected in
-// GenerateHelperFunctionsCode) and, for Gemm, on the local BLAS::sgemm_ below.
+// GenerateHelperFunctionsCode) and, for Gemm, on BLAS::sgemm_ (see
+// GenerateBlasRoutinesCode).
 
-// extern "C" declaration of the BLAS routine Gemm_Call needs, in a nested BLAS
-// namespace. Skipped when the caller already declared sgemm_ (see the
-// sgemmAlreadyDeclared parameter of GenerateHelperFunctionsCode).
-constexpr const char *kBlasSgemm = R"SOFIE(
-namespace BLAS {
+// The BLAS routines used by the generated code, in a nested BLAS namespace.
+// They have the interface of the Fortran BLAS routines, so that the generated
+// code calls them in the same way whether they are only declared, to use the
+// BLAS library loaded in the process, or defined below in standard C++. The
+// definitions are plain loops, without any optimization: they are meant to make
+// the generated code self-contained, not to compete with an optimized BLAS.
+
+constexpr const char *kBlasSgemmDecl = R"SOFIE(
 extern "C" void sgemm_(const char *transa, const char *transb, const int *m, const int *n, const int *k,
                        const float *alpha, const float *A, const int *lda, const float *B, const int *ldb,
                        const float *beta, float *C, const int *ldc);
-} // namespace BLAS
+)SOFIE";
+
+constexpr const char *kBlasSgemvDecl = R"SOFIE(
+extern "C" void sgemv_(const char *trans, const int *m, const int *n, const float *alpha, const float *A,
+                       const int *lda, const float *X, const int *incx, const float *beta, float *Y, const int *incy);
+)SOFIE";
+
+constexpr const char *kBlasSaxpyDecl = R"SOFIE(
+extern "C" void saxpy_(const int *n, const float *alpha, const float *x, const int *incx, float *y, const int *incy);
+)SOFIE";
+
+constexpr const char *kBlasScopyDecl = R"SOFIE(
+extern "C" void scopy_(const int *n, const float *x, const int *incx, float *y, const int *incy);
+)SOFIE";
+
+// Index of the first element of a vector with n elements and increment inc,
+// following the BLAS convention for negative increments
+constexpr const char *kBlasFirstIndex = R"SOFIE(
+inline int FirstIndex(int n, int inc)
+{
+   return inc < 0 ? (1 - n) * inc : 0;
+}
+)SOFIE";
+
+// C = alpha * op(A) * op(B) + beta * C, with column-major matrices
+constexpr const char *kBlasSgemmImpl = R"SOFIE(
+inline void sgemm_(const char *transa, const char *transb, const int *m, const int *n, const int *k,
+                   const float *alpha, const float *A, const int *lda, const float *B, const int *ldb,
+                   const float *beta, float *C, const int *ldc)
+{
+   const bool ta = *transa == 't' || *transa == 'T' || *transa == 'c' || *transa == 'C';
+   const bool tb = *transb == 't' || *transb == 'T' || *transb == 'c' || *transb == 'C';
+   for (int j = 0; j < *n; ++j) {
+      float *c = C + j * *ldc;
+      for (int i = 0; i < *m; ++i)
+         c[i] = *beta == 0.f ? 0.f : *beta * c[i];
+      if (*alpha == 0.f)
+         continue;
+      for (int l = 0; l < *k; ++l) {
+         const float b = *alpha * (tb ? B[j + l * *ldb] : B[l + j * *ldb]);
+         for (int i = 0; i < *m; ++i)
+            c[i] += b * (ta ? A[l + i * *lda] : A[i + l * *lda]);
+      }
+   }
+}
+)SOFIE";
+
+// Y = alpha * op(A) * X + beta * Y, with a column-major matrix
+constexpr const char *kBlasSgemvImpl = R"SOFIE(
+inline void sgemv_(const char *trans, const int *m, const int *n, const float *alpha, const float *A, const int *lda,
+                   const float *X, const int *incx, const float *beta, float *Y, const int *incy)
+{
+   const bool t = *trans == 't' || *trans == 'T' || *trans == 'c' || *trans == 'C';
+   const int lenX = t ? *m : *n;
+   const int lenY = t ? *n : *m;
+   const int x0 = FirstIndex(lenX, *incx);
+   const int y0 = FirstIndex(lenY, *incy);
+   for (int i = 0; i < lenY; ++i) {
+      float &y = Y[y0 + i * *incy];
+      float sum = 0.f;
+      for (int j = 0; j < lenX; ++j)
+         sum += (t ? A[j + i * *lda] : A[i + j * *lda]) * X[x0 + j * *incx];
+      y = (*beta == 0.f ? 0.f : *beta * y) + *alpha * sum;
+   }
+}
+)SOFIE";
+
+// y = alpha * x + y
+constexpr const char *kBlasSaxpyImpl = R"SOFIE(
+inline void saxpy_(const int *n, const float *alpha, const float *x, const int *incx, float *y, const int *incy)
+{
+   const int x0 = FirstIndex(*n, *incx);
+   const int y0 = FirstIndex(*n, *incy);
+   for (int i = 0; i < *n; ++i)
+      y[y0 + i * *incy] += *alpha * x[x0 + i * *incx];
+}
+)SOFIE";
+
+// y = x
+constexpr const char *kBlasScopyImpl = R"SOFIE(
+inline void scopy_(const int *n, const float *x, const int *incx, float *y, const int *incy)
+{
+   const int x0 = FirstIndex(*n, *incx);
+   const int y0 = FirstIndex(*n, *incy);
+   for (int i = 0; i < *n; ++i)
+      y[y0 + i * *incy] = x[x0 + i * *incx];
+}
+)SOFIE";
+
+// Exponential and logarithm used by the operators that can use vdt. The vdt
+// functions are used if the vdt headers are found when the generated code is
+// compiled, otherwise the ones of the standard library.
+constexpr const char *kFastExp = R"SOFIE(
+inline float FastExp(float x)
+{
+#if __has_include(<vdt/exp.h>)
+   return vdt::fast_expf(x);
+#else
+   return std::exp(x);
+#endif
+}
+)SOFIE";
+
+constexpr const char *kFastLog = R"SOFIE(
+inline float FastLog(float x)
+{
+#if __has_include(<vdt/log.h>)
+   return vdt::fast_logf(x);
+#else
+   return std::log(x);
+#endif
+}
 )SOFIE";
 
 constexpr const char *kConvertShapeToLength = R"SOFIE(
@@ -1155,8 +1270,40 @@ inline MemoryResult OrganizeMemory(const std::vector<TensorLifeInfo> &tensorsInf
 
 } // anonymous namespace
 
+std::string GenerateBlasRoutinesCode(const std::set<std::string> &routines, bool useBlasLibrary)
+{
+   if (routines.empty())
+      return "";
+   auto need = [&](const char *key) { return routines.count(key) > 0; };
+   std::string code = "namespace BLAS {\n";
+   if (useBlasLibrary) {
+      if (need("Gemm"))
+         code += kBlasSgemmDecl;
+      if (need("Gemv"))
+         code += kBlasSgemvDecl;
+      if (need("Axpy"))
+         code += kBlasSaxpyDecl;
+      if (need("Copy"))
+         code += kBlasScopyDecl;
+   } else {
+      if (need("Gemv") || need("Axpy") || need("Copy"))
+         code += kBlasFirstIndex;
+      if (need("Gemm"))
+         code += kBlasSgemmImpl;
+      if (need("Gemv"))
+         code += kBlasSgemvImpl;
+      if (need("Axpy"))
+         code += kBlasSaxpyImpl;
+      if (need("Copy"))
+         code += kBlasScopyImpl;
+   }
+   code += "} // namespace BLAS\n";
+   return code;
+}
+
 HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &neededHelpers,
-                                                const std::string &modelNamespace, bool sgemmAlreadyDeclared)
+                                                const std::string &modelNamespace, bool sgemmAlreadyDeclared,
+                                                bool useBlasLibrary)
 {
    auto need = [&](const char *key) { return neededHelpers.count(key) > 0; };
 
@@ -1174,6 +1321,8 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
    const bool readSafetensors = need("SafetensorsReader");
    const bool inputDims = need("InputTensorDims");
    const bool dynMemory = need("DynamicMemory");
+   const bool fastExp = need("FastExp");
+   const bool fastLog = need("FastLog");
 
    const bool im2colFamily = im2col || im2col3d || col2im;
    const bool needConvertLength = uniBroadcast || convBias;
@@ -1203,18 +1352,26 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
    if (dynMemory)
       addStd({"set", "unordered_map", "stdexcept", "iterator"});
 
+   if (fastExp || fastLog)
+      addStd({"cmath"});
+
    std::string includes;
    for (auto const &h : stdHeaders)
       includes += "#include <" + h + ">\n";
+   // vdt is optional: its headers are included only if they are found
+   if (fastExp)
+      includes += "#if __has_include(<vdt/exp.h>)\n#include <vdt/exp.h>\n#endif\n";
+   if (fastLog)
+      includes += "#if __has_include(<vdt/log.h>)\n#include <vdt/log.h>\n#endif\n";
 
    // ---- assemble the definitions ------------------------------------------
    // The order matters: a definition must precede any non-dependent use of it.
    std::string defs;
    defs += "\n// --- Standalone SOFIE inference helper functions ---\n";
 
-   // sgemm_ declaration for Gemm_Call, unless the caller already emitted one.
+   // sgemm_ for Gemm_Call, unless the caller already emitted it.
    if (gemm && !sgemmAlreadyDeclared)
-      defs += kBlasSgemm;
+      defs += GenerateBlasRoutinesCode({"Gemm"}, useBlasLibrary);
 
    if (needConvertLength)
       defs += kConvertShapeToLength;
@@ -1256,6 +1413,10 @@ HelperFunctionsCode GenerateHelperFunctionsCode(const std::set<std::string> &nee
       defs += kInputTensorDims;
    if (dynMemory)
       defs += kDynamicMemory;
+   if (fastExp)
+      defs += kFastExp;
+   if (fastLog)
+      defs += kFastLog;
 
    defs += "// --- End of SOFIE inference helper functions ---\n\n";
 

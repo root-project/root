@@ -2197,27 +2197,10 @@ void RModel::GenerateHeaderInfo(std::string& hgname) {
         fGC += "#include <iterator>\n";
 
     fGC += "\nnamespace SOFIE_" + fName + "{\n";
-    if (!fNeededBlasRoutines.empty()) {
-        fGC += ("namespace BLAS{\n");
-        for (auto &routine : fNeededBlasRoutines) {
-            if (routine == "Gemm") {
-                fGC += ("\textern \"C\" void sgemm_(const char * transa, const char * transb, const int * m, const int * n, const int * k,\n"
-                        "\t                       const float * alpha, const float * A, const int * lda, const float * B, const int * ldb,\n"
-                        "\t                       const float * beta, float * C, const int * ldc);\n");
-                // sgemm_ now declared; the standalone Gemm_Call helper will skip its copy.
-                fBlasSgemmDeclared = true;
-            } else if (routine == "Gemv") {
-                fGC += ("\textern \"C\" void sgemv_(const char * trans, const int * m, const int * n, const float * alpha, const float * A,\n"
-                        "\t                       const int * lda, const float * X, const int * incx, const float * beta, const float * Y, const int * incy);\n");
-            } else if (routine == "Axpy") {
-                fGC += ("\textern \"C\" void saxpy_(const int * n, const float * alpha, const float * x,\n"
-                        "\t                         const int * incx, float * y, const int * incy);\n");
-            } else if (routine == "Copy") {
-                fGC += ("\textern \"C\" void scopy_(const int *n, const float* x, const int *incx, float* y, const int* incy);\n");
-            }
-        }
-        fGC += ("}//BLAS\n");
-    }
+    // sgemm_ is emitted here if the model needs it, so the standalone
+    // Gemm_Call helper skips its copy
+    fGC += GenerateBlasRoutinesCode({fNeededBlasRoutines.begin(), fNeededBlasRoutines.end()}, fUseBlasLibrary);
+    fBlasSgemmDeclared = fNeededBlasRoutines.count("Gemm") > 0;
     // Placeholder for the standalone definitions of the inference helper
     // functions used by this model (filled in by EmitHelperFunctionsCode). It
     // sits inside the generated model namespace, right before the session code.
@@ -2227,7 +2210,7 @@ void RModel::GenerateHeaderInfo(std::string& hgname) {
 void RModel::EmitHelperFunctionsCode()
 {
     HelperFunctionsCode code =
-        GenerateHelperFunctionsCode(fNeededHelperFunctions, "SOFIE_" + fName, fBlasSgemmDeclared);
+        GenerateHelperFunctionsCode(fNeededHelperFunctions, "SOFIE_" + fName, fBlasSgemmDeclared, fUseBlasLibrary);
 
     auto replaceMarker = [this](const std::string &marker, const std::string &replacement) {
         auto pos = fGC.find(marker);
