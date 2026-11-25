@@ -2,20 +2,8 @@
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(CMAKE_ROOTTEST_NOROOTMAP OFF)
 ROOT_GENERATE_DICTIONARY(base_cling ${CMAKE_CURRENT_SOURCE_DIR}/base.h MODULE base LINKDEF baseLinkDef.h)
-ROOTTEST_LINKER_LIBRARY(base base_cling.cxx testobject.cpp testobjectderived.cpp TEST LIBRARIES ROOT::Core ROOT::RIO)
-
-add_test(NAME roottest-root-io-transient-base-build
-         COMMAND ${CMAKE_COMMAND} --build ${CMAKE_BINARY_DIR}
-                                  ${build_config}
-                                  --target base${fast}
-                                  -- ${always-make})
-set_property(TEST roottest-root-io-transient-base-build PROPERTY FIXTURES_SETUP root-io-transient-base-build)
-if(GeneratorNeedsBuildSerialization)
-  if(GeneratorNeedsResourecLock)
-    set_property(TEST roottest-root-io-transient-base-build APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
-  endif()
-  set_property(TEST roottest-root-io-transient-base-build APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
-endif()
+ROOT_LINKER_LIBRARY(base NOINSTALL base_cling.cxx testobject.cpp testobjectderived.cpp LIBRARIES ROOT::Core ROOT::RIO)
+ROOT_SET_OUTPUT_DIRECTORIES(base)
 
 ROOTTEST_ADD_TEST(WriteFile
                   COPY_TO_BUILDDIR testobject.h testobjectderived.h
