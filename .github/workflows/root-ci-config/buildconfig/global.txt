@@ -33,7 +33,6 @@ builtin_xrootd=OFF
 builtin_xxhash=OFF
 builtin_zlib=OFF
 builtin_zstd=OFF
-ccache=ON
 cefweb=OFF
 check_connection=OFF
 clad=ON

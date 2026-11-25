@@ -19,6 +19,7 @@ builtin_vdt=ON
 builtin_xrootd=ON
 builtin_xxhash=ON
 builtin_zstd=ON
+ccache=ON
 cocoa=ON
 davix=OFF
 minuit2_omp=OFF
