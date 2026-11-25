@@ -37,9 +37,7 @@ foreach(directoryName IN ITEMS ${CMAKE_SOURCE_DIR} ${CMAKE_BINARY_DIR} ${CMAKE_I
   endif()
 endforeach()
 
-set(policy_new CMP0072 CMP0076 CMP0077 CMP0079
-    CMP0116 # Ninja generators transform DEPFILEs from add_custom_command()
-    CMP0135 # Timestamps of downloaded archives are set to time of extraction
+set(policy_new
     CMP0144 # <PACKAGENAME>_ROOT (converted to upper case) can be used to search for dependencies
     CMP0156 CMP0179 #deduplicate static libraries when linker supports it
     CMP0218 # no special handling for `CMAKE_WARN_DEPRECATED` and `CMAKE_ERROR_DEPRECATED` variables
