@@ -59,11 +59,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(TrackMathCoreUnitDict
                               LINKDEF stress/TrackMathCoreLinkDef.h
                               DEPENDENCIES Core MathCore RIO GenVector Smatrix)
 
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  add_custom_command(TARGET TrackMathCoreUnitDict POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libTrackMathCoreUnitDict.dll
-                                                  ${CMAKE_CURRENT_BINARY_DIR}/libTrackMathCoreUnitDict.dll)
-endif()
+set_target_properties(TrackMathCoreUnitDict PROPERTIES
+  # The generator expression stops multi-config generators like Visual
+  # Studio from appending a per-config subdirectory:
+  RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}>
+)
 
 ROOT_ADD_GTEST(stressMathCoreUnit stress/testSMatrix.cxx stress/testGenVector.cxx
         stress/testStat.cxx stress/testSVector.cxx stress/testVector.cxx stress/testVector34.cxx

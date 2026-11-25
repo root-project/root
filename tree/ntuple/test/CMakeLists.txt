@@ -13,11 +13,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(CustomStruct
                               LINKDEF CustomStructLinkDef.h
                               DEPENDENCIES RIO ROOTVecOps)
 configure_file(CustomStruct.hxx . COPYONLY)
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  add_custom_command(TARGET CustomStruct POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libCustomStruct.dll
-                                                  ${CMAKE_CURRENT_BINARY_DIR}/libCustomStruct.dll)
-endif()
+set_target_properties(CustomStruct PROPERTIES
+  # The generator expression stops multi-config generators like Visual
+  # Studio from appending a per-config subdirectory:
+  RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}>
+)
 
 ROOT_ADD_GTEST(ntuple_attributes ntuple_attributes.cxx ntuple_test.cxx LIBRARIES ROOTNTuple xxHash::xxHash)
 ROOT_ADD_GTEST(ntuple_basics ntuple_basics.cxx LIBRARIES ROOTNTuple CustomStruct)
@@ -136,13 +136,6 @@ target_compile_options(StreamerFieldXMLDict PRIVATE $<TARGET_PROPERTY:rfield_str
 target_compile_definitions(StreamerFieldXMLDict PRIVATE $<TARGET_PROPERTY:rfield_streamer,COMPILE_DEFINITIONS>)
 target_compile_features(StreamerFieldXMLDict PRIVATE $<TARGET_PROPERTY:rfield_streamer,COMPILE_FEATURES>)
 target_include_directories(StreamerFieldXMLDict PRIVATE $<TARGET_PROPERTY:rfield_streamer,INCLUDE_DIRECTORIES>)
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  add_custom_command(TARGET rfield_streamer POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/librfield_streamer_rdict.pcm
-                             ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/librfield_streamer_rdict.pcm
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/StreamerFieldXMLDict_rdict.pcm
-                             ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/StreamerFieldXMLDict_rdict.pcm)
-endif()
 
 configure_file(SoAFieldXML.h . COPYONLY)
 configure_file(SoAFieldSelection.xml . COPYONLY)
@@ -156,13 +149,6 @@ target_compile_options(SoAFieldXMLDict PRIVATE $<TARGET_PROPERTY:ntuple_soa,COMP
 target_compile_definitions(SoAFieldXMLDict PRIVATE $<TARGET_PROPERTY:ntuple_soa,COMPILE_DEFINITIONS>)
 target_compile_features(SoAFieldXMLDict PRIVATE $<TARGET_PROPERTY:ntuple_soa,COMPILE_FEATURES>)
 target_include_directories(SoAFieldXMLDict PRIVATE $<TARGET_PROPERTY:ntuple_soa,INCLUDE_DIRECTORIES>)
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  add_custom_command(TARGET ntuple_soa POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/libntuple_soa_rdict.pcm
-                             ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libntuple_soa_rdict.pcm
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/SoAFieldXMLDict_rdict.pcm
-                             ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/SoAFieldXMLDict_rdict.pcm)
-endif()
 
 if(daos OR daos_mock)
   # Label of the DAOS pool used for testing, if not provided (may be any for libdaos_mock).

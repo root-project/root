@@ -41,14 +41,13 @@ add_executable(RootShower ${SOURCES} RootShowerDict.cxx ${RCFILE})
 target_link_libraries(RootShower ROOT::Core ROOT::Rint ROOT::Gui ROOT::RIO ROOT::Hist ROOT::Gpad
   ROOT::Graf ROOT::EG ROOT::Geom ROOT::Tree
 )
-set_target_properties(RootShower PROPERTIES ENABLE_EXPORTS 1)
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  add_custom_command(TARGET RootShower POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/RootShower.exe
-                                     ${CMAKE_CURRENT_BINARY_DIR}
-  )
-  set_target_properties(RootShower PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-endif()
+set_target_properties(RootShower PROPERTIES
+  ENABLE_EXPORTS 1
+  WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+  # The generator expression stops multi-config generators like Visual
+  # Studio from appending a per-config subdirectory:
+  RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}>
+)
 
 file(COPY anim DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 file(COPY icons DESTINATION ${CMAKE_CURRENT_BINARY_DIR})

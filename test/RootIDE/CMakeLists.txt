@@ -26,14 +26,13 @@ file(COPY ${HEADERS} DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
 
 add_executable(RIDE ${SOURCES} RIDEDict.cxx)
 target_link_libraries(RIDE ROOT::Core ROOT::Rint ROOT::Gui ROOT::Thread ROOT::RIO ROOT::Hist ROOT::Gpad)
-set_target_properties(RIDE PROPERTIES ENABLE_EXPORTS 1)
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  add_custom_command(TARGET RIDE POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/RIDE.exe
-                                     ${CMAKE_CURRENT_BINARY_DIR}
-  )
-  set_target_properties(RIDE PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
-endif()
+set_target_properties(RIDE PROPERTIES
+  ENABLE_EXPORTS 1
+  WINDOWS_EXPORT_ALL_SYMBOLS TRUE
+  # The generator expression stops multi-config generators like Visual
+  # Studio from appending a per-config subdirectory:
+  RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}>
+)
 
 install(TARGETS RIDE RUNTIME DESTINATION ${PROJECT_NAME} COMPONENT applications)
 install(FILES ${HEADERS} DESTINATION ${PROJECT_NAME} COMPONENT headers)
