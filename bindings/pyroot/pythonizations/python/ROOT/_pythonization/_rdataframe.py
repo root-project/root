@@ -285,7 +285,7 @@ def RDataFrameAsNumpy(
         raise ImportError("Failed to import numpy during call of RDataFrame.AsNumpy.")
 
     # Find all column names in the dataframe if no column are specified
-    if not columns:
+    if columns is None:
         columns = [str(c) for c in df.GetColumnNames()]
 
     # Exclude the specified columns

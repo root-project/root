@@ -234,6 +234,15 @@ class RDataFrameAsNumpy(unittest.TestCase):
         self.assertTrue(["x"] == list(npy.keys()))
         self.assertTrue(all(ref["x"] == npy["x"]))
 
+    def test_empty_columns_returns_no_columns(self):
+        """
+        An explicit empty columns iterable must select no columns; only None
+        means "all columns".
+        """
+        df = ROOT.ROOT.RDataFrame(4).Define("x", "1").Define("y", "2")
+        npy = df.AsNumpy(columns=[])
+        self.assertEqual(npy, {})
+
     def test_numpy_result_ptr(self):
         """
         Testing result pointer being attribute of returned numpy array
