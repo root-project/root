@@ -9,11 +9,26 @@ namespace TMVA {
 namespace Experimental {
 namespace SOFIE {
 
-enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog, kSin, kCos, kAbs, kSoftplus, kAtan, kFloor, kAsinh, kAcosh, kAtanh };
+enum class EBasicUnaryOperator {
+   kReciprocal,
+   kSqrt,
+   kNeg,
+   kExp,
+   kLog,
+   kSin,
+   kCos,
+   kAbs,
+   kSoftplus,
+   kAtan,
+   kFloor,
+   kAsinh,
+   kAcosh,
+   kAtanh,
+   kMish
+};
 
 template <typename T, EBasicUnaryOperator Op>
-struct UnaryOpTraits {
-};
+struct UnaryOpTraits {};
 
 template <typename T>
 struct UnaryOpTraits<T, EBasicUnaryOperator::kReciprocal> {
@@ -102,6 +117,15 @@ struct UnaryOpTraits<T, EBasicUnaryOperator::kAtanh> {
    // atanh is only defined for |X| < 1; std::atanh returns NaN/inf outside this domain
    static std::string Name() { return "Atanh"; }
    static std::string Op(const std::string &X) { return "std::atanh(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kMish> {
+   static std::string Name() { return "Mish"; }
+   static std::string Op(const std::string &X)
+   {
+      return X + " * std::tanh(((" + X + " >= 0x1.4000000000000p+4f) ? " + X + " : std::log1p(std::exp(" + X + "))))";
+   }
 };
 
 template <typename T, EBasicUnaryOperator Op>

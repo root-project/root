@@ -1864,6 +1864,28 @@ TEST(ONNX, Softplus)
       }
    }
 }
+
+TEST(ONNX, Mish)
+{
+   // Inputs spanning negative, zero, positive, threshold boundary, and overflow-prone range
+   std::vector<float> input({-5.0f, -0.2f, 0.0f, 0.1f, 1.0f, 50.0f});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<float>, "Mish", input);
+
+   ASSERT_EQ(output.size(), input.size());
+
+   for (size_t i = 0; i < output.size(); ++i) {
+      EXPECT_FALSE(std::isinf(output[i])) << "Inf at input=" << input[i];
+      EXPECT_FALSE(std::isnan(output[i])) << "NaN at input=" << input[i];
+      // For large positive x (>= 20.0), softplus(x) ≈ x and tanh(x) ≈ 1, so mish(x) ≈ x
+      if (input[i] >= 20.0f) {
+         EXPECT_NEAR(output[i], input[i], DEFAULT_TOLERANCE);
+      } else {
+         float exp_value = input[i] * std::tanh(std::log1p(std::exp(input[i])));
+         EXPECT_LE(std::abs(output[i] - exp_value), DEFAULT_TOLERANCE);
+      }
+   }
+}
 // tests of Einsum operator
 TEST(ONNX, Einsum_matmul)
 {
