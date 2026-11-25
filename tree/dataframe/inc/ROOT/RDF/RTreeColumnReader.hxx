@@ -108,9 +108,6 @@ private:
    /// The size of the collection value type.
    std::size_t fValueSize{};
 
-   /// Whether we already printed a warning about performing a copy of the TTreeReaderArray contents
-   bool fCopyWarningPrinted = false;
-
    void *GetImpl(Long64_t entry) override;
 
    void *ReadStdArray(Long64_t entry);

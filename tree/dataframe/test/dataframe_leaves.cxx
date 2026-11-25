@@ -94,11 +94,6 @@ TEST(RDFLeaves, LeafFromTClonesArray)
    ROOT::TestSupport::CheckDiagsRAII diagRAII;
    diagRAII.requiredDiag(kWarning, "TTree::Bronch",
                          "Using split mode on a class: TLorentzVector with a custom Streamer");
-#ifndef NDEBUG
-   diagRAII.requiredDiag(
-      kWarning, "RTreeColumnReader::Get",
-      "Branch ca.fE hangs from a non-split branch. A copy is being performed in order to properly read the content.");
-#endif
    constexpr static auto fName{"leaffromtclonesarray.root"};
    struct Dataset {
       Dataset()
