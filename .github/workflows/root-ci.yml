@@ -419,6 +419,12 @@ jobs:
       INSTALL_DIR: /github/home/ROOT-CI/install
       POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
       PYTHON_VENV: ${{ matrix.python_venv || '/py-venv/ROOT-CI' }}
+      SCCACHE_GHA_ENABLED: false
+      SCCACHE_BUCKET: ${{ vars.SCCACHE_BUCKET }}
+      SCCACHE_ENDPOINT: ${{ vars.SCCACHE_ENDPOINT }}
+      SCCACHE_REGION: auto
+      SCCACHE_S3_KEY_PREFIX: ${{ vars.SCCACHE_S3_KEY_PREFIX }}
+      SCCACHE_S3_USE_SSL: ${{ vars.SCCACHE_S3_USE_SSL }}
 
     steps:
       - name: Set up sccache-cache
@@ -427,7 +433,7 @@ jobs:
       - name: Set environment for sccache
         if: github.event_name == 'pull_request'
         run: |
-          echo "SCCACHE_GHA_ENABLED=true" >> $GITHUB_ENV
+          echo "SCCACHE_GHA_ENABLED=false" >> $GITHUB_ENV
           echo "CMAKE_CXX_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
           echo "CMAKE_C_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
           echo "CMAKE_CUDA_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
@@ -478,6 +484,9 @@ jobs:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+          AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
