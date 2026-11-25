@@ -23,6 +23,7 @@ class TGCocoa;
 class QuartzDrawable : public TVirtualX::XDrawable {
 friend class TGCocoa;
 protected:
+   QuartzView *GetDirectView(const char *calledFrom) const;
    NSObject<X11Drawable> *GetPixmapDrawable(const char *calledFrom) const;
 
    template<typename CharType>

@@ -309,6 +309,22 @@ NSObject<X11Drawable> *QuartzDrawable::GetPixmapDrawable(const char *calledFrom)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Return view object which can be used for direct draw xor operations
+/// Required only for support of old API, remove in ROOT7
+
+QuartzView *QuartzDrawable::GetDirectView(const char *calledFrom) const
+{
+   QuartzView *view = nullptr;
+   if (!fDrawable.fIsPixmap) {
+      view = (QuartzView *)fCocoa.fPimpl->GetWindow(fDrawable.fID).fContentView;
+      if (!view)
+         ::Warning(calledFrom, "Invalid view/window for XOR-mode");
+   }
+   return view;
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Draw box
 
 void QuartzDrawable::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, TVirtualX::EBoxMode mode)
@@ -318,15 +334,8 @@ void QuartzDrawable::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, TVirtualX::
 
    //Check some conditions first.
    if ([fDrawable isDirectDraw]) {
-      if (!fDrawable.fIsPixmap) {
-         QuartzView * const view = (QuartzView *)fCocoa.fPimpl->GetWindow(fDrawable.fID).fContentView;
-         if (!view) {
-            ::Warning("DrawBoxW", "Invalid view/window for XOR-mode");
-            return;
-         }
-
+      if (auto view = GetDirectView("DrawBox"))
          [view.fQuartzWindow addXorBox: view : x1 : y1 : x2 : y2];
-      }
       return;
    }
 
@@ -445,18 +454,9 @@ void QuartzDrawable::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    if (!fDrawable)
       return;
 
-
    if ([fDrawable isDirectDraw]) {
-      if (!fDrawable.fIsPixmap) {
-         QuartzView * const view = (QuartzView *)fCocoa.fPimpl->GetWindow(fDrawable.fID).fContentView;
-         if (!view) {
-             ::Warning("DrawLine", "Invalid view/window for XOR-mode");
-             return;
-         }
-
+      if (auto view = GetDirectView("DrawLine"))
          [view.fQuartzWindow addXorLine: view : x1 : y1 : x2 : y2];
-      }
-
       return;
    }
 
@@ -496,16 +496,8 @@ void QuartzDrawable::DrawPolyLine(Int_t n, TPoint *xy)
 
    //Some checks first.
    if ([fDrawable isDirectDraw]) {
-      if (!fDrawable.fIsPixmap) {
-         QuartzView * const view = (QuartzView *)fCocoa.fPimpl->GetWindow(fDrawable.fID).fContentView;
-         if (!view) {
-             ::Warning("DrawPolyLine", "Invalid view/window for XOR-mode");
-             return;
-         }
-
+      if (auto view = GetDirectView("DrawPolyLine"))
          [view.fQuartzWindow addXorPolyLine: view : n : xy : fAttLine ];
-      }
-
       return;
    }
 
@@ -563,18 +555,11 @@ void QuartzDrawable::DrawPolyMarker(Int_t n, TPoint *xy)
       return;
 
    if ([fDrawable isDirectDraw]) {
-      if (!fDrawable.fIsPixmap) {
-         QuartzView * const view = (QuartzView *)fCocoa.fPimpl->GetWindow(fDrawable.fID).fContentView;
-         if (!view) {
-             ::Warning("DrawPolyMarkerW", "Invalid view/window for XOR-mode");
-             return;
-         }
-
+      if (auto view = GetDirectView("DrawPolyMarker"))
          [view.fQuartzWindow addXorMarker: view : n : xy : fAttMarker ];
-      }
-
       return;
    }
+
    auto drawable = GetPixmapDrawable("DrawPolyMarker");
    if (!drawable)
       return;
