@@ -1,12 +1,17 @@
 // Author: Federico Sossai
 // Last modified: 2021/07/30
 // Description:
-//    SOFIE command line compiler.
-//    This program is automatically run when the target 'TestCustomModelsFromONNX' is built.
-//    Usage example: $./sofiec indir/mymodel.onnx outdir/myname.hxx
+//    Emits the code for all ONNX models in a directory into the current
+//    working directory, for the SofieCompileModels_ONNX test.
+//    Usage: ./emitFromONNX <models_dir>
 
 #include "TMVA/RModel.hxx"
 #include "TMVA/RModelParser_ONNX.hxx"
+
+#include <algorithm>
+#include <filesystem>
+#include <iostream>
+#include <vector>
 
 int EmitModel(std::string filename, std::string outname)
 {
@@ -51,9 +56,26 @@ int EmitModel(std::string filename, std::string outname)
    return 0;
 }
 
-int main(int /*argc*/, char * /*argv*/[])
+int main(int argc, char *argv[])
 {
-   // clang-format off
-   @EMIT_CAPTURES@;
-   // clang-format on
+   if (argc != 2) {
+      std::cerr << "Usage: " << argv[0] << " <models_dir>" << std::endl;
+      return 1;
+   }
+
+   std::vector<std::filesystem::path> files;
+   for (auto const &entry : std::filesystem::directory_iterator(argv[1])) {
+      if (entry.path().extension() == ".onnx")
+         files.push_back(entry.path());
+   }
+   if (files.empty()) {
+      std::cerr << "No .onnx files found in " << argv[1] << std::endl;
+      return 1;
+   }
+   std::sort(files.begin(), files.end());
+
+   for (auto const &file : files)
+      EmitModel(file.string(), file.stem().string());
+
+   return 0;
 }

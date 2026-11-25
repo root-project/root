@@ -26,12 +26,6 @@ if (ROOT_ONNX_FOUND AND DEFINED ROOT_ONNX_VERSION)
   endif()
 endif()
 
-# Adding a model to generate_input_models.py changes the model list below, so
-# CMake has to re-run when the script changes. Without this, an incremental
-# build keeps the stale list and the new model is silently never emitted.
-set_property(DIRECTORY APPEND PROPERTY CMAKE_CONFIGURE_DEPENDS
-             ${CMAKE_CURRENT_SOURCE_DIR}/generate_input_models.py)
-
 # The ONNX input models are not checked into the repository: they are created
 # by generate_input_models.py, which runs as the SofieGenerateModels_ONNX test
 # that the other ONNX tests depend on. Set ONNX_MODELS_DIR to use pre-existing
@@ -40,49 +34,23 @@ if (NOT ONNX_MODELS_DIR)
   if (ROOT_ONNX_FOUND AND NOT broken_onnx)
     set(ONNX_MODELS_DIR ${CMAKE_CURRENT_BINARY_DIR}/input_models)
     set(generate_onnx_models TRUE)
-    # Get the model names from the generator script (--list does not require
-    # the onnx module, only a Python interpreter).
-    execute_process(
-      COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_input_models.py --list
-      OUTPUT_VARIABLE _onnx_model_names
-      OUTPUT_STRIP_TRAILING_WHITESPACE
-      RESULT_VARIABLE _onnx_list_status)
-    if (NOT _onnx_list_status EQUAL 0)
-      message(FATAL_ERROR "Failed to list the SOFIE ONNX test models with generate_input_models.py")
-    endif()
-    string(REPLACE "\n" ";" ONNX_MODEL_NAMES "${_onnx_model_names}")
   else()
     message(WARNING "The onnx Python module is not usable: the ONNX input models for the TMVA SOFIE tests cannot be generated and the corresponding tests are disabled.")
   endif()
 else()
   get_filename_component(ONNX_MODELS_DIR ${ONNX_MODELS_DIR} ABSOLUTE)
-  file(GLOB ONNX_FILES "${ONNX_MODELS_DIR}/*.onnx")
-  set(ONNX_MODEL_NAMES "")
-  foreach(onnx_file ${ONNX_FILES})
-    get_filename_component(fname ${onnx_file} NAME_WE)
-    list(APPEND ONNX_MODEL_NAMES ${fname})
-  endforeach()
 endif()
 
 if (ONNX_MODELS_DIR)
-  # Creating the appropriate code to parse all ONNX model files. It is much
-  # faster to combine all parsing in a single executable which will avoid
-  # initialization time (especially when using ROOT)
-  set(CAPTURE_STR "EmitModel( \"@1\", \"@2\");")
-  set(ALL_CAPTURES "")
-  foreach(fname ${ONNX_MODEL_NAMES})
-    string(REPLACE "@1" ${ONNX_MODELS_DIR}/${fname}.onnx cap ${CAPTURE_STR})
-    string(REPLACE "@2" ${fname} cap ${cap})
-    list(APPEND ALL_CAPTURES ${cap})
-  endforeach()
-  string(REPLACE ";" ";\n" EMIT_CAPTURES "${ALL_CAPTURES}")
-  configure_file(EmitFromONNX.cxx.in EmitFromONNX_all.cxx @ONLY)
+  # Emits the code for all models in ONNX_MODELS_DIR, which it lists at runtime.
+  # One executable for all models avoids paying the initialization time per model.
+  ROOT_EXECUTABLE(emitFromONNX EmitFromONNX.cxx
+                  LIBRARIES ROOTTMVASofie ROOTTMVASofieParser)
+  if(ROOT_NEED_STDCXXFS)
+    target_link_libraries(emitFromONNX PRIVATE stdc++fs)
+  endif()
 
-  ROOTTEST_GENERATE_EXECUTABLE(emitFromONNX EmitFromONNX_all.cxx
-                               LIBRARIES ROOTTMVASofie ROOTTMVASofieParser
-                               FIXTURES_SETUP sofie-compile-models-onnx-build)
-
-  set(compile_models_fixtures sofie-compile-models-onnx-build)
+  set(compile_models_fixtures "")
   if (generate_onnx_models)
     ROOTTEST_ADD_TEST(SofieGenerateModels_ONNX
       COMMAND ${Python3_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/generate_input_models.py --outdir ${ONNX_MODELS_DIR}
@@ -92,7 +60,7 @@ if (ONNX_MODELS_DIR)
   endif()
 
   ROOTTEST_ADD_TEST(SofieCompileModels_ONNX
-    COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX
+    COMMAND ${CMAKE_COMMAND} -E env ROOTIGNOREPREFIX=1 ./emitFromONNX ${ONNX_MODELS_DIR}
     FIXTURES_REQUIRED ${compile_models_fixtures}
     FIXTURES_SETUP sofie-compile-models-onnx
   )
