@@ -83,10 +83,14 @@ add_library(SOFIE SHARED
   src/ParseWhere.cxx
   src/RModel.cxx
   src/RModelParser_ONNX.cxx
+  src/SOFIE.cxx
   src/common.cxx
   src/common_helpers.cxx
 )
 add_library(SOFIE::SOFIE ALIAS SOFIE)
+
+# Export the functions of the C interface (see SOFIE/SOFIE.h)
+target_compile_definitions(SOFIE PRIVATE SOFIE_BUILDING_LIBRARY)
 
 target_include_directories(SOFIE
   PUBLIC
