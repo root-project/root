@@ -19,6 +19,17 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
+// VecGeom provides Version.h since 1.2.4
+#if __has_include(<VecGeom/base/Version.h>)
+#include <VecGeom/base/Version.h>
+#endif
+#if defined(VECGEOM_VERSION) && VECGEOM_VERSION >= 0x020300
+// Since VecGeom 2.3 the volume classes are memory-space templates: use its forward declarations
+#include <VecGeom/volumes/VolumesFwd.h>
+namespace vecgeom {
+class Transformation3D;
+} // namespace vecgeom
+#else
 namespace vecgeom {
 inline namespace cxx {
 class Transformation3D;
@@ -26,6 +37,7 @@ class VPlacedVolume;
 class VUnplacedVolume;
 } // namespace cxx
 } // namespace vecgeom
+#endif
 
 class TGeoVGShape : public TGeoBBox {
 private:
