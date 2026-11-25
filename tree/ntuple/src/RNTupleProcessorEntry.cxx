@@ -131,3 +131,9 @@ ROOT::Internal::RNTupleProcessorEntry::GetFieldIndices() const
                    [i = 0]() mutable { return i++; });
    return fieldIdxs;
 }
+
+ROOT::RFieldBase::RValue ROOT::Internal::RNTupleProcessorEntry::CreateValue(FieldIndex_t fieldIdx)
+{
+   assert(fieldIdx < fProcessorValues.size());
+   return fProcessorValues[fieldIdx].fField->CreateValue();
+}

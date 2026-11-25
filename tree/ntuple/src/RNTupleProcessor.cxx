@@ -843,3 +843,8 @@ void ROOT::Experimental::RNTupleJoinProcessor::PrintStructureImpl(std::ostream &
       output << "\n";
    }
 }
+
+ROOT::RFieldBase::RValue ROOT::Internal::CreateRValueFromValuePtr(ROOT::RNTupleProcessorValuePtr<void> &valuePtr)
+{
+   return valuePtr.CreateValue();
+}
