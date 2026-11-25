@@ -2,23 +2,23 @@
 // The model files are hand-written protobuf wire format, so the tests need
 // neither the onnx Python package nor a protobuf dependency.
 
-#include <TMVA/RModel.hxx>
-#include <TMVA/RModelParser_ONNX.hxx>
+#include <SOFIE/RModel.hxx>
+#include <SOFIE/RModelParser_ONNX.hxx>
 
-#include <TSystem.h>
 
 #include <gtest/gtest.h>
 
 #include <cstdint>
 #include <cctype>
 #include <cstring>
+#include <filesystem>
 #include <fstream>
 #include <sstream>
 #include <stdexcept>
 #include <string>
 #include <vector>
 
-using namespace TMVA::Experimental::SOFIE;
+using namespace SOFIE;
 
 namespace {
 
@@ -229,7 +229,7 @@ std::string GeneratePReluCode(const std::string &fileName, const TestTensor &x, 
 // to the model directory; different tensors can point to different files.
 TEST(SOFIEParser, ExternalDataLocationRelativeToModelDirectory)
 {
-   gSystem->mkdir("extdata_models");
+   std::filesystem::create_directories("extdata_models");
    const std::vector<float> values1{1.f, 2.f, 3.f, 4.f};
    const std::vector<float> values2{-5.f, 6.5f};
    WriteDataFile("extdata_models/weights1.bin", values1, /*padding=*/8);

@@ -1,0 +1,9 @@
+// Configuration of the tests, filled in by CMake.
+#pragma once
+
+/// The compiler used to build the tests. It also compiles the drivers, the small
+/// programs that run the generated models.
+#define SOFIE_TEST_CXX "@CMAKE_CXX_COMPILER@"
+#define SOFIE_TEST_CXX_FLAGS "@SOFIE_TEST_CXX_FLAGS@"
+#define SOFIE_TEST_SOURCE_DIR "@CMAKE_CURRENT_SOURCE_DIR@"
+#define SOFIE_TEST_PYTHON "@Python3_EXECUTABLE@"

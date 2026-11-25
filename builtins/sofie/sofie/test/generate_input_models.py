@@ -6725,8 +6725,8 @@ MODELS = {
 # Reference data for the value-based unit tests
 # ===========================================================================
 #
-# TEST_INPUTS defines the inputs that TestCustomModelsFromONNX.cxx (and
-# TestCladAutodiff.cxx) feed to each model, one numpy array per graph input.
+# TEST_INPUTS defines the inputs that TestCustomModelsFromONNX.cxx feeds
+# to each model, one numpy array per graph input.
 # The expected outputs are computed here with onnx's ReferenceEvaluator (or
 # with the numpy fallbacks in EXPECTED_OVERRIDES below) and written next to
 # the generated models as references/<Name>.ref, from where the tests read

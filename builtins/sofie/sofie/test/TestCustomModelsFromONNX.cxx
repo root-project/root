@@ -1614,9 +1614,12 @@ TEST(ONNX, RuntimeSizeBeyondSessionThrows)
 
    // Returns 100 if the call threw, 0 if the snippet did not compile, 1 if it did not throw.
    auto thrown = [](std::string const &model, const char *sessionArgs, const char *call) {
-      std::string code = "[]() { try { TMVA_SOFIE_" + model + "::Session s(" + sessionArgs + "); " + call +
-                         " return 1; } catch (std::runtime_error const &) { return 100; } }()";
-      return gInterpreter->ProcessLine(code.c_str());
+      const std::string code = "#include \"" + model + modelHeaderSuffix +
+                               "\"\n#include <cstdint>\n#include <stdexcept>\nint main() { try { SOFIE_" + model +
+                               "::Session s(" + sessionArgs + "); " + call +
+                               " return 1; } catch (std::runtime_error const &) { return 100; } }\n";
+      const DriverResult result = compileAndRunDriver(code);
+      return result.compiled ? result.exitCode : 0;
    };
    const char *range = "float a = 1, b = 10, c = 2; s.infer(&a, &b, &c);"; // 5 elements
    const char *reshape = "float x[6] = {}; int64_t shape[2] = {3, 2}; s.infer(x, shape);"; // 3 x 2
@@ -1913,7 +1916,8 @@ TEST(ONNX, Einsum_4)
 }
 TEST(ONNX, RandomUniform)
 {
-   // output of gRandom->Uniform(10,20) with seed 111 - > shape(2,3)
+   // output of std::uniform_real_distribution(10,20) with seed 111 -> shape(2,3), with the
+   // std::mt19937 engine seeded as TRandom3 (which gives the same values as gRandom->Uniform(10,20))
    std::vector<float> correct_output = {16.1217, 11.2076, 11.6907, 13.0179, 14.3606, 18.5391};
 
    ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "RandomUniform");
@@ -1923,12 +1927,19 @@ TEST(ONNX, RandomUniform)
 
 TEST(ONNX, RandomNormal)
 {
-    // output of gRandom->Gaus(1,3) with seed 111 - > shape(2,3)
-   std::vector<float> correct_output = {-0.808389, -0.985581, 0.616354, 2.1887, 1.13927, -0.228048};
+   // The generated code samples std::normal_distribution(1,3) with seed 111 -> shape(2,3).
+   // The exact values depend on the implementation of the standard library, so
+   // only check the shape and that the values are compatible with the distribution.
+   const float mean = 1.f;
+   const float scale = 3.f;
 
    ASSERT_INCLUDE_AND_RUN_0(std::vector<float>, "RandomNormal");
 
-   expectNear(output, correct_output, DEFAULT_TOLERANCE);
+   ASSERT_EQ(output.size(), 6u);
+   for (float x : output) {
+      EXPECT_TRUE(std::isfinite(x));
+      EXPECT_NEAR(x, mean, 5.f * scale);
+   }
 }
 
 TEST(ONNX, Split_0)

@@ -6,8 +6,8 @@
 // checks that the operator acted on that answer, matching with a regex that
 // ignores the spacing.
 
-#include <TMVA/RModel.hxx>
-#include <TMVA/RModelParser_ONNX.hxx>
+#include <SOFIE/RModel.hxx>
+#include <SOFIE/RModelParser_ONNX.hxx>
 
 #include <gtest/gtest.h>
 
@@ -19,7 +19,7 @@
 #define SOFIE_ONNX_MODELS_DIR "."
 #endif
 
-using namespace TMVA::Experimental::SOFIE;
+using namespace SOFIE;
 
 namespace {
 

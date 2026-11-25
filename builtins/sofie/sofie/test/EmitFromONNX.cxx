@@ -5,8 +5,8 @@
 //    working directory, for the SofieCompileModels_ONNX test.
 //    Usage: ./emitFromONNX <models_dir>
 
-#include "TMVA/RModel.hxx"
-#include "TMVA/RModelParser_ONNX.hxx"
+#include "SOFIE/RModel.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
 
 #include <algorithm>
 #include <filesystem>
@@ -15,7 +15,7 @@
 
 int EmitModel(std::string filename, std::string outname)
 {
-   using namespace TMVA::Experimental::SOFIE;
+   using namespace SOFIE;
 
    std::cout << "parsing file ..." << filename << std::endl;
    {
