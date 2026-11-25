@@ -64,7 +64,7 @@ def distribute_headers(headers_to_include: Iterable[str]) -> None:
             ROOT.gInterpreter.Declare(include_code)
         except Exception as e:
             msg = "There was an error in including \"{}\" !".format(header)
-            raise e(msg)
+            raise type(e)(msg) from e
 
 
 def distribute_shared_libraries(libraries_to_include: Iterable[str]) -> None:

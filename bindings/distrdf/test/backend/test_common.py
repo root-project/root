@@ -1,4 +1,5 @@
 import unittest
+from unittest.mock import patch
 
 import ROOT
 import ROOT._distrdf
@@ -56,6 +57,14 @@ class DeclareHeadersTest(unittest.TestCase):
             self.assertRaises(ROOT.b(1))
         Utils.distribute_headers(["test_headers/header4.hxx"])
         self.assertEqual(ROOT.b(1), True)
+
+    def test_declaration_error_keeps_exception_type(self):
+        """A failed declaration raises the original exception type, not TypeError."""
+        with patch.object(ROOT.gInterpreter, "Declare", side_effect=RuntimeError("boom")):
+            with self.assertRaises(RuntimeError) as ctx:
+                Utils.distribute_headers(["missing_header.hxx"])
+
+        self.assertIn("missing_header.hxx", str(ctx.exception))
 
 
 class InitializationTest(unittest.TestCase):
