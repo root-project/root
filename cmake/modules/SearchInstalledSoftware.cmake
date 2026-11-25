@@ -937,6 +937,23 @@ if(experimental_adaptivecpp)
   endif()
 endif()
 
+#---Look for SOFIE, which is only loaded at runtime, or build it--------------------------
+# RooONNXFunc and the SOFIE tutorials with RDataFrame load the SOFIE library at
+# runtime, to generate the code to evaluate ONNX models. No ROOT target links
+# against it or includes its headers.
+#
+# There is no FindSOFIE.cmake module and SOFIE doesn't install a
+# SOFIEConfig.cmake package file yet, so find_package(SOFIE) never finds it, and
+# the SOFIE bundled in builtins/sofie is always built. If an external SOFIE is
+# found in the future, its library has to be in the library path at runtime
+# (e.g. in LD_LIBRARY_PATH), so that ROOT can load it.
+if(roofit OR dataframe)
+  find_package(SOFIE QUIET)
+  if(NOT SOFIE_FOUND)
+    add_subdirectory(builtins/sofie)
+  endif()
+endif()
+
 #---Check for optional TMVA-SOFIE testing dependency (BLAS)-------------------------------
 # SOFIE itself has no external dependencies: ONNX models are read with a small
 # self-contained protobuf wire-format decoder (tmva/sofie_parsers/src/onnx.hxx).
