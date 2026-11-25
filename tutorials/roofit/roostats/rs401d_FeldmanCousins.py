@@ -206,7 +206,7 @@ def rs401d_FeldmanCousins(doFeldmanCousins=False, doMCMC=True):
 
         axisList = ROOT.RooArgList(deltaMSq, sinSq2theta)
         mc = ROOT.RooStats.MCMCCalculator(data, modelConfig)
-        mc.SetNumIters(5000)
+        mc.SetNumIters(1000)
         mc.SetNumBurnInSteps(100)
         mc.SetUseKeys(True)
         mc.SetTestSize(0.1)
