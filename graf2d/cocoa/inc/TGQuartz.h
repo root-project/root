@@ -86,16 +86,6 @@ public:
 
 private:
 
-   //Lines with AA can be quite different
-   //from what we always had with X11.
-   //Now this is a switch in our configuration file (system.rootrc),
-   //so it can be disabled. This flag affects _only_ pad's graphics,
-   //GUI graphics is special and different. AA for fill area has a special
-   // switch because it is better to have it off by default.
-   bool fUseAA;
-   bool fUseFAAA;
-
-   void SetAA();
    TAttFill &GetAttFill(WinContext_t wctxt);
    TAttLine &GetAttLine(WinContext_t wctxt);
    TAttMarker &GetAttMarker(WinContext_t wctxt);
@@ -104,6 +94,8 @@ private:
 
    TGQuartz(const TGQuartz &rhs);
    TGQuartz &operator = (const TGQuartz &rhs);
+
+   void SetAA();
 
    ClassDefOverride(TGQuartz, 0);//2D non-GUI graphics for Mac OSX.
 };

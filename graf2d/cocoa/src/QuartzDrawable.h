@@ -21,6 +21,15 @@ class TGCocoa;
 /// Description of a Quratz window or pixmap.
 
 class QuartzDrawable : public TVirtualX::XDrawable {
+friend class TGCocoa;
+protected:
+   NSObject<X11Drawable> *GetPixmapDrawable(const char *calledFrom) const;
+
+   template<typename CharType>
+   void DrawTextHelper(Int_t x, Int_t y, Float_t angle, Float_t mgn, const CharType *text, TVirtualX::ETextMode mode);
+
+   void ClearDrawable();
+
 public:
    TGCocoa  &fCocoa;                  ///< reference to TGCocoa instance
    NSObject<X11Drawable> *fDrawable = nullptr; ///< pointer on existing drawable class
@@ -40,7 +49,7 @@ public:
    void      SetAttMarker(const TAttMarker &) override;
    void      SetAttText(const TAttText &) override;
    void      SetDrawMode(TVirtualX::EDrawMode) override;
-   TVirtualX::EDrawMode GetDrawMode() override { return fDrawMode; }
+   TVirtualX::EDrawMode GetDrawMode() override;
    void      ClearWindow() override;
    void      CloseWindow() override;
    void      UpdateWindow(Int_t) override;
