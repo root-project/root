@@ -1,9 +1,9 @@
 #include "Byteswap.h"
-#include "TMVA/RModelParser_ONNX.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
 // The operator base class is a private header: RModelParser_ONNX.hxx only
 // forward-declares it, but this translation unit manages ROperator instances
 // through std::unique_ptr and needs the complete type.
-#include "TMVA/ROperator.hxx"
+#include "SOFIE/ROperator.hxx"
 #include "onnx.hxx"
 
 #include <algorithm>
@@ -15,10 +15,8 @@
 #include <iostream>
 #include <unordered_map>
 #include <functional>
-#include "TMVA/SOFIE_common.hxx"
+#include "SOFIE/common.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 // Declaration of operators
@@ -109,7 +107,7 @@ template<>
 struct ExtractDataFromTP<float> {
    static void Copy(onnx::TensorProto * tensor, void * data, int length) {
       if (tensor->float_data_size() != length)
-         throw std::runtime_error("TMVA::SOFIE - Failed to read float initialized tensor - actual size is " + std::to_string(tensor->float_data_size()));
+         throw std::runtime_error("SOFIE - Failed to read float initialized tensor - actual size is " + std::to_string(tensor->float_data_size()));
       const auto &src = tensor->float_data();
       std::copy(src.begin(), src.end(), static_cast<float *>(data));
    }
@@ -118,7 +116,7 @@ template<>
 struct ExtractDataFromTP<double> {
    static void Copy(onnx::TensorProto * tensor, void * data, int length) {
       if (tensor->double_data_size() != length)
-         throw std::runtime_error("TMVA::SOFIE - Failed to read double initialized tensor - actual size is " + std::to_string(tensor->double_data_size()));
+         throw std::runtime_error("SOFIE - Failed to read double initialized tensor - actual size is " + std::to_string(tensor->double_data_size()));
       const auto &src = tensor->double_data();
       std::copy(src.begin(), src.end(), static_cast<double *>(data));
    }
@@ -127,7 +125,7 @@ template<>
 struct ExtractDataFromTP<int32_t> {
    static void Copy(onnx::TensorProto * tensor, void * data, int length) {
       if (tensor->int32_data_size() != length)
-         throw std::runtime_error("TMVA::SOFIE - Failed to read int32 initialized tensor - actual size is " + std::to_string(tensor->int32_data_size()));
+         throw std::runtime_error("SOFIE - Failed to read int32 initialized tensor - actual size is " + std::to_string(tensor->int32_data_size()));
       const auto &src = tensor->int32_data();
       std::copy(src.begin(), src.end(), static_cast<int32_t *>(data));
    }
@@ -136,7 +134,7 @@ template<>
 struct ExtractDataFromTP<int64_t> {
    static void Copy(onnx::TensorProto * tensor, void * data, int length) {
       if (tensor->int64_data_size() != length)
-         throw std::runtime_error("TMVA::SOFIE - Failed to read int64 initialized tensor - actual size is " + std::to_string(tensor->int64_data_size()));
+         throw std::runtime_error("SOFIE - Failed to read int64 initialized tensor - actual size is " + std::to_string(tensor->int64_data_size()));
       const auto &src = tensor->int64_data();
       std::copy(src.begin(), src.end(), static_cast<int64_t *>(data));
    }
@@ -190,7 +188,7 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
    if (tensorproto->data_location() != onnx::TensorProto::EXTERNAL) {
       if (tensorproto->raw_data().size() > 0) {
          if (tensorproto->raw_data().size() != tensor_size)
-            throw std::runtime_error("TMVA::SOFIE - Failed to read raw data of initialized tensor - actual raw size is " +
+            throw std::runtime_error("SOFIE - Failed to read raw data of initialized tensor - actual raw size is " +
                                  std::to_string(tensorproto->raw_data().size()));
 
 #ifdef R__BYTESWAP
@@ -220,11 +218,11 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
                break;
             }
             case ETensorType::BOOL: {
-               throw std::runtime_error("TMVA::SOFIE - ExtractData from TP in BOOL not supported");
+               throw std::runtime_error("SOFIE - ExtractData from TP in BOOL not supported");
                break;
             }
             case ETensorType::UINT8: {
-               throw std::runtime_error("TMVA::SOFIE - ExtractData from TP in UINT8 not supported");
+               throw std::runtime_error("SOFIE - ExtractData from TP in UINT8 not supported");
                break;
             }
             default:
@@ -253,7 +251,7 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
       if (dataFileName.empty())
          dataFileName = location.empty() ? fDefaultDataFileName : fModelDirectory + location;
       if (dataFileName.empty())
-         throw std::runtime_error("TMVA::SOFIE ONNX : tensor " + tensorproto->name() +
+         throw std::runtime_error("SOFIE ONNX : tensor " + tensorproto->name() +
                                   " has external data but no data file location is available");
 
       if (fVerbose)
@@ -261,7 +259,7 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
                    << " at location " << location << " offset " << offset << " and with length " << buffer_size << std::endl;
 
       if (buffer_size != tensor_size)
-         throw std::runtime_error("TMVA::SOFIE ONNX : invalid stored data size vs tensor size");
+         throw std::runtime_error("SOFIE ONNX : invalid stored data size vs tensor size");
 
       // open the data file if needed (a previous tensor may have opened a different one)
       if (fDataFile.is_open() && fOpenedDataFileName != dataFileName)
@@ -269,7 +267,7 @@ std::shared_ptr<void> RModelParser_ONNX::GetInitializedTensorData(onnx::TensorPr
       if (!fDataFile.is_open()) {
          fDataFile.open(dataFileName, std::ios::binary);
          if (!fDataFile.is_open())
-            throw std::runtime_error("TMVA::SOFIE ONNX:  error reading external weight ONNX data file " + dataFileName);
+            throw std::runtime_error("SOFIE ONNX:  error reading external weight ONNX data file " + dataFileName);
          fOpenedDataFileName = dataFileName;
       }
 
@@ -431,7 +429,7 @@ std::unique_ptr<ROperator>
 RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphproto, const std::vector<size_t> &nodes, const std::vector<int> & children)
 {
    if (i >= nodes.size())
-      throw std::runtime_error("TMVA::SOFIE - Error in parsing ordered operators " + std::to_string(i) + " is >=  " + std::to_string(nodes.size()));
+      throw std::runtime_error("SOFIE - Error in parsing ordered operators " + std::to_string(i) + " is >=  " + std::to_string(nodes.size()));
    int idx = nodes[i];
    const auto &nodeproto = graphproto.node(idx);
    const std::string op_type = nodeproto.op_type();
@@ -496,7 +494,7 @@ RModelParser_ONNX::ParseOperator(const size_t i, const onnx::GraphProto &graphpr
    auto it = fOperatorsMapImpl->fOperatorsMap.find(op_type);
    if (it == fOperatorsMapImpl->fOperatorsMap.end()) {
       std::cout << "operator " << op_type << " is not supported" << std::endl;
-      throw std::runtime_error("TMVA::SOFIE Operator type " + op_type + " is not yet supported");
+      throw std::runtime_error("SOFIE Operator type " + op_type + " is not yet supported");
    }
    if (fVerbose) {
       std::cout << "\tCreating operator " << op_type << std::endl;
@@ -513,7 +511,7 @@ RModel RModelParser_ONNX::Parse(std::string const &filename, bool verbose)
 
    auto model = LoadModel(filename);
    if (!model)
-      throw std::runtime_error("TMVA::SOFIE - Failed to load onnx file " + filename);
+      throw std::runtime_error("SOFIE - Failed to load onnx file " + filename);
 
    const onnx::GraphProto &graph = model->graph(); // not a memory leak. model freed automatically at the end.
 
@@ -550,7 +548,7 @@ RModel RModelParser_ONNX::Parse(std::istream &input, std::string const &name, bo
 
    auto model = LoadModel(input);
    if (!model)
-      throw std::runtime_error("TMVA::SOFIE - Failed to parse ONNX model from input stream");
+      throw std::runtime_error("SOFIE - Failed to parse ONNX model from input stream");
 
    const onnx::GraphProto &graph = model->graph(); // not a memory leak. model freed automatically at the end.
 
@@ -580,7 +578,7 @@ void RModelParser_ONNX::ResetExternalDataState()
 std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(const std::string &filename) {
    std::fstream input(filename, std::ios::in | std::ios::binary);
    if (!input) {
-      std::cerr << "TMVA::SOFIE - Failed to open onnx file " << filename << std::endl;
+      std::cerr << "SOFIE - Failed to open onnx file " << filename << std::endl;
       return {};
    }
 
@@ -592,7 +590,7 @@ std::unique_ptr<onnx::ModelProto> RModelParser_ONNX::LoadModel(std::istream &inp
    auto model = std::make_unique<onnx::ModelProto>();
 
    if (!model->ParseFromIstream(&input)) {
-      std::cerr << "TMVA::SOFIE - Failed to parse ONNX model from input stream" << std::endl;
+      std::cerr << "SOFIE - Failed to parse ONNX model from input stream" << std::endl;
       return {};
    }
 
@@ -708,7 +706,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
       std::vector<Dim> fShape;
       bool existParam = false;
       if (!valueinfoproto.type().tensor_type().has_shape())
-         throw std::runtime_error("TMVA::SOFIE data node with no shape restrictions is not supported yet");
+         throw std::runtime_error("SOFIE data node with no shape restrictions is not supported yet");
       for (int j = 0; j < valueinfoproto.type().tensor_type().shape().dim_size(); j++) {
          Dim dim;
          if (valueinfoproto.type().tensor_type().shape().dim(j).value_case() ==
@@ -727,7 +725,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
             existParam = true;
             dim.param = valueinfoproto.type().tensor_type().shape().dim(j).dim_param();
          } else {
-            throw std::runtime_error("TMVA::SOFIE ONNX file error: Valueinfoproto " + input_name +
+            throw std::runtime_error("SOFIE ONNX file error: Valueinfoproto " + input_name +
                                      " has neither dim_value nor dim_param! \n");
          }
          fShape.push_back(dim);
@@ -884,7 +882,7 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
             int ilast = nodesOrder.back();
             std::cout << "cannot find a new node after " << graph.node(ilast).op_type() << " " << graph.node(ilast).name() << std::endl;
          }
-         throw std::runtime_error("TMVA::SOFIE - cannot find a new node ");
+         throw std::runtime_error("SOFIE - cannot find a new node ");
       }
    } while ((int)nodesOrder.size() < graph.node_size());
 
@@ -968,5 +966,3 @@ void RModelParser_ONNX::ParseONNXGraph(RModel & rmodel, const onnx::GraphProto &
 }
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

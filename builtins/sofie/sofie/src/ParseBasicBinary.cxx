@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_BasicBinary.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_BasicBinary.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 template <EBasicBinaryOperator Op>
@@ -21,13 +19,13 @@ std::unique_ptr<ROperator> ParseBasicBinary(RModelParser_ONNX &parser, const onn
             ETensorType input_type2 = parser.GetTensorType(input_name);
             if (input_type2 != input_type) {
                throw
-                  std::runtime_error("TMVA::SOFIE ONNX parser Binary op has input tensors of different types: " +
+                  std::runtime_error("SOFIE ONNX parser Binary op has input tensors of different types: " +
                      input_name + " : " + ConvertTypeToString(input_type2) +
                      " and " +  nodeproto.input(0) + " : " + ConvertTypeToString(input_type));
             }
          }
       } else {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser Binary op has input tensor " + input_name +
+         throw std::runtime_error("SOFIE ONNX Parser Binary op has input tensor " + input_name +
                                   " but its type is not yet registered");
       }
    }
@@ -49,7 +47,7 @@ std::unique_ptr<ROperator> ParseBasicBinary(RModelParser_ONNX &parser, const onn
       op.reset(new ROperator_BasicBinary<int64_t, Op>(nodeproto.input(0), nodeproto.input(1), output_name));
       break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Binary Operator does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Binary Operator does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -77,13 +75,13 @@ ParserFuncSignature ParseMod = [] (RModelParser_ONNX &parser, const onnx::NodePr
             ETensorType input_type2 = parser.GetTensorType(input_name);
             if (input_type2 != input_type) {
                throw
-                  std::runtime_error("TMVA::SOFIE ONNX parser Binary op has input tensors of different types: " +
+                  std::runtime_error("SOFIE ONNX parser Binary op has input tensors of different types: " +
                      input_name + " : " + ConvertTypeToString(input_type2) +
                      " and " +  nodeproto.input(0) + " : " + ConvertTypeToString(input_type));
             }
          }
       } else {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser Binary op has input tensor " + input_name +
+         throw std::runtime_error("SOFIE ONNX Parser Binary op has input tensor " + input_name +
                                   " but its type is not yet registered");
       }
    }
@@ -115,7 +113,7 @@ ParserFuncSignature ParseMod = [] (RModelParser_ONNX &parser, const onnx::NodePr
          op.reset(new ROperator_BasicBinary<int64_t, EBasicBinaryOperator::Mod>(nodeproto.input(0), nodeproto.input(1), output_name));
       break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Binary Operator does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Binary Operator does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -138,5 +136,3 @@ void RegisterBasicBinaryParsers(RModelParser_ONNX &parser)
 }
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

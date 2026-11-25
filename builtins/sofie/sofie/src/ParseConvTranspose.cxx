@@ -1,16 +1,14 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_ConvTranspose.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_ConvTranspose.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseConvTranspose = [](RModelParser_ONNX &model,
                                             const onnx::NodeProto &nodeproto) -> std::unique_ptr<ROperator> {
    auto inputName = nodeproto.input(0);
    if (!model.IsRegisteredTensorType(inputName)) {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser ConvTranspose op has input tensor " + inputName +
+      throw std::runtime_error("SOFIE ONNX Parser ConvTranspose op has input tensor " + inputName +
                                " but its type is not yet registered");
    }
    ETensorType inputType = model.GetTensorType(inputName);
@@ -46,7 +44,7 @@ ParserFuncSignature ParseConvTranspose = [](RModelParser_ONNX &model,
       } else if (attributeName == "strides") {
          strides = std::vector<size_t>({nodeproto.attribute(i).ints().begin(), nodeproto.attribute(i).ints().end()});
       } else {
-         std::cout << "TMVA::SOFIE Warning - Model Loading - Attribute " << attributeName << " in OperatorNode "
+         std::cout << "SOFIE Warning - Model Loading - Attribute " << attributeName << " in OperatorNode "
                    << nodeproto.name() << " is not defined in ONNX IR and not applied!\n";
       }
    }
@@ -65,7 +63,7 @@ ParserFuncSignature ParseConvTranspose = [](RModelParser_ONNX &model,
                                                   pads, strides, inputName, nameW, nameBias, outputName));
       break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator ConvTranspose does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Operator ConvTranspose does not yet support input type " +
                                std::to_string(static_cast<int>(inputType)));
    }
 
@@ -77,5 +75,3 @@ ParserFuncSignature ParseConvTranspose = [](RModelParser_ONNX &model,
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

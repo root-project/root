@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Constant.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Constant.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 // same function used to parse Constant and ConstantOfShape
@@ -17,7 +15,7 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
       input_name = nodeproto.input(0);
       isConstantOfShape = true;
       if (!parser.IsRegisteredTensorType(input_name)) {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser ConstantOfShape op has input tensor" + input_name +
+         throw std::runtime_error("SOFIE ONNX Parser ConstantOfShape op has input tensor" + input_name +
                                   "  but its type is not yet registered");
       }
    }
@@ -39,7 +37,7 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
    std::vector<std::size_t> shape;   // output shape (use in case of constant operator)
    // it should be only one attribute (Constant or 1 or 0 Constant of Shape)
    if (nodeproto.attribute_size() > 1)
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser Constant or ConstantOfShape and attribute size is larger than 1");
+      throw std::runtime_error("SOFIE ONNX Parser Constant or ConstantOfShape and attribute size is larger than 1");
    if (nodeproto.attribute_size() > 0) {
       std::string attribute_name = nodeproto.attribute(0).name();
       // tensor input
@@ -55,7 +53,7 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
          if (isConstantOfShape) {
             // value tensor should be one-element tensor
             if (length != 1)
-               throw std::runtime_error("TMVA::SOFIE ONNX Parser ConstantOfShape has invalid tensor size " + std::to_string(length));
+               throw std::runtime_error("SOFIE ONNX Parser ConstantOfShape has invalid tensor size " + std::to_string(length));
          }
          switch(output_type) {
          // to get the tensor values one needs to use the given data types or the raw_data.
@@ -115,11 +113,11 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
                for (size_t i = 0; i < length; i++) {
                   auto val = t.int32_data(i);
                   if (val < 0 || val > 1)
-                     throw std::runtime_error("TMVA::SOFIE ONNX Parser Constant has invalid boolean value " + std::to_string(val));
+                     throw std::runtime_error("SOFIE ONNX Parser Constant has invalid boolean value " + std::to_string(val));
                   values[i] = static_cast<int8_t>(val);
                }
             } else
-               throw std::runtime_error("TMVA::SOFIE ONNX Parser COnstant : invalid tensor data values");
+               throw std::runtime_error("SOFIE ONNX Parser COnstant : invalid tensor data values");
 
             op.reset(new ROperator_Constant<int8_t>("bool",values, shape, input_name, output_name));
             break;
@@ -155,10 +153,10 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
                shape.push_back(values.size());
                op.reset(new ROperator_Constant<int64_t>("int64_t",values, shape, input_name, output_name));
             } else {
-               throw std::runtime_error("TMVA::SOFIE ONNX Parser Constant op: not yet supporting attribute " + attribute_name);
+               throw std::runtime_error("SOFIE ONNX Parser Constant op: not yet supporting attribute " + attribute_name);
             }
          } else {
-            throw std::runtime_error("TMVA::SOFIE ONNX Parser ConstantOfShape op: parsed invalid attribute " + attribute_name);
+            throw std::runtime_error("SOFIE ONNX Parser ConstantOfShape op: parsed invalid attribute " + attribute_name);
          }
       }
 
@@ -170,7 +168,7 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
          std::vector<size_t> constantShape(1,1);
          op.reset(new ROperator_Constant<float>("float",values,constantShape, input_name, output_name));
       } else {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser Constant has no attribute");
+         throw std::runtime_error("SOFIE ONNX Parser Constant has no attribute");
       }
    }
 
@@ -185,5 +183,3 @@ ParserFuncSignature ParseConstant = [](RModelParser_ONNX &parser, const onnx::No
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

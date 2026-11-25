@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Einsum.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Einsum.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseEinsum = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -13,13 +11,13 @@ ParserFuncSignature ParseEinsum = [](RModelParser_ONNX &parser, const onnx::Node
    std::vector<std::string> input_names(input_size);
    for (int i = 0; i < input_size; i++) {
       if (!parser.IsRegisteredTensorType(nodeproto.input(i))){
-        throw std::runtime_error("TMVA::SOFIE ONNX Parser Einsum op has input tensor " +  nodeproto.input(i)
+        throw std::runtime_error("SOFIE ONNX Parser Einsum op has input tensor " +  nodeproto.input(i)
                                 + " but its type is not yet registered");
       }
       if (i == 0)
          input_type = parser.GetTensorType(nodeproto.input(0));
       if (parser.GetTensorType(nodeproto.input(i)) != input_type) {
-         throw std::runtime_error("TMVA::SOFIE ONNX parser Einsum op has input tensors of different types: " +
+         throw std::runtime_error("SOFIE ONNX parser Einsum op has input tensors of different types: " +
                   nodeproto.input(i) + " : " + ConvertTypeToString(parser.GetTensorType(nodeproto.input(2))) +
                      " and " +  nodeproto.input(0) + " : " + ConvertTypeToString(input_type));
       }
@@ -28,9 +26,9 @@ ParserFuncSignature ParseEinsum = [](RModelParser_ONNX &parser, const onnx::Node
 
    // equation attribute should be existing
    if (nodeproto.attribute_size() == 0)
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser Einsum op has  no attribute defining the equation");
+      throw std::runtime_error("SOFIE ONNX Parser Einsum op has  no attribute defining the equation");
    if (nodeproto.attribute(0).name() != "equation")
-       throw std::runtime_error("TMVA::SOFIE ONNX Parser Einsum op has wrong attribute name: " + nodeproto.attribute(0).name());
+       throw std::runtime_error("SOFIE ONNX Parser Einsum op has wrong attribute name: " + nodeproto.attribute(0).name());
    std::string equation = nodeproto.attribute(0).s();
 
    std::unique_ptr<ROperator> op;
@@ -43,7 +41,7 @@ ParserFuncSignature ParseEinsum = [](RModelParser_ONNX &parser, const onnx::Node
       op.reset(new ROperator_Einsum<float>(equation, input_names, output_name));
       break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Einsum Operator does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Einsum Operator does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -57,5 +55,3 @@ ParserFuncSignature ParseEinsum = [](RModelParser_ONNX &parser, const onnx::Node
 
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

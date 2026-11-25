@@ -1,4 +1,4 @@
-// TMVA SOFIE — minimal, dependency-free ONNX protobuf reader.
+// SOFIE — minimal, dependency-free ONNX protobuf reader.
 //
 // Drop-in replacement for the protoc-generated onnx_proto3.pb.h. Provides the
 // subset of the onnx:: message API that the SOFIE ONNX parser actually uses,
@@ -8,8 +8,8 @@
 // Only the read-side accessors used by RModelParser_ONNX and the Parse*.cxx
 // operator parsers are implemented.
 
-#ifndef TMVA_SOFIE_ONNX_LITE
-#define TMVA_SOFIE_ONNX_LITE
+#ifndef SOFIE_ONNX_LITE
+#define SOFIE_ONNX_LITE
 
 #include <cstdint>
 #include <cstring>
@@ -20,7 +20,7 @@
 #include <string>
 #include <vector>
 
-// The messages live in TMVA::Experimental::SOFIE::onnx, not in the global onnx
+// The messages live in SOFIE::onnx, not in the global onnx
 // namespace the protoc-generated headers use. The real ONNX C++ library ships
 // inside the `onnx` Python wheel, and when that extension module is loaded in
 // the same process (as any PyTorch ONNX export does) its exported symbols
@@ -28,8 +28,6 @@
 // onnx::TensorProto destructor on an object with this file's layout.
 // Unqualified `onnx::` inside namespace SOFIE still names these classes, so
 // the parser sources need no change.
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 namespace onnx {
@@ -673,7 +671,5 @@ private:
 } // namespace onnx
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA
 
 #endif

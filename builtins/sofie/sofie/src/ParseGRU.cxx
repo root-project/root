@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_GRU.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_GRU.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseGRU = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -13,7 +11,7 @@ ParserFuncSignature ParseGRU = [](RModelParser_ONNX &parser, const onnx::NodePro
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser GRU op has input tensor " + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser GRU op has input tensor " + input_name +
                                " but its type is not yet registered");
    }
 
@@ -47,7 +45,7 @@ ParserFuncSignature ParseGRU = [](RModelParser_ONNX &parser, const onnx::NodePro
       } else if (attribute_name == "linear_before_reset") {
          attr_linear_before_reset = nodeproto.attribute(i).i();
       } else {
-         std::cout << "TMVA SOFIE Warning - Model Loading - Attribute " << attribute_name << " in OperatorNode "
+         std::cout << "SOFIE Warning - Model Loading - Attribute " << attribute_name << " in OperatorNode "
                    << nodeproto.name() << " is not defined in ONNX IR and not applied!\n";
       }
    }
@@ -82,7 +80,7 @@ ParserFuncSignature ParseGRU = [](RModelParser_ONNX &parser, const onnx::NodePro
                                         name_sequence_lens, name_initial_h, name_y, name_y_h));
       break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator GRU does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Operator GRU does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -97,5 +95,3 @@ ParserFuncSignature ParseGRU = [](RModelParser_ONNX &parser, const onnx::NodePro
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

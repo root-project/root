@@ -1,27 +1,25 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_ScatterND.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_ScatterND.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseScatterND = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
 
    if (nodeproto.input_size() != 3) {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser ScatterND op has invalid input size");
+      throw std::runtime_error("SOFIE ONNX Parser ScatterND op has invalid input size");
    }
    // data is input 0
    for (int i = 0; i < 3; i++) {
       if (!parser.IsRegisteredTensorType(nodeproto.input(i)))
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser ScatterND op has input tensor " +  nodeproto.input(i)
+         throw std::runtime_error("SOFIE ONNX Parser ScatterND op has input tensor " +  nodeproto.input(i)
                                 + " but its type is not yet registered");
    }
 
    ETensorType input_type = parser.GetTensorType(nodeproto.input(0));
    // type of update tensor (input(2)) must be the same of data tensor (input(0)
    if (parser.GetTensorType(nodeproto.input(2)) != input_type) {
-      throw std::runtime_error("TMVA::SOFIE ONNX parser ScatterND op has input tensors of different types: " +
+      throw std::runtime_error("SOFIE ONNX parser ScatterND op has input tensors of different types: " +
                   nodeproto.input(2) + " : " + ConvertTypeToString(parser.GetTensorType(nodeproto.input(2))) +
                      " and " +  nodeproto.input(0) + " : " + ConvertTypeToString(input_type));
    }
@@ -48,5 +46,3 @@ ParserFuncSignature ParseScatterND = [](RModelParser_ONNX &parser, const onnx::N
 
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Erf.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Erf.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseErf = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -13,7 +11,7 @@ ParserFuncSignature ParseErf = [](RModelParser_ONNX &parser, const onnx::NodePro
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser Erf op has input tensor" + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser Erf op has input tensor" + input_name +
                                " but its type is not yet registered");
    }
 
@@ -23,7 +21,7 @@ ParserFuncSignature ParseErf = [](RModelParser_ONNX &parser, const onnx::NodePro
    switch (input_type) {
    case ETensorType::FLOAT: op.reset(new ROperator_Erf<float>(input_name, output_name)); break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Erf does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Operator Erf does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -35,5 +33,3 @@ ParserFuncSignature ParseErf = [](RModelParser_ONNX &parser, const onnx::NodePro
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

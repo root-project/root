@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Selu.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Selu.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseSelu = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -13,7 +11,7 @@ ParserFuncSignature ParseSelu = [](RModelParser_ONNX &parser, const onnx::NodePr
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser selu op has input tensor" + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser selu op has input tensor" + input_name +
                                " but its type is not yet registered");
    }
 
@@ -35,7 +33,7 @@ ParserFuncSignature ParseSelu = [](RModelParser_ONNX &parser, const onnx::NodePr
    switch (input_type) {
    case ETensorType::FLOAT: op.reset(new ROperator_Selu<float>(attr_alpha, attr_gamma, input_name, output_name)); break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Selu does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Operator Selu does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -47,5 +45,3 @@ ParserFuncSignature ParseSelu = [](RModelParser_ONNX &parser, const onnx::NodePr
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

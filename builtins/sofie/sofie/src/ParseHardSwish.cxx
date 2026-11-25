@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_HardSwish.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_HardSwish.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseHardSwish = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -13,7 +11,7 @@ ParserFuncSignature ParseHardSwish = [](RModelParser_ONNX &parser, const onnx::N
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser HardSwish op has input tensor" + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser HardSwish op has input tensor" + input_name +
                                " but its type is not yet registered");
    }
 
@@ -25,7 +23,7 @@ ParserFuncSignature ParseHardSwish = [](RModelParser_ONNX &parser, const onnx::N
       op.reset(new ROperator_HardSwish<float>(input_name, output_name));
       break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator HardSwish does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Operator HardSwish does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -37,5 +35,3 @@ ParserFuncSignature ParseHardSwish = [](RModelParser_ONNX &parser, const onnx::N
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

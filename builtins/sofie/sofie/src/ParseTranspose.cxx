@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Transpose.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Transpose.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseTranspose = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -13,7 +11,7 @@ ParserFuncSignature ParseTranspose = [](RModelParser_ONNX &parser, const onnx::N
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser tranpose op has input tensor" + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser tranpose op has input tensor" + input_name +
                                " but its type is not yet registered");
    }
 
@@ -35,5 +33,3 @@ ParserFuncSignature ParseTranspose = [](RModelParser_ONNX &parser, const onnx::N
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

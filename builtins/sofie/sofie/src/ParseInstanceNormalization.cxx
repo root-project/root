@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_InstanceNormalization.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_InstanceNormalization.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseInstanceNormalization = [](RModelParser_ONNX &parser,
@@ -13,7 +11,7 @@ ParserFuncSignature ParseInstanceNormalization = [](RModelParser_ONNX &parser,
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser InstanceNormalization op has input tensor " + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser InstanceNormalization op has input tensor " + input_name +
                                " but its type is not yet registered");
    }
 
@@ -35,7 +33,7 @@ ParserFuncSignature ParseInstanceNormalization = [](RModelParser_ONNX &parser,
       op.reset(new ROperator_InstanceNormalization<float>(epsilon, input_name, name_scale, name_bias, output_name));
       break;
    default:
-      throw std::runtime_error("TMVA::SOFIE ONNX parser Operator with input type " + ConvertTypeToString(input_type) +
+      throw std::runtime_error("SOFIE ONNX parser Operator with input type " + ConvertTypeToString(input_type) +
                                " not supported.");
       break;
    }
@@ -48,5 +46,3 @@ ParserFuncSignature ParseInstanceNormalization = [](RModelParser_ONNX &parser,
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

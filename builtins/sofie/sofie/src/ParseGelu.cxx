@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Gelu.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Gelu.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseGelu = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -13,7 +11,7 @@ ParserFuncSignature ParseGelu = [](RModelParser_ONNX &parser, const onnx::NodePr
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser gelu op has input tensor" + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser gelu op has input tensor" + input_name +
                                " but its type is not yet registered");
    }
 
@@ -38,5 +36,3 @@ ParserFuncSignature ParseGelu = [](RModelParser_ONNX &parser, const onnx::NodePr
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

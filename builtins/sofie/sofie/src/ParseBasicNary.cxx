@@ -1,10 +1,8 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_BasicNary.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_BasicNary.hxx"
 #include "onnx.hxx"
 #include <memory>
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 template<EBasicNaryOperator Op>
@@ -21,7 +19,7 @@ std::unique_ptr<ROperator> ParseBasicNary(RModelParser_ONNX& parser, const onnx:
          else
             assert(parser.GetTensorType(input_name) == input_type);
       } else {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser " + nodeproto.op_type() + " op has input tensor " +
+         throw std::runtime_error("SOFIE ONNX Parser " + nodeproto.op_type() + " op has input tensor " +
                                   input_name + " but its type is not yet registered");
       }
       inputs.emplace_back(input_name);
@@ -36,7 +34,7 @@ std::unique_ptr<ROperator> ParseBasicNary(RModelParser_ONNX& parser, const onnx:
    case ETensorType::INT32: op.reset(new ROperator_BasicNary<int32_t, Op>(inputs, output_name)); break;
    case ETensorType::INT64: op.reset(new ROperator_BasicNary<int64_t, Op>(inputs, output_name)); break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator " + nodeproto.op_type() +
+      throw std::runtime_error("SOFIE - Unsupported - Operator " + nodeproto.op_type() +
                                " does not yet support input type " + ConvertTypeToString(input_type));
    }
 
@@ -56,5 +54,3 @@ void RegisterBasicNaryParsers(RModelParser_ONNX &parser)
 }
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

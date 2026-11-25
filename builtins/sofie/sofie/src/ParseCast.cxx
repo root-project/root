@@ -1,15 +1,13 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Cast.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Cast.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseCast = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    auto input_name = nodeproto.input(0);
    if (!parser.IsRegisteredTensorType(input_name)) {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser Cast op has input tensor" + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser Cast op has input tensor" + input_name +
                                "  but its type is not yet registered");
    }
 
@@ -22,7 +20,7 @@ ParserFuncSignature ParseCast = [](RModelParser_ONNX &parser, const onnx::NodePr
       }
    }
    if (output_type == ETensorType::UNDEFINED)
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser Cast op has invalid output type");
+      throw std::runtime_error("SOFIE ONNX Parser Cast op has invalid output type");
 
    std::string output_name = nodeproto.output(0);
    auto op = std::make_unique<ROperator_Cast>(output_type, nodeproto.input(0), output_name);
@@ -35,5 +33,3 @@ ParserFuncSignature ParseCast = [](RModelParser_ONNX &parser, const onnx::NodePr
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

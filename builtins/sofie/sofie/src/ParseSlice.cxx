@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Slice.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Slice.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseSlice = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -14,7 +12,7 @@ ParserFuncSignature ParseSlice = [](RModelParser_ONNX &parser, const onnx::NodeP
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser Slice op has input tensor" + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser Slice op has input tensor" + input_name +
                                " but its type is not yet registered");
    }
 
@@ -57,12 +55,12 @@ ParserFuncSignature ParseSlice = [](RModelParser_ONNX &parser, const onnx::NodeP
          op.reset(new ROperator_Slice<int64_t>(input_name, axisTensorNames, output_name));
       else
          throw std::runtime_error(
-            "TMVA::SOFIE - Unsupported - Operator Slice has invalid input type for input axis descriptors " +
+            "SOFIE - Unsupported - Operator Slice has invalid input type for input axis descriptors " +
             std::to_string(static_cast<int>(axis_type)));
    } else if (attr_starts.size() > 0 && attr_ends.size() > 0) {
       op.reset(new ROperator_Slice<int64_t>(input_name, attr_starts, attr_ends, attr_axes, output_name));
    } else {
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Slice has invalid attribues");
+      throw std::runtime_error("SOFIE - Unsupported - Operator Slice has invalid attribues");
    }
 
 
@@ -74,5 +72,3 @@ ParserFuncSignature ParseSlice = [](RModelParser_ONNX &parser, const onnx::NodeP
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

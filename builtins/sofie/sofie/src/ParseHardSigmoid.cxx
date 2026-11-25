@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_HardSigmoid.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_HardSigmoid.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseHardSigmoid = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -13,7 +11,7 @@ ParserFuncSignature ParseHardSigmoid = [](RModelParser_ONNX &parser, const onnx:
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser HardSigmoid op has input tensor" + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser HardSigmoid op has input tensor" + input_name +
                                " but its type is not yet registered");
    }
 
@@ -36,7 +34,7 @@ ParserFuncSignature ParseHardSigmoid = [](RModelParser_ONNX &parser, const onnx:
       op.reset(new ROperator_HardSigmoid<float>(attr_alpha, attr_beta, input_name, output_name));
       break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator HardSigmoid does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Operator HardSigmoid does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -48,5 +46,3 @@ ParserFuncSignature ParseHardSigmoid = [](RModelParser_ONNX &parser, const onnx:
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

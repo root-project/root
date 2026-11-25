@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_SubGraph.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_SubGraph.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseIf = [] (RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -11,12 +9,12 @@ ParserFuncSignature ParseIf = [] (RModelParser_ONNX &parser, const onnx::NodePro
 
    auto input_name = nodeproto.input(0);
    if (!parser.IsRegisteredTensorType(input_name)) {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser If op has input tensor" + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser If op has input tensor" + input_name +
                                " but its type is not yet registered");
    }
    // attributes containing the graphs
    if (nodeproto.attribute_size() != 2) {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser If op has not 2 attributes");
+      throw std::runtime_error("SOFIE ONNX Parser If op has not 2 attributes");
    }
    int then_index = -1;
    int else_index = -1;
@@ -30,7 +28,7 @@ ParserFuncSignature ParseIf = [] (RModelParser_ONNX &parser, const onnx::NodePro
       }
    }
    if (else_index < 0 || then_index < 0)
-     throw std::runtime_error("TMVA::SOFIE ONNX Parser If has wrong attributes");
+     throw std::runtime_error("SOFIE ONNX Parser If has wrong attributes");
 
    auto then_graph = nodeproto.attribute(then_index).g();
    auto else_graph = nodeproto.attribute(else_index).g();
@@ -61,5 +59,3 @@ ParserFuncSignature ParseIf = [] (RModelParser_ONNX &parser, const onnx::NodePro
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

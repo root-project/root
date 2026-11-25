@@ -1,15 +1,13 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_ArgMax.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_ArgMax.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseArgMax = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
    auto input_name = nodeproto.input(0);
    if (!parser.IsRegisteredTensorType(input_name)) {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser ArgMax op has input tensor " + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser ArgMax op has input tensor " + input_name +
                                " but its type is not yet registered");
    }
 
@@ -40,5 +38,3 @@ ParserFuncSignature ParseArgMax = [](RModelParser_ONNX &parser, const onnx::Node
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

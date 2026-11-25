@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Pool.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Pool.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParsePool = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -23,7 +21,7 @@ ParserFuncSignature ParsePool = [](RModelParser_ONNX &parser, const onnx::NodePr
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser Pool op has input tensor " + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser Pool op has input tensor " + input_name +
                                " but its type is not yet registered");
    }
 
@@ -53,7 +51,7 @@ ParserFuncSignature ParsePool = [](RModelParser_ONNX &parser, const onnx::NodePr
          attr.strides =
             std::vector<size_t>({nodeproto.attribute(i).ints().begin(), nodeproto.attribute(i).ints().end()});
       } else {
-         std::cout << "TMVA::SOFIE Warning - Model Loading - Attribute " << attribute_name << " in OperatorNode "
+         std::cout << "SOFIE Warning - Model Loading - Attribute " << attribute_name << " in OperatorNode "
                    << nodeproto.name() << " is not defined in ONNX IR and not applied!\n";
       }
    }
@@ -62,7 +60,7 @@ ParserFuncSignature ParsePool = [](RModelParser_ONNX &parser, const onnx::NodePr
    switch (input_type) {
    case ETensorType::FLOAT: op.reset(new ROperator_Pool<float>(op_mode, attr, input_name, output_name)); break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator Pool does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Operator Pool does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -74,5 +72,3 @@ ParserFuncSignature ParsePool = [](RModelParser_ONNX &parser, const onnx::NodePr
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

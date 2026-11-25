@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_ThresholdedRelu.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_ThresholdedRelu.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParseThresholdedRelu = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -13,7 +11,7 @@ ParserFuncSignature ParseThresholdedRelu = [](RModelParser_ONNX &parser, const o
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser ThresholdedRelu op has input tensor " + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser ThresholdedRelu op has input tensor " + input_name +
                                " but its type is not yet registered");
    }
 
@@ -31,7 +29,7 @@ ParserFuncSignature ParseThresholdedRelu = [](RModelParser_ONNX &parser, const o
    switch (input_type) {
    case ETensorType::FLOAT: op.reset(new ROperator_ThresholdedRelu<float>(attr_alpha, input_name, output_name)); break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator ThresholdedRelu does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Operator ThresholdedRelu does not yet support input type " +
                                std::to_string(static_cast<int>(input_type)));
    }
 
@@ -43,5 +41,3 @@ ParserFuncSignature ParseThresholdedRelu = [](RModelParser_ONNX &parser, const o
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

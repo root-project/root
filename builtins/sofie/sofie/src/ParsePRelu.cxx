@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_PRelu.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_PRelu.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuncSignature ParsePRelu = [](RModelParser_ONNX &parser, const onnx::NodeProto &nodeproto) {
@@ -14,18 +12,18 @@ ParserFuncSignature ParsePRelu = [](RModelParser_ONNX &parser, const onnx::NodeP
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser PRelu op has input tensor " + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser PRelu op has input tensor " + input_name +
                                " but its type is not yet registered");
    }
    auto slope_name = nodeproto.input(1);
    if (parser.IsRegisteredTensorType(slope_name)) {
       slope_type = parser.GetTensorType(slope_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser PRelu op has slope tensor " + slope_name +
+      throw std::runtime_error("SOFIE ONNX Parser PRelu op has slope tensor " + slope_name +
                                " but its type is not yet registered");
    }
    if (slope_type != input_type) {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser PRelu op has slope tensor " + slope_name + " of type " +
+      throw std::runtime_error("SOFIE ONNX Parser PRelu op has slope tensor " + slope_name + " of type " +
                                ConvertTypeToString(slope_type) + " but input tensor " + input_name + " is of type " +
                                ConvertTypeToString(input_type) + "; they must be the same");
    }
@@ -37,7 +35,7 @@ ParserFuncSignature ParsePRelu = [](RModelParser_ONNX &parser, const onnx::NodeP
    switch (input_type) {
    case ETensorType::FLOAT: op.reset(new ROperator_PRelu<float>(input_name, slope_name, output_name)); break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Operator PRelu does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Operator PRelu does not yet support input type " +
                                ConvertTypeToString(input_type));
    }
    if (!parser.IsRegisteredTensorType(output_name)) {
@@ -48,5 +46,3 @@ ParserFuncSignature ParsePRelu = [](RModelParser_ONNX &parser, const onnx::NodeP
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Comparision.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Comparision.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 template <EComparisionOperator Op>
@@ -20,10 +18,10 @@ std::unique_ptr<ROperator> ParseComparision(RModelParser_ONNX &parser, const onn
          else
             if (input_type != parser.GetTensorType(input_name)) {
                throw
-                  std::runtime_error("TMVA::SOFIE ONNX parser Comparision op has input tensors of different types");
+                  std::runtime_error("SOFIE ONNX parser Comparision op has input tensors of different types");
             }
       } else {
-         throw std::runtime_error("TMVA::SOFIE ONNX Parser Comparision op has input tensor " + input_name +
+         throw std::runtime_error("SOFIE ONNX Parser Comparision op has input tensor " + input_name +
                                   " but its type is not yet registered");
       }
    }
@@ -43,7 +41,7 @@ std::unique_ptr<ROperator> ParseComparision(RModelParser_ONNX &parser, const onn
       op.reset(new ROperator_Comparision<int32_t, Op>(nodeproto.input(0), nodeproto.input(1), output_name));
       break;
    default:
-      throw std::runtime_error("TMVA::SOFIE - Unsupported - Comparision Operator does not yet support input type " +
+      throw std::runtime_error("SOFIE - Unsupported - Comparision Operator does not yet support input type " +
                                ConvertTypeToString(input_type));
    }
 
@@ -65,5 +63,3 @@ void RegisterComparisionParsers(RModelParser_ONNX &parser)
 }
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA

@@ -1,9 +1,7 @@
-#include "TMVA/RModelParser_ONNX.hxx"
-#include "TMVA/ROperator_Gemm.hxx"
+#include "SOFIE/RModelParser_ONNX.hxx"
+#include "SOFIE/ROperator_Gemm.hxx"
 #include "onnx.hxx"
 
-namespace TMVA {
-namespace Experimental {
 namespace SOFIE {
 
 ParserFuseFuncSignature ParseFuseMatMulAdd = [](RModelParser_ONNX &parser, const onnx::NodeProto &matmulnode,
@@ -15,12 +13,12 @@ ParserFuseFuncSignature ParseFuseMatMulAdd = [](RModelParser_ONNX &parser, const
    if (parser.IsRegisteredTensorType(input_name)) {
       input_type = parser.GetTensorType(input_name);
    } else {
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser MatMul op has input tensor " + input_name +
+      throw std::runtime_error("SOFIE ONNX Parser MatMul op has input tensor " + input_name +
                                " but its type is not yet registered");
    }
 
    if (addnode.input_size() != 2)
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser : cannot fuse MatMul if Add does not have 2 inputs");
+      throw std::runtime_error("SOFIE ONNX Parser : cannot fuse MatMul if Add does not have 2 inputs");
    // output of matmul should be one of the input of Add
    std::string nameBias;
    if (matmulnode.output(0) == addnode.input(0))
@@ -28,7 +26,7 @@ ParserFuseFuncSignature ParseFuseMatMulAdd = [](RModelParser_ONNX &parser, const
    else if (matmulnode.output(0) == addnode.input(1))
       nameBias = addnode.input(0);
    else
-      throw std::runtime_error("TMVA::SOFIE ONNX Parser : cannot fuse MatMul and Add since have different inputs");
+      throw std::runtime_error("SOFIE ONNX Parser : cannot fuse MatMul and Add since have different inputs");
 
    // we don't check input type of ADD since it is not be registered
    std::unique_ptr<ROperator> op;
@@ -45,7 +43,7 @@ ParserFuseFuncSignature ParseFuseMatMulAdd = [](RModelParser_ONNX &parser, const
       break;
    default:
       throw std::runtime_error(
-         "TMVA::SOFIE - Unsupported - Operator for fusing MatMul and Add to Gemm does not yet support input type " +
+         "SOFIE - Unsupported - Operator for fusing MatMul and Add to Gemm does not yet support input type " +
          std::to_string(static_cast<int>(input_type)));
    }
 
@@ -58,5 +56,3 @@ ParserFuseFuncSignature ParseFuseMatMulAdd = [](RModelParser_ONNX &parser, const
 };
 
 } // namespace SOFIE
-} // namespace Experimental
-} // namespace TMVA
