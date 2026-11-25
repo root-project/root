@@ -12,6 +12,7 @@
 #define ROOT_INTERNAL_RDF_RCOLUMNREADERBASE
 
 #include <Rtypes.h>
+#include <ROOT/RDF/RMaskedEntryRange.hxx>
 
 namespace ROOT {
 namespace Detail {
@@ -26,8 +27,14 @@ This pure virtual class provides a common base class for the different column re
 RDSColumnReader.
 **/
 class R__CLING_PTRCHECK(off) RColumnReaderBase {
+
 public:
    virtual ~RColumnReaderBase() = default;
+
+   /// Load the column value for the given entry.
+   /// \param entry The entry number to load.
+   /// \param mask The entry mask. Values will be loaded only for entries for which the mask equals true.
+   void Load(const ROOT::Internal::RDF::RMaskedEntryRange &mask) { LoadImpl(mask); }
 
    /// Return the column value for the given entry.
    /// \tparam T The column type
@@ -36,13 +43,14 @@ public:
    /// The caller is responsible for checking that the returned value actually
    /// exists.
    template <typename T>
-   T *TryGet(Long64_t entry)
+   T *TryGet(std::size_t entryInBulk)
    {
-      return static_cast<T *>(GetImpl(entry));
+      return static_cast<T *>(GetImpl(entryInBulk));
    }
 
 private:
-   virtual void *GetImpl(Long64_t entry) = 0;
+   virtual void *GetImpl(std::size_t entryInBulk) = 0;
+   virtual void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &) = 0;
 };
 
 } // namespace RDF

@@ -56,36 +56,15 @@ namespace GraphDrawing {
 class GraphCreatorHelper;
 } // ns GraphDrawing
 
-using Callback_t = std::function<void(unsigned int)>;
-
-class RCallback {
-   const Callback_t fFun;
-   const ULong64_t fEveryN;
-   std::vector<ULong64_t> fCounters;
-
-public:
-   RCallback(ULong64_t everyN, Callback_t &&f, unsigned int nSlots)
-      : fFun(std::move(f)), fEveryN(everyN), fCounters(nSlots, 0ull)
-   {
-   }
-
-   void operator()(unsigned int slot)
-   {
-      auto &c = fCounters[slot];
-      ++c;
-      if (c == fEveryN) {
-         c = 0ull;
-         fFun(slot);
-      }
-   }
-};
-
 class ROneTimeCallback {
-   const Callback_t fFun;
+   const std::function<void(unsigned int)> fFun;
    std::vector<int> fHasBeenCalled; // std::vector<bool> is thread-unsafe for our purposes (and generally evil)
 
 public:
-   ROneTimeCallback(Callback_t &&f, unsigned int nSlots) : fFun(std::move(f)), fHasBeenCalled(nSlots, 0) {}
+   ROneTimeCallback(std::function<void(unsigned int)> &&f, unsigned int nSlots)
+      : fFun(std::move(f)), fHasBeenCalled(nSlots, 0)
+   {
+   }
 
    void operator()(unsigned int slot)
    {
@@ -179,7 +158,6 @@ class RLoopManager : public RNodeBase {
    std::unique_ptr<RDataSource> fDataSource{}; ///< Owning pointer to a data-source object. Null if no data-source
    /// Registered callbacks to be executed every N events.
    /// The registration happens via the RegisterCallback method.
-   std::vector<RDFInternal::RCallback> fCallbacksEveryNEvents;
    /// Registered callbacks to invoke just once before running the loop.
    /// The registration happens via the RegisterCallback method.
    std::vector<RDFInternal::ROneTimeCallback> fCallbacksOnce;
@@ -200,7 +178,7 @@ class RLoopManager : public RNodeBase {
    void RunEmptySource();
    void RunDataSourceMT();
    void RunDataSource();
-   void RunAndCheckFilters(unsigned int slot, Long64_t entry);
+   void RunAndCheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize);
    void InitNodeSlots(TTreeReader *r, unsigned int slot);
    void InitNodes();
    void CleanUpNodes();
@@ -243,6 +221,10 @@ class RLoopManager : public RNodeBase {
    std::vector<DeferredJitCall> fJitHelperCalls{};
    std::hash<std::string> fStringHasher{};
 
+   std::size_t fCurrentBulkSize{57};
+
+   std::vector<std::uint64_t> fUniqueRDFEntry;
+
 public:
    RLoopManager(const ColumnNames_t &defaultColumns = {});
    RLoopManager(TTree *tree, const ColumnNames_t &defaultBranches);
@@ -275,7 +257,7 @@ public:
    void Deregister(RDefineBase *definePtr);
    void Register(RDFInternal::RVariationBase *varPtr);
    void Deregister(RDFInternal::RVariationBase *varPtr);
-   bool CheckFilters(unsigned int, Long64_t) final;
+   ROOT::Internal::RDF::RMaskedEntryRange CheckFilters(unsigned int, Long64_t, std::size_t) final;
    unsigned int GetNSlots() const { return fNSlots; }
    void Report(ROOT::RDF::RCutFlowReport &rep) const final;
    /// End of recursive chain of calls, does nothing
@@ -287,7 +269,7 @@ public:
                               std::unique_ptr<ROOT::Internal::RDF::RColumnRegister> colRegister,
                               const std::vector<std::string> &colnames, std::shared_ptr<void> jittedNode,
                               std::shared_ptr<void> argument = nullptr);
-   void RegisterCallback(ULong64_t everyNEvents, std::function<void(unsigned int)> &&f);
+   void RegisterCallbackOnce(std::function<void(unsigned int)> &&f);
    unsigned int GetNRuns() const { return fNRuns; }
    bool HasDataSourceColumnReaders(std::string_view col, const std::type_info &ti) const;
    void AddDataSourceColumnReaders(std::string_view col, std::vector<std::unique_ptr<RColumnReaderBase>> &&readers,
@@ -354,14 +336,28 @@ public:
    // of the data source public.
 
    /// The task run by every thread on the input entry range, for the generic RDataSource.
-   void DataSourceThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange, ROOT::Internal::RSlotStack &slotStack,
-                             std::atomic<ULong64_t> &entryCount);
+   void DataSourceThreadTask(
+      const std::pair<ULong64_t, ULong64_t> &entryRange, ROOT::Internal::RSlotStack &slotStack,
+      std::atomic<ULong64_t> &entryCount,
+      std::function<std::size_t(std::size_t, std::uint64_t &, std::uint64_t &, void *)> pickBulkSizeFn);
    /// The task run by every thread on an entry range (known by the input TTreeReader), for the TTree data source.
    void
-   TTreeThreadTask(TTreeReader &treeReader, ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &entryCount);
+   TTreeThreadTask(TTreeReader &treeReader, ROOT::Internal::RSlotStack &slotStack, std::atomic<ULong64_t> &entryCount,
+                   std::function<std::size_t(std::size_t, std::uint64_t &, std::uint64_t &, void *)> pickBulkSizeFn);
    /// The task run by every thread on the input entry range, for the RNTuple data source.
-   void RNTupleThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange, unsigned int slot,
-                          std::uint64_t columnReaderOffset);
+   void
+   RNTupleThreadTask(const std::pair<ULong64_t, ULong64_t> &entryRange, unsigned int slot,
+                     std::uint64_t columnReaderOffset,
+                     std::function<std::size_t(std::size_t, std::uint64_t &, std::uint64_t &, void *)> pickBulkSizeFn);
+
+   std::size_t GetCurrentBulkSize() const { return fCurrentBulkSize; }
+   void SetMaxBulkSize(std::size_t maxBulkSize) { fCurrentBulkSize = maxBulkSize; }
+
+   /// Return a unique entry number for a given processing slot.
+   /// The entry number is guaranteed to be unique across the whole (possibly multi-thread) event loop.
+   /// This is what rdfentry_ and the input entry to DefineSlotEntry lambdas will be equal to, and it will
+   /// only differ from the actual event loop (e.g. TTree/TChain) global entry number in multi-thread event loops.
+   std::uint64_t GetUniqueRDFEntry(unsigned int slot) const { return fUniqueRDFEntry[slot]; }
 };
 
 /// \brief Create an RLoopManager that reads a TChain.

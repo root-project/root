@@ -27,21 +27,22 @@ class R__CLING_PTRCHECK(off) RVariationReader final : public ROOT::Detail::RDF::
    RVariationBase *fVariation;
 
    /// Non-owning ptr to the value of the variation.
-   void *fValuePtr = nullptr;
+   std::pair<void *, std::size_t> fValuePtrAndSize;
 
    /// The slot this value belongs to.
    unsigned int fSlot = std::numeric_limits<unsigned int>::max();
 
-   void *GetImpl(Long64_t entry) final
+   void *GetImpl(std::size_t entryInBulk) final
    {
-      fVariation->Update(fSlot, entry);
-      return fValuePtr;
+      return reinterpret_cast<std::byte *>(fValuePtrAndSize.first) + entryInBulk * fValuePtrAndSize.second;
    }
+
+   void LoadImpl(const ROOT::Internal::RDF::RMaskedEntryRange &mask) final { fVariation->Update(fSlot, mask); }
 
 public:
    RVariationReader(unsigned int slot, const std::string &colName, const std::string &variationName,
                     RVariationBase &variation)
-      : fVariation(&variation), fValuePtr(variation.GetValuePtr(slot, colName, variationName)), fSlot(slot)
+      : fVariation(&variation), fValuePtrAndSize(variation.GetValuePtr(slot, colName, variationName)), fSlot(slot)
    {
    }
 };

@@ -394,14 +394,14 @@ TEST(RDFAndFriendsNoFixture, IndexedFriendTree)
 #ifdef R__USE_IMT
 TEST(RDFAndFriendsNoFixture, IndexedFriendChainMT)
 {
-   ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT(2);
    TestIndexedFriendChain();
    ROOT::DisableImplicitMT();
 }
 
 TEST(RDFAndFriendsNoFixture, IndexedFriendTreeMT)
 {
-   ROOT::EnableImplicitMT();
+   ROOT::EnableImplicitMT(2);
    TestIndexedFriendTree();
    ROOT::DisableImplicitMT();
 }

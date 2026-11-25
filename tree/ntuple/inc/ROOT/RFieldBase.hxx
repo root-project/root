@@ -329,6 +329,10 @@ private:
    }
 
    void SetStringPool(const std::shared_ptr<Internal::RStringPool> &pool);
+   std::size_t ReadBulkImplGlobalIndex(ROOT::NTupleSize_t globalIndex, void *values, std::size_t count,
+                                       const bool *maskReq, bool *maskAvail);
+   std::size_t ReadBulkImplLocalIndex(ROOT::RNTupleLocalIndex localIndex, void *values, std::size_t count,
+                                      const bool *maskReq, bool *maskAvail);
 
 protected:
    struct RBulkSpec;
@@ -910,9 +914,7 @@ struct RFieldBase::RBulkSpec {
    /// Possible return value of ReadBulk() and ReadBulkImpl(), which indicates that the full bulk range was read
    /// independently of the provided masks.
    static const std::size_t kAllSet = std::size_t(-1);
-
-   RNTupleLocalIndex fFirstIndex; ///< Start of the bulk range
-   std::size_t fCount = 0;        ///< Size of the bulk range
+   std::size_t fCount = 0; ///< Size of the bulk range
    /// A bool array of size fCount, indicating the required values in the requested range
    const bool *fMaskReq = nullptr;
    bool *fMaskAvail = nullptr; ///< A bool array of size `fCount`, indicating the valid values in fValues
@@ -922,7 +924,16 @@ struct RFieldBase::RBulkSpec {
    /// Reference to memory owned by the RBulkValues class. The field implementing BulkReadImpl() may use `fAuxData` as
    /// memory that stays persistent between calls.
    std::vector<unsigned char> *fAuxData = nullptr;
+   std::variant<RNTupleLocalIndex, ROOT::NTupleSize_t> fFirstIndex; ///< Start of the bulk range
 };
+} // namespace ROOT
+
+namespace ROOT::Internal {
+std::pair<void *, std::size_t> ReadBulkAndValueSize(ROOT::RFieldBase::RBulkValues &bulk, ROOT::NTupleSize_t globalIndex,
+                                                    const bool *maskReq, std::size_t count);
+} // namespace ROOT::Internal
+
+namespace ROOT {
 
 // clang-format off
 /**
@@ -940,6 +951,9 @@ The memory of the value array is managed by the RBulkValues class.
 class RFieldBase::RBulkValues final {
 private:
    friend class RFieldBase;
+   friend std::pair<void *, std::size_t> ROOT::Internal::ReadBulkAndValueSize(RBulkValues &bulk,
+                                                                              ROOT::NTupleSize_t globalIndex,
+                                                                              const bool *maskReq, std::size_t count);
 
    RFieldBase *fField = nullptr;                   ///< The field that created the array of values
    std::unique_ptr<RFieldBase::RDeleter> fDeleter; /// Cached deleter of fField
@@ -955,6 +969,8 @@ private:
    /// arrays of vectors. A pointer to the `fAuxData` array is passed to the field's BulkRead method.
    /// The RBulkValues class does not modify the array in-between calls to the field's BulkRead method.
    std::vector<unsigned char> fAuxData;
+   ROOT::NTupleSize_t fGlobalFirstIndex{
+      ROOT::kInvalidNTupleIndex}; ///< First index of the bulk, expressed as a global index in the RNTuple
 
    void ReleaseValues();
    /// Sets a new range for the bulk. If there is enough capacity, the `fValues` array will be reused.
@@ -975,6 +991,11 @@ private:
       : fField(field), fDeleter(field->GetDeleter()), fValueSize(field->GetValueSize())
    {
    }
+
+   void Reset(ROOT::NTupleSize_t firstIndex, std::size_t size);
+   bool ContainsRange(ROOT::NTupleSize_t firstIndex, std::size_t size) const;
+   // Overload of ReadBulk that takes the starting index as a global index in the RNTuple
+   void *ReadBulk(ROOT::NTupleSize_t firstIndex, const bool *maskReq, std::size_t size);
 
 public:
    ~RBulkValues();

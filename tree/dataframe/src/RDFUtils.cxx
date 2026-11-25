@@ -718,12 +718,28 @@ void ROOT::Internal::RDF::ProcessMT(ROOT::RDF::RDataSource &ds, ROOT::Detail::RD
 
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
 ROOT::Internal::RDF::CreateColumnReader(ROOT::RDF::RDataSource &ds, unsigned int slot, std::string_view col,
-                                        const std::type_info &tid, TTreeReader *treeReader)
+                                        const std::type_info &tid, TTreeReader *treeReader, std::size_t maxBulkSize)
 {
-   return ds.CreateColumnReader(slot, col, tid, treeReader);
+   return ds.CreateColumnReader(slot, col, tid, treeReader, maxBulkSize);
 }
 
 std::vector<ROOT::RDF::Experimental::RSample> ROOT::Internal::RDF::MoveOutSamples(ROOT::RDF::Experimental::RDatasetSpec &spec)
 {
    return std::move(spec.fSamples);
+}
+
+ROOT::Internal::RDF::RCallback::RCallback(std::uint64_t everyNEntries, std::function<void(unsigned int)> &&fun,
+                                          unsigned int nSlots)
+   : fFun(std::move(fun)), fEveryNEntries(everyNEntries), fCounterAtSlot(nSlots, 0ull)
+{
+}
+
+void ROOT::Internal::RDF::RCallback::operator()(unsigned int slot)
+{
+   auto &c = fCounterAtSlot[slot];
+   ++c;
+   if (c == fEveryNEntries) {
+      c = 0ull;
+      fFun(slot);
+   }
 }

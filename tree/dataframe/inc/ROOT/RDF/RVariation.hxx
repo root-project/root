@@ -59,27 +59,31 @@ std::size_t GetNVariations(const RVec<T> &results)
 }
 
 template <typename T>
-void ResizeResults(ROOT::RVec<T> &results, std::size_t /*nCols*/, std::size_t nVariations)
+void ResizeResults(ROOT::RVec<ROOT::RVec<T>> &results, std::size_t /*nCols*/, std::size_t nVariations,
+                   std::size_t maxBulkSize)
 {
    results.resize(nVariations);
+   for (auto &bulkValues : results)
+      bulkValues.resize(maxBulkSize);
 }
 
 /// Assign into fLastResults[slot] without changing the addresses of its elements (we gave those addresses away in
 /// GetValuePtr)
 /// The callee is responsible of making sure that `resStorage` has the correct size.
 template <typename T>
-void AssignResults(ROOT::RVec<T> &resStorage, ROOT::RVec<T> &&tmpResults)
+void AssignResults(ROOT::RVec<ROOT::RVec<T>> &resStorage, ROOT::RVec<T> &&tmpResults, std::size_t entryInBulk)
 {
    const auto nVariations = resStorage.size(); // we have already checked that tmpResults has the same size
 
    for (auto i = 0u; i < nVariations; ++i)
-      resStorage[i] = std::move(tmpResults[i]);
+      resStorage[i][entryInBulk] = std::move(tmpResults[i]);
 }
 
 template <typename T>
-void *GetValuePtrHelper(ROOT::RVec<T> &v, std::size_t /*colIdx*/, std::size_t varIdx)
+std::pair<void *, std::size_t>
+GetValuePtrHelper(ROOT::RVec<ROOT::RVec<T>> &v, std::size_t /*colIdx*/, std::size_t varIdx)
 {
-   return static_cast<void *>(&v[varIdx]);
+   return std::make_pair(static_cast<void *>(v[varIdx].data()), sizeof(T));
 }
 ///@}
 
@@ -93,35 +97,41 @@ bool ResultsSizeEq(const T &results, std::size_t expected, std::size_t /*nColumn
 }
 
 template <typename T>
-std::size_t GetNVariations(const std::vector<RVec<T>> &results)
+std::size_t GetNVariations(const std::vector<ROOT::RVec<T>> &results)
 {
    assert(!results.empty());
    return results[0].size();
 }
 
 template <typename T>
-void ResizeResults(std::vector<ROOT::RVec<T>> &results, std::size_t nCols, std::size_t nVariations)
+void ResizeResults(std::vector<ROOT::RVec<ROOT::RVec<T>>> &results, std::size_t nCols, std::size_t nVariations,
+                   std::size_t maxBulkSize)
 {
    results.resize(nCols);
-   for (auto &rvecOverVariations : results)
+   for (auto &rvecOverVariations : results) {
       rvecOverVariations.resize(nVariations);
+      for (auto &bulkValues : rvecOverVariations)
+         bulkValues.resize(maxBulkSize);
+   }
 }
 
 // The callee is responsible of making sure that `resStorage` has the correct outer and inner sizes.
 template <typename T>
-void AssignResults(std::vector<ROOT::RVec<T>> &resStorage, ROOT::RVec<ROOT::RVec<T>> &&tmpResults)
+void AssignResults(std::vector<ROOT::RVec<ROOT::RVec<T>>> &resStorage, ROOT::RVec<ROOT::RVec<T>> &&tmpResults,
+                   std::size_t entryInBulk)
 {
    const auto nCols = resStorage.size();
    const auto nVariations = resStorage[0].size();
    for (auto colIdx = 0u; colIdx < nCols; ++colIdx)
       for (auto varIdx = 0u; varIdx < nVariations; ++varIdx)
-         resStorage[colIdx][varIdx] = std::move(tmpResults[colIdx][varIdx]);
+         resStorage[colIdx][varIdx][entryInBulk] = std::move(tmpResults[colIdx][varIdx]);
 }
 
 template <typename T>
-void *GetValuePtrHelper(std::vector<ROOT::RVec<T>> &v, std::size_t colIdx, std::size_t varIdx)
+std::pair<void *, std::size_t>
+GetValuePtrHelper(std::vector<ROOT::RVec<ROOT::RVec<T>>> &v, std::size_t colIdx, std::size_t varIdx)
 {
-   return static_cast<void *>(&v[colIdx][varIdx]);
+   return std::make_pair(static_cast<void *>(v[colIdx][varIdx].data()), sizeof(T));
 }
 ///@}
 
@@ -150,33 +160,36 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
    using TypeInd_t = std::make_index_sequence<ColumnTypes_t::list_size>;
    using Ret_t = typename CallableTraits<F>::ret_type;
    using VariedCol_t = ColumnType_t<IsSingleColumn, Ret_t>;
-   using Result_t = std::conditional_t<IsSingleColumn, ROOT::RVec<VariedCol_t>, std::vector<ROOT::RVec<VariedCol_t>>>;
+   using BulkValues_t = std::conditional_t<IsSingleColumn, ROOT::RVec<ROOT::RVec<VariedCol_t>>,
+                                           std::vector<ROOT::RVec<ROOT::RVec<VariedCol_t>>>>;
+   using ValuesPerSlot_t = std::vector<BulkValues_t>;
 
    F fExpression;
    /// Per-slot storage for varied column values (for one or multiple columns depending on IsSingleColumn).
-   std::vector<Result_t> fLastResults;
+   /// Dimensions from inner to outer: bulk idx, variation idx[, column idx], slot idx.
+   ValuesPerSlot_t fCachedResultsPerSlot;
 
    /// Column readers per slot and per input column
    std::vector<std::array<RColumnReaderBase *, ColumnTypes_t::list_size>> fValues;
 
    template <typename ColType>
-   auto GetValueChecked(unsigned int slot, std::size_t readerIdx, Long64_t entry) -> ColType &
+   auto GetValueChecked(unsigned int slot, std::size_t readerIdx, std::size_t idx) -> ColType &
    {
-      if (auto *val = fValues[slot][readerIdx]->template TryGet<ColType>(entry))
+      if (auto *val = fValues[slot][readerIdx]->template TryGet<ColType>(idx))
          return *val;
 
       throw std::out_of_range{"RDataFrame: Could not retrieve value for variation '" + fColNames[readerIdx] +
-                              "' for entry " + std::to_string(entry) +
+                              "' for entry " + std::to_string(idx) +
                               ". You can use the DefaultValueFor operation to provide a default value, or "
                               "FilterAvailable/FilterMissing to discard/keep entries with missing values instead."};
    }
 
    template <typename... ColTypes, std::size_t... S>
-   void UpdateHelper(unsigned int slot, Long64_t entry, TypeList<ColTypes...>, std::index_sequence<S...>)
+   void UpdateHelper(unsigned int slot, std::size_t idx, TypeList<ColTypes...>, std::index_sequence<S...>)
    {
       // fExpression must return an RVec<T>
-      auto &&results = fExpression(GetValueChecked<ColTypes>(slot, S, entry)...);
-      (void)entry; // avoid unused parameter warnings (gcc 12.1)
+      auto &&results = fExpression(GetValueChecked<ColTypes>(slot, S, idx)...);
+      (void)idx; // avoid unused parameter warnings (gcc 12.1)
 
       if (!ResultsSizeEq(results, fVariationNames.size(), fColNames.size(),
                          std::integral_constant<bool, IsSingleColumn>{})) {
@@ -186,7 +199,7 @@ class R__CLING_PTRCHECK(off) RVariation final : public RVariationBase {
                                   std::to_string(fVariationNames.size()) + " were expected.");
       }
 
-      AssignResults(fLastResults[slot * CacheLineStep<Result_t>()], std::move(results));
+      AssignResults(fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<BulkValues_t>()], std::move(results), idx);
    }
 
 public:
@@ -195,13 +208,16 @@ public:
               RLoopManager &lm, const ColumnNames_t &inputColNames)
       : RVariationBase(colNames, variationName, variationTags, type, defines, lm, inputColNames),
         fExpression(std::move(expression)),
-        fLastResults(lm.GetNSlots() * CacheLineStep<Result_t>()),
+        fCachedResultsPerSlot(lm.GetNSlots() * RDFInternal::CacheLineStep<BulkValues_t>()),
         fValues(lm.GetNSlots())
    {
       fLoopManager->Register(this);
 
-      for (auto i = 0u; i < lm.GetNSlots(); ++i)
-         ResizeResults(fLastResults[i * CacheLineStep<Result_t>()], colNames.size(), variationTags.size());
+      auto nSlots = lm.GetNSlots();
+      for (decltype(nSlots) i = 0; i < nSlots; ++i) {
+         auto &cachedResultsForThisSlot = fCachedResultsPerSlot[i * RDFInternal::CacheLineStep<BulkValues_t>()];
+         ResizeResults(cachedResultsForThisSlot, colNames.size(), variationTags.size(), lm.GetCurrentBulkSize());
+      }
    }
 
    RVariation(const RVariation &) = delete;
@@ -215,8 +231,10 @@ public:
       fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = -1;
    }
 
-   /// Return the (type-erased) address of the value for the given processing slot.
-   void *GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation) final
+   /// Return the beginning of the cached results of the current bulk for the input processing slot, column and
+   /// variation
+   std::pair<void *, std::size_t>
+   GetValuePtr(unsigned int slot, const std::string &column, const std::string &variation) final
    {
       const auto colIt = std::find(fColNames.begin(), fColNames.end(), column);
       assert(colIt != fColNames.end());
@@ -226,16 +244,23 @@ public:
       assert(varIt != fVariationNames.end());
       const auto varIdx = std::distance(fVariationNames.begin(), varIt);
 
-      return GetValuePtrHelper(fLastResults[slot * CacheLineStep<Result_t>()], colIdx, varIdx);
+      return GetValuePtrHelper(fCachedResultsPerSlot[slot * RDFInternal::CacheLineStep<BulkValues_t>()], colIdx,
+                               varIdx);
    }
 
    /// Update the value at the address returned by GetValuePtr with the content corresponding to the given entry
-   void Update(unsigned int slot, Long64_t entry) final
+   void Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask) final
    {
-      if (entry != fLastCheckedEntry[slot * CacheLineStep<Long64_t>()]) {
-         // evaluate this filter, cache the result
-         UpdateHelper(slot, entry, ColumnTypes_t{}, TypeInd_t{});
-         fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = entry;
+      if (static_cast<Long64_t>(mask.GetFirstEntry()) == fLastCheckedEntry[slot * CacheLineStep<Long64_t>()])
+         return;
+
+      std::for_each(fValues[slot].begin(), fValues[slot].end(), [&mask](auto *v) { v->Load(mask); });
+      auto bulkSize = mask.GetBulkSize();
+      for (decltype(bulkSize) i = 0; i < bulkSize; ++i) {
+         if (mask[i]) {
+            UpdateHelper(slot, i, ColumnTypes_t{}, TypeInd_t{});
+            fLastCheckedEntry[slot * CacheLineStep<Long64_t>()] = mask.GetFirstEntry();
+         }
       }
    }
 

@@ -97,7 +97,12 @@ void RunFinalChecks(const ROOT::RDF::RDataSource &ds, bool nodesLeftNotRun);
 void ProcessMT(ROOT::RDF::RDataSource &ds, ROOT::Detail::RDF::RLoopManager &lm);
 std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
 CreateColumnReader(ROOT::RDF::RDataSource &ds, unsigned int slot, std::string_view col, const std::type_info &tid,
-                   TTreeReader *treeReader);
+                   TTreeReader *treeReader, std::size_t maxBulkSize);
+std::size_t PickBulkSize(ROOT::RDF::RDataSource &ds, std::size_t maxBulkSize, std::uint64_t &bulkBeginEntry,
+                         std::uint64_t &rangeEndEntry, void *extraArg);
+bool CheckValidRead(ROOT::RDF::RDataSource &ds, unsigned int slot, std::uint64_t entry);
+ROOT::Internal::RDF::RMaskedEntryRange
+CheckFilters(ROOT::RDF::RDataSource &ds, unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize);
 } // namespace RDF
 
 } // ns Internal
@@ -178,7 +183,7 @@ protected:
 
    friend std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
    ROOT::Internal::RDF::CreateColumnReader(ROOT::RDF::RDataSource &, unsigned int, std::string_view,
-                                           const std::type_info &, TTreeReader *);
+                                           const std::type_info &, TTreeReader *, std::size_t);
    /**
     * \brief Creates a column reader for the requested column
     *
@@ -192,10 +197,25 @@ protected:
     * refactoring the TTreeProcessorMT scheduling into RTTreeDS altogether.
     */
    virtual std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
-   CreateColumnReader(unsigned int slot, std::string_view col, const std::type_info &tid, TTreeReader *)
+   CreateColumnReader(unsigned int slot, std::string_view col, const std::type_info &tid, TTreeReader *, std::size_t)
    {
       return GetColumnReaders(slot, col, tid);
    }
+
+   friend std::size_t ROOT::Internal::RDF::PickBulkSize(ROOT::RDF::RDataSource &ds, std::size_t maxBulkSize,
+                                                        std::uint64_t &bulkBeginEntry, std::uint64_t &rangeEndEntry,
+                                                        void *extraArg);
+   virtual std::size_t
+   PickBulkSize(std::size_t maxBulkSize, std::uint64_t &bulkBeginEntry, std::uint64_t &rangeEndEntry, void *extraArg);
+
+   friend bool ROOT::Internal::RDF::CheckValidRead(ROOT::RDF::RDataSource &ds, unsigned int slot, std::uint64_t entry);
+   virtual bool CheckValidRead(unsigned int, std::uint64_t) { return true; }
+
+   friend ROOT::Internal::RDF::RMaskedEntryRange
+   ROOT::Internal::RDF::CheckFilters(ROOT::RDF::RDataSource &ds, unsigned int slot, Long64_t bulkBeginEntry,
+                                     std::size_t bulkSize);
+   virtual ROOT::Internal::RDF::RMaskedEntryRange
+   CheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize);
 
 public:
    RDataSource() = default;

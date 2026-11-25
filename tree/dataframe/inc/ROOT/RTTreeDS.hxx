@@ -131,9 +131,9 @@ public:
       throw std::runtime_error("GetColumnReaders should not be called on this data source, something wrong happened!");
    }
 
-   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase> CreateColumnReader(unsigned int slot, std::string_view col,
-                                                                            const std::type_info &tid,
-                                                                            TTreeReader *treeReader) final;
+   std::unique_ptr<ROOT::Detail::RDF::RColumnReaderBase>
+   CreateColumnReader(unsigned int slot, std::string_view col, const std::type_info &tid, TTreeReader *treeReader,
+                      std::size_t maxBulkSize) final;
 
    std::string GetLabel() final { return "TTreeDS"; }
 
@@ -152,6 +152,14 @@ public:
    std::size_t GetNFiles() const final;
 
    void ProcessMT(ROOT::Detail::RDF::RLoopManager &lm) final;
+
+   std::size_t PickBulkSize(std::size_t maxBulkSize, std::uint64_t &bulkBeginEntry, std::uint64_t &rangeEndEntry,
+                            void *extraArg) final;
+
+   bool CheckValidRead(unsigned int slot, std::uint64_t entry) final;
+
+   ROOT::Internal::RDF::RMaskedEntryRange
+   CheckFilters(unsigned int, Long64_t bulkBeginEntry, std::size_t bulkSize) final;
 };
 
 ROOT::RDataFrame FromTTree(std::string_view treeName, std::string_view fileNameGlob);

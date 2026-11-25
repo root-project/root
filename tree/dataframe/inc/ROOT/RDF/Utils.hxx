@@ -333,6 +333,16 @@ ROOT::RDF::Experimental::RDatasetSpec RetrieveSpecFromJson(const std::string &js
  */
 struct UseNativeDataType {};
 
+class RCallback {
+   std::function<void(unsigned int)> fFun;
+   std::uint64_t fEveryNEntries;
+   std::vector<std::uint64_t> fCounterAtSlot;
+
+public:
+   RCallback(std::uint64_t everyNEntries, std::function<void(unsigned int)> &&fun, unsigned int nSlots);
+   void operator()(unsigned int slot);
+};
+
 } // end NS RDF
 } // end NS Internal
 } // end NS ROOT

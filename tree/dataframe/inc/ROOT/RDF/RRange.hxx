@@ -68,30 +68,38 @@ public:
    ~RRange() final { fLoopManager->Deregister(this); }
 
    /// Ranges act as filters when it comes to selecting entries that downstream nodes should process
-   bool CheckFilters(unsigned int slot, Long64_t entry) final
+   ROOT::Internal::RDF::RMaskedEntryRange
+   CheckFilters(unsigned int slot, Long64_t bulkBeginEntry, std::size_t bulkSize) final
    {
-      if (entry != fLastCheckedEntry) {
-         if (fHasStopped)
-            return false;
-         if (!fPrevNode.CheckFilters(slot, entry)) {
-            // a filter upstream returned false, cache the result
-            fLastResult = false;
-         } else {
-            // apply range filter logic, cache the result
-            if (fNProcessedEntries < fStart || (fStop > 0 && fNProcessedEntries >= fStop) ||
-                (fStride != 1 && (fNProcessedEntries - fStart) % fStride != 0))
-               fLastResult = false;
-            else
-               fLastResult = true;
-            ++fNProcessedEntries;
-            if (fNProcessedEntries == fStop) {
-               fHasStopped = true;
-               fPrevNode.StopProcessing();
-            }
-         }
-         fLastCheckedEntry = entry;
+      auto &thisNodeMask = fMaskPerSlot[slot * RDFInternal::CacheLineStep<RDFInternal::RMaskedEntryRange>()];
+      // Early return if we have already seen this bulk within this run of the computation graph
+      if (thisNodeMask.GetFirstEntry() == static_cast<std::uint64_t>(bulkBeginEntry)) {
+         return thisNodeMask;
       }
-      return fLastResult;
+
+      thisNodeMask =
+         ROOT::Internal::RDF::RMaskedEntryRange{bulkSize, false, static_cast<std::uint64_t>(bulkBeginEntry)};
+
+      if (fHasStopped)
+         return thisNodeMask;
+
+      auto mask = fPrevNode.CheckFilters(slot, bulkBeginEntry, bulkSize);
+      const auto validIndices = mask.GetValidIndices();
+      if (validIndices.empty())
+         return thisNodeMask;
+
+      for (auto idx : validIndices) {
+         thisNodeMask[idx] = fNProcessedEntries >= fStart && (fStop == 0 || fNProcessedEntries < fStop) &&
+                             (fStride == 1 || (fNProcessedEntries - fStart) % fStride == 0);
+         ++fNProcessedEntries;
+      }
+
+      if (fStop > 0 && fNProcessedEntries >= fStop) {
+         fHasStopped = true;
+         fPrevNode.StopProcessing();
+      }
+
+      return thisNodeMask;
    }
 
    // recursive chain of `Report`s

@@ -39,15 +39,15 @@ Number of blocks in current cache..: 1, total size: 166
 Sum is 27.6706
 ******TreeCache statistics for tree: TotemNtuple in file: bigFile.root ******
 Number of branches in the cache ...: 1
-Cache Efficiency ..................: 0.500000
+Cache Efficiency ..................: 1.000000
 Cache Efficiency Rel...............: 1.000000
 Secondary Efficiency ..............: 0.000000
 Secondary Efficiency Rel ..........: 0.000000
 Learn entries......................: 100
-Cached Reading.....................: 332 bytes in 1 transactions
+Cached Reading.....................: 498 bytes in 1 transactions
 Reading............................: 0 bytes in 0 uncached transactions
-Readahead..........................: 256000 bytes with overhead = 3775 bytes
-Average transaction................: 0.332000 Kbytes
-Number of blocks in current cache..: 2, total size: 332
- ====> Bytes Read: 332
+Readahead..........................: 256000 bytes with overhead = 10096 bytes
+Average transaction................: 0.498000 Kbytes
+Number of blocks in current cache..: 3, total size: 498
+ ====> Bytes Read: 498
 (int) 0

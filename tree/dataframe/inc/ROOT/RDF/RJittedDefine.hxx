@@ -56,9 +56,9 @@ public:
    void SetDefine(std::unique_ptr<RDefineBase> c) { fConcreteDefine = std::move(c); }
 
    void InitSlot(TTreeReader *r, unsigned int slot) final;
-   void *GetValuePtr(unsigned int slot) final;
+   std::pair<void *, std::size_t> GetValuePtr(unsigned int slot) final;
    const std::type_info &GetTypeId() const final;
-   void Update(unsigned int slot, Long64_t entry) final;
+   void Update(unsigned int slot, const ROOT::Internal::RDF::RMaskedEntryRange &mask) final;
    void Update(unsigned int slot, const ROOT::RDF::RSampleInfo &id) final;
    void FinalizeSlot(unsigned int slot) final;
    void MakeVariations(const std::vector<std::string> &variations) final;
