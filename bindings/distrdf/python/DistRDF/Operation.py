@@ -51,7 +51,7 @@ class Histo(Action):
             # If the keyword argument was not passed, we need to check the first
             # positional argument. In all Histo*D overload where it is present,
             # it is always the first argument.
-            if not isinstance(
+            if not self.args or not isinstance(
                 self.args[0],
                 (
                     tuple,

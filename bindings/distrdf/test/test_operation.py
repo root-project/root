@@ -79,6 +79,11 @@ class HistoModelTests(unittest.TestCase):
         with self.assertRaises(ValueError):
             _ = Operation.create_op("Histo1D", "x")
 
+    def test_histo1d_with_no_arguments(self):
+        """Creating a histogram with no arguments raises ValueError, not IndexError."""
+        with self.assertRaises(ValueError):
+            _ = Operation.create_op("Histo1D")
+
     def test_histo2d_with_th2dmodel(self):
         """TH2DModel"""
         op = Operation.create_op("Histo2D", ROOT.RDF.TH2DModel(), "x", "y")
