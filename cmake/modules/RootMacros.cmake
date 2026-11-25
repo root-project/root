@@ -2996,8 +2996,12 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   CMAKE_PARSE_ARGUMENTS(ARG "" "RESOURCE_LOCK" "LIBRARIES;COMPILE_FLAGS;DEPENDS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" ${ARGN})
 
   add_executable(${executable} EXCLUDE_FROM_ALL ${ARG_UNPARSED_ARGUMENTS})
-  set_target_properties(${executable} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR})
-  set_property(TARGET ${executable} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
+  set_target_properties(${executable} PROPERTIES
+    BUILD_WITH_INSTALL_RPATH OFF # will never be installed anyway
+    # The generator expression stops multi-config generators like Visual
+    # Studio from appending a per-config subdirectory:
+    RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}>
+  )
 
   set_property(TARGET ${executable}
                APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
@@ -3070,12 +3074,6 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
       set_property(TEST ${GENERATE_EXECUTABLE_TEST} APPEND PROPERTY RESOURCE_LOCK CMAKE_BUILD)
     endif()
     set_property(TEST ${GENERATE_EXECUTABLE_TEST} APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
-  endif()
-
-  if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-    add_custom_command(TARGET ${executable} POST_BUILD
-       COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/${executable}.exe
-                                        ${CMAKE_CURRENT_BINARY_DIR}/${executable}.exe)
   endif()
 
 endmacro()

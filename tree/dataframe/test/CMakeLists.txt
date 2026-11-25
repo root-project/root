@@ -127,11 +127,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(NTupleStruct
                               LINKDEF NTupleStructLinkDef.h
                               DEPENDENCIES RIO)
 configure_file(NTupleStruct.hxx . COPYONLY)
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  add_custom_command(TARGET NTupleStruct POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libNTupleStruct.dll
-                                                  ${CMAKE_CURRENT_BINARY_DIR}/libNTupleStruct.dll)
-endif()
+set_target_properties(NTupleStruct PROPERTIES
+  # The generator expression stops multi-config generators like Visual
+  # Studio from appending a per-config subdirectory:
+  RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}>
+)
 ROOT_GENERATE_DICTIONARY(ClassWithArraysDict ${CMAKE_CURRENT_SOURCE_DIR}/ClassWithArrays.h
                           MODULE datasource_ntuple LINKDEF ClassWithArraysLinkDef.h OPTIONS -inlineInputHeader
                           DEPENDENCIES ROOTVecOps)

@@ -6,7 +6,12 @@ add_custom_command(OUTPUT dict.cxx dict_rdict.pcm
 set_source_files_properties(dict.cxx PROPERTIES GENERATED TRUE)
 
 add_library(ROOT-8096 EXCLUDE_FROM_ALL SHARED dict.cxx)
-set_target_properties(ROOT-8096 PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
+set_target_properties(ROOT-8096 PROPERTIES
+  # The generator expression stops multi-config generators like Visual
+  # Studio from appending a per-config subdirectory:
+  RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}>
+  ${ROOT_LIBRARY_PROPERTIES}
+)
 
 target_link_libraries(ROOT-8096 ${ARG_LIBRARIES} ${ROOT_LIBRARIES})
 set_property(TARGET ROOT-8096 APPEND PROPERTY INCLUDE_DIRECTORIES ${CMAKE_CURRENT_SOURCE_DIR})
@@ -28,9 +33,6 @@ if(GeneratorNeedsBuildSerialization)
    set_property(TEST roottest-cling-dict-ROOT-8096-build APPEND PROPERTY FIXTURES_REQUIRED CMAKE_BUILD_ALL)
 endif()
 
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-   set(load_precmd ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libROOT-8096.dll ${CMAKE_CURRENT_BINARY_DIR}/)
-endif()
 ROOTTEST_ADD_TEST(load
                   MACRO load.C
                   PRECMD ${load_precmd}

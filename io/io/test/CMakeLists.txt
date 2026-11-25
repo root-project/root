@@ -27,11 +27,11 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RFileTestIncludes
                               LINKDEF RFileTestIncludesLinkDef.h
                               DEPENDENCIES RIO Tree)
 configure_file(RFileTestIncludes.hxx . COPYONLY)
-if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
-  add_custom_command(TARGET RFileTestIncludes POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different ${CMAKE_CURRENT_BINARY_DIR}/$<CONFIG>/libRFileTestIncludes.dll
-                                                  ${CMAKE_CURRENT_BINARY_DIR}/libRFileTestIncludes.dll)
-endif()
+set_target_properties(RFileTestIncludes PROPERTIES
+  # The generator expression stops multi-config generators like Visual
+  # Studio from appending a per-config subdirectory:
+  RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}>
+)
 ROOT_ADD_GTEST(rfile rfile.cxx LIBRARIES RIO Hist ROOTNTuple Tree RFileTestIncludes)
 if(pyroot)
   ROOT_ADD_PYUNITTEST(rfile_py rfile.py)
