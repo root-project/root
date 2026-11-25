@@ -86,12 +86,6 @@ public:
 
 private:
 
-   TAttFill &GetAttFill(WinContext_t wctxt);
-   TAttLine &GetAttLine(WinContext_t wctxt);
-   TAttMarker &GetAttMarker(WinContext_t wctxt);
-   TAttText &GetAttText(WinContext_t wctxt);
-   void *GetPixmapDrawable(void *drawable0, const char *calledFrom) const;
-
    TGQuartz(const TGQuartz &rhs);
    TGQuartz &operator = (const TGQuartz &rhs);
 

@@ -53,12 +53,6 @@
 - (unsigned) fWidth;
 - (unsigned) fHeight;
 
-//Graphical attributes
-@property (nonatomic, readonly) TAttLine *attLine;
-@property (nonatomic, readonly) TAttFill *attFill;
-@property (nonatomic, readonly) TAttMarker *attMarker;
-@property (nonatomic, readonly) TAttText *attText;
-
 // new graphics methods
 - (void) setDrawMode : (TVirtualX::EDrawMode) newMode;
 - (TVirtualX::EDrawMode) getDrawMode;
