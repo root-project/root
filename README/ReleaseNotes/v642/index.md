@@ -1,5 +1,5 @@
 % ROOT Version 6.42 Release Notes
-% 2026-11-15
+% 2026-11-27
 <a name="TopOfPage"></a>
 
 ## Introduction
@@ -135,6 +135,9 @@ CMake versions below 3.26 will emit a warning during configure, since they will 
 
 After ROOT 6.44, the minimum may rise to 3.31 if an upgrade to LLVM 24 or later is performed, see the [minimum version of CMake required by LLVM](https://discourse.llvm.org/t/rfc-raising-minimum-required-cmake-version-to-3-31/91086).
 
+### Download of source tarballs and usage of network during build
+
+The source archives of the `builtin_*` options are downloaded during the build, into `ROOT_DOWNLOAD_DIR` (the default value is `${CMAKE_BINARY_DIR}/download`). That path is passed as `DOWNLOAD_DIR` to the `ExternalProject_Add` call of each archive builtin. An archive that is already there, named as on the CERN mirror, the first URL listed by each builtin), is checked against `URL_HASH` and **not downloaded again**. This allows to build ROOT without network access: point `ROOT_DOWNLOAD_DIR` to a directory with the pre-downloaded archives, or copy them into the default location. When the directory already contains archives, the internet connectivity check in `SearchInstalledSoftware.cmake` is skipped.
 
 ### Optimization of ROOT header files
 
@@ -153,7 +156,7 @@ Note: if you build ROOT with option `dev=ON`, the header `RConfigure.h` will alr
 
 ### RenderCore
 
-RenderCore, the WebGL engine of the REve client, is fetched at build time as the tarball of its release, from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/) first and from its GitHub release second, instead of being bundled in `builtins/rendercore/`. A build without a network takes the tarball from `ROOT_DOWNLOAD_DIR`, as for every builtin. The build option `builtin_rendercore`, ON by default, controls the download. REve has no web location of RenderCore to fall back to, so the option can be OFF only when REve is not built, that is with `root7` or `webgui` OFF; otherwise the configuration stops with an error.
+RenderCore, the WebGL engine of the REve client, is fetched at build time as the tarball of its release, from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/) first and from its GitHub release second, instead of being bundled in `builtins/rendercore/`. The build option `builtin_rendercore`, ON by default, controls the download. REve has no web location of RenderCore to fall back to, so the option can be OFF only when REve is not built, that is with `root7` or `webgui` OFF; otherwise the configuration stops with an error.
 
 ## Python Interface
 
