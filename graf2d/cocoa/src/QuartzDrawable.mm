@@ -644,6 +644,9 @@ void QuartzDrawable::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    DrawTextHelper<wchar_t>(x, y, angle, mgn, text, mode);
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Draw TTFhandle glyphs
+
 void QuartzDrawable::DrawTTFglyphs(Int_t x1, Int_t y1, TTFhandle &ttf, TVirtualX::ETextMode mode)
 {
    if (!fDrawable)
@@ -721,8 +724,16 @@ void QuartzDrawable::DrawTTFglyphs(Int_t x1, Int_t y1, TTFhandle &ttf, TVirtualX
    CGContextRef ctx = drawable.fContext;
    const Quartz::CGStateGuard ctxGuard(ctx);
 
-   ULong_t fore = fCocoa.GetPixel(fAttText.GetTextColor());
-   ULong_t back = 0xffffff;
+      // 0 - backgroud, 4 - text color, 1..3 - interpolation for antialiasing
+   unsigned char text_color[5][3];
+   if (auto color = gROOT->GetColor(fAttText.GetTextColor())) {
+      text_color[4][0] = color->GetRed() * 255;
+      text_color[4][1] = color->GetGreen() * 255;
+      text_color[4][2] = color->GetBlue() * 255;
+   } else {
+      // black as default text color
+      text_color[4][0] = text_color[4][1] = text_color[4][2] = 0;
+   }
 
    CGContextSetRGBStrokeColor(ctx, 0., 0., 1., 1.);
    // paint the glyphs in the pixmap.
@@ -734,83 +745,46 @@ void QuartzDrawable::DrawTTFglyphs(Int_t x1, Int_t y1, TTFhandle &ttf, TVirtualX
          continue;
 
       if (ttf.GetSmoothing()) {
-         ColorStruct_t col[5];
          // background kClear, i.e. transparent, we take as background color
          // the average of the rgb values of all pixels covered by this character
          if (mode == TVirtualX::kClear) {
             const UInt_t maxDots = TMath::Min((UInt_t) 50000, width * rows);
-
-            //In original code, they first have to extract
-            //pixels and call XQueryColors.
-            //I have only one loop here.
-            ULong_t r = 0, g = 0, b = 0;
+            ULong_t sum[3] = {0, 0, 0};
             UInt_t dotCnt = 0;
             for (unsigned y = 0; y < rows; y++) {
                for (unsigned x = 0; x < width; x++) {
                   if (x + bx < pixmap.Get().fWidth && y + by < pixmap.Get().fHeight) {
-                     const unsigned char * const pixels = pixmap.Get().fData + (y + by) * pixmap.Get().fWidth * 4 + (x + bx) * 4;
-                     r += UShort_t(pixels[0] / 255. * 0xffff);
-                     g += UShort_t(pixels[1] / 255. * 0xffff);
-                     b += UShort_t(pixels[2] / 255. * 0xffff);
+                     auto pixels = pixmap.Get().fData + (y + by) * pixmap.Get().fWidth * 4 + (x + bx) * 4;
+                     for (int k = 0; k < 3; ++k)
+                        sum[k] += pixels[k];
                      if (++dotCnt >= maxDots)
                         break;
                   }
                }
             }
-
-            if (dotCnt > 0) {
-               r /= dotCnt;
-               g /= dotCnt;
-               b /= dotCnt;
-            }
-
-            col[0].fRed = (UShort_t) r;
-            col[0].fGreen = (UShort_t) g;
-            col[0].fBlue = (UShort_t) b;
+            for (int k = 0; k < 3; ++k)
+               text_color[0][k] = sum[k] * (dotCnt > 0 ? 1. / dotCnt : 0.);
          } else {
-            // request background color
-            col[0].fPixel = back;
-            fCocoa.QueryColor(kNone, col[0]);
+            // use white as default background color
+            text_color[0][0] = text_color[0][1] = text_color[0][2] = 0xff;
          }
-
-         // request foreground color
-         col[4].fPixel = fore;
-         fCocoa.QueryColor(kNone, col[4]);//calculate fRed/fGreen/fBlue triple from fPixel.
 
          // interpolate between fore and background colors
-         for (int x = 3; x > 0; --x) {
-            col[x].fRed   = (col[4].fRed   * x + col[0].fRed   * (4 - x)) / 4;
-            col[x].fGreen = (col[4].fGreen * x + col[0].fGreen * (4 - x)) / 4;
-            col[x].fBlue  = (col[4].fBlue  * x + col[0].fBlue  * (4 - x)) / 4;
-            fCocoa.AllocColor(kNone, col[x]);//Calculate fPixel from fRed/fGreen/fBlue triplet.
-         }
+         for (int x = 1; x < 4; ++x)
+            for (int k = 0; k < 3; ++k)
+               text_color[x][k] = (text_color[4][k] * x + text_color[0][k] * (4 - x)) / 4;
 
          // put smoothed character, character pixmap values are an index
          // into the 5 colors used for aliasing (4 = foreground, 0 = background)
          const unsigned char *s = buffer;
          for (unsigned y = 0; y < rows; ++y) {
             for (unsigned x = 0; x < width; ++x) {
-               unsigned char d = (((*s++ & 0xff) + 10) * 5) / 256;
-               if (d > 4)
-                  d = 4;
-               if (d > 0) {
-                  const UChar_t pixel[] = {UChar_t(double(col[d].fRed) / 0xffff * 255),
-                                          UChar_t(double(col[d].fGreen) / 0xffff * 255),
-                                          UChar_t(double(col[d].fBlue) / 0xffff * 255), 255};
-                  [pixmap.Get() putPixel : pixel X : bx + x Y : by + y];
-               }
+               unsigned char d = TMath::Min((unsigned char) 4, (((*s++ & 0xff) + 10) * 5) / 256);
+               if (d > 0)
+                  [pixmap.Get() putPixel : text_color[d] X : bx + x Y : by + y];
             }
          }
       } else {
-         // no smoothing, just put character using foreground color
-         ColorStruct_t col;
-         // request foreground color
-         col.fPixel = fore;
-         fCocoa.QueryColor(kNone, col);//calculate fRed/fGreen/fBlue triple from fPixel.
-         const UChar_t pixel[] = {UChar_t(double(col.fRed) / 0xffff * 255),
-                                  UChar_t(double(col.fGreen) / 0xffff * 255),
-                                  UChar_t(double(col.fBlue) / 0xffff * 255), 255};
-
          UChar_t *row = buffer;
          for (unsigned y = 0; y < rows; y++) {
             unsigned n = 0;
@@ -819,7 +793,7 @@ void QuartzDrawable::DrawTTFglyphs(Int_t x1, Int_t y1, TTFhandle &ttf, TVirtualX
             for (unsigned x = 0; x < width; x++) {
                if (n == 0) d = *s++;
                if (TESTBIT(d,7-n))
-                  [pixmap.Get() putPixel : pixel X : bx + x Y : by + y];
+                  [pixmap.Get() putPixel : text_color[4] X : bx + x Y : by + y];
                if (++n == kBitsPerByte) n = 0;
             }
             row += pitch;
