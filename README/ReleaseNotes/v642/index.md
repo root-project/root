@@ -359,6 +359,23 @@ The parameter indices in this interface always refer to the function's own full 
   mode only.
 * Python callables passed to `Define` and `Filter` now run in the Python interpreter, and Numba compilation is opt-in,
   see [Pure Python callables in RDataFrame](#pure-python-callables-in-rdataframe).
+* `AsNumpy` now allows reading columns of type `char`. They are read internally as `ROOT::Vec<unsigned char>` and exposed
+  to the user as a numpy array with `dtype=numpy.uint8`. A warning is raised in such scenarios to let the user know of
+  the conversion taking place.
+* Integration with the new histogram package is continuing:
+  * `VariationsFor` now also supports retrieving variations of new ROOT histograms created with `Hist`.
+  * `Hist` now supports filling a histogram from column(s) containing collection types. The sizes of all containers must
+    match, while scalars are broadcasted. As an extension, this works recursively, so nested vectors are handled one
+    level at a time.
+  * A new experimental method `Profile` has been added to RDataFrame to fill a `ROOT::Experimental::RProfile`.
+* The `RNTupleProcessor` integration in RDataFrame has begun, with a new experimental `RDataSource` for processing of
+  arbitrary RNTuple combinations. The functionality can be accessed by first creating an `RNTupleProcessor`, and then
+  passing it to `ROOT::Experimental::RDF::FromRNTupleProcessor` to create the RDataFrame. At the moment this
+  functionality is restricted to local single-thread processing.
+* The scheduling of multithreaded RNTuple processing has been reworked based on TBB splittable ranges, delegating to
+  the scheduling engine the responsibility to optimise the task processing and split tasks that may be running for too
+  long (e.g. some files may contain many more entries than others). In scenarios with extremely imbalanced file sizes,
+  the new approach may result in a speedup of several factors.
 
 ## Trees
 
