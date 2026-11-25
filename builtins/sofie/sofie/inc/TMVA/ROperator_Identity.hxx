@@ -1,0 +1,87 @@
+#ifndef TMVA_SOFIE_ROPERATOR_IDENTITY
+#define TMVA_SOFIE_ROPERATOR_IDENTITY
+
+#include "TMVA/SOFIE_common.hxx"
+#include "TMVA/ROperator.hxx"
+#include "TMVA/RModel.hxx"
+
+#include <sstream>
+
+namespace TMVA{
+namespace Experimental{
+namespace SOFIE{
+
+template <typename T>
+class ROperator_Identity final : public ROperator
+{
+
+private:
+   bool fIsOutputInitialized = false; // the output is the same weight as the input
+   bool fIsAlias = false;             // the output shares the memory of the input
+   std::string fNX;
+   std::string fNY;
+   std::vector<Dim> fShape;
+
+public:
+   ROperator_Identity(){}
+   ROperator_Identity(std::string nameX, std::string nameY):
+      fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY)){
+         fInputTensorNames = { fNX };
+         fOutputTensorNames = { fNY };
+      }
+
+   void Initialize(RModel& model) override {
+       //input must be a graph input, or already initialized intermediate tensor
+      if (model.CheckIfTensorAlreadyExist(fNX) == false){
+        throw std::runtime_error("TMVA SOFIE Identity Op Input Tensor is not found in model");
+      }
+      fShape = model.GetDimTensorShape(fNX);
+      if (model.IsInitializedTensor(fNX)) {
+         // we need to check if is a weight (initialized) or a constant tensor: in both cases the
+         // output is registered directly and no code is generated at run time
+         if (model.IsConstantTensor(fNX)) {
+            auto inputData = static_cast<T*>(model.GetInitializedTensorData(fNX).get());
+            model.AddConstantTensor<T>(fNY, model.GetTensorShape(fNX), inputData);
+            fIsOutputConstant = true;
+         } else {
+            // the output is the same weight under another name (exporters emit this for a
+            // shared parameter); registering it as an initialized tensor keeps it resolvable
+            // while the code is generated, as BatchNormalization needs its scale to be.
+            // Note that the generated code and the weight file then hold the values twice,
+            // once under each name.
+            fIsOutputInitialized = true;
+            model.AddInitializedTensor(fNY, model.GetTensorType(fNX), model.GetTensorShape(fNX),
+                                       model.GetInitializedTensorData(fNX));
+         }
+      } else {
+         model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShape);
+         fIsAlias = model.AddAliasTensor(fNY, fNX);
+      }
+   }
+
+   std::string Generate(std::string OpName) override {
+      if (fIsOutputConstant || fIsOutputInitialized)
+         return "";
+      OpName = "op_" + OpName;
+      if (fShape.empty()) {
+         throw std::runtime_error("TMVA SOFIE Operator Identity called to Generate without being initialized first");
+      }
+      std::stringstream out;
+      out << "\n//------ IDENTITY\n";
+      if (fIsAlias) {
+         out << SP << "auto * tensor_" << fNY << " = tensor_" << fNX << ";\n";
+      } else {
+         out << SP << "std::copy(tensor_" << fNX << ", tensor_" << fNX << " + " << ConvertDimShapeToLength(fShape)
+             << ", tensor_" << fNY << ");\n";
+      }
+      return out.str();
+   }
+
+};
+
+}//SOFIE
+}//Experimental
+}//TMVA
+
+
+#endif //TMVA_SOFIE_ROPERATOR_IDENTITY

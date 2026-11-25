@@ -1,0 +1,159 @@
+#ifndef TMVA_EXPERIMENTAL_SOFIE_ROPERATOR_BASIC_UNARY
+#define TMVA_EXPERIMENTAL_SOFIE_ROPERATOR_BASIC_UNARY
+
+#include <TMVA/ROperator.hxx>
+#include <TMVA/RModel.hxx>
+#include <TMVA/SOFIE_common.hxx>
+
+namespace TMVA {
+namespace Experimental {
+namespace SOFIE {
+
+enum class EBasicUnaryOperator { kReciprocal, kSqrt , kNeg, kExp, kLog, kSin, kCos, kAbs, kSoftplus, kAtan, kFloor, kAsinh, kAcosh, kAtanh };
+
+template <typename T, EBasicUnaryOperator Op>
+struct UnaryOpTraits {
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kReciprocal> {
+   static std::string Name() { return "Reciprocal"; }
+   static std::string Op(const std::string &X) { return "1/" + X; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kSqrt> {
+   static std::string Name() { return "Sqrt"; }
+   static std::string Op(const std::string &X) { return "std::sqrt(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kNeg> {
+   static std::string Name() { return "Neg"; }
+   static std::string Op(const std::string &X) { return "-" + X; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kExp> {
+   static std::string Name() { return "Exp"; }
+   static std::string Op(const std::string &X) { return "std::exp(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kLog> {
+   static std::string Name() { return "Log"; }
+   static std::string Op(const std::string &X) { return "std::log(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kSin> {
+   static std::string Name() { return "Sin"; }
+   static std::string Op(const std::string &X) { return "std::sin(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kCos> {
+   static std::string Name() { return "Cos"; }
+   static std::string Op(const std::string &X) { return "std::cos(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kAbs> {
+   static std::string Name() { return "Abs"; }
+   static std::string Op(const std::string &X) { return "std::abs(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kSoftplus> {
+   static std::string Name() { return "Softplus"; }
+   static std::string Op(const std::string &X)
+   {
+      return "((" + X + " >= 0x1.4000000000000p+4f) ? " + X + " : std::log1p(std::exp(" + X + ")))";
+   }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kAtan> {
+   static std::string Name() { return "Atan"; }
+   static std::string Op(const std::string &X) { return "std::atan(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kFloor> {
+   static std::string Name() { return "Floor"; }
+   static std::string Op(const std::string &X) { return "std::floor(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kAsinh> {
+   static std::string Name() { return "Asinh"; }
+   static std::string Op(const std::string &X) { return "std::asinh(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kAcosh> {
+   // acosh is only defined for X >= 1; std::acosh returns NaN outside this domain
+   static std::string Name() { return "Acosh"; }
+   static std::string Op(const std::string &X) { return "std::acosh(" + X + ")"; }
+};
+
+template <typename T>
+struct UnaryOpTraits<T, EBasicUnaryOperator::kAtanh> {
+   // atanh is only defined for |X| < 1; std::atanh returns NaN/inf outside this domain
+   static std::string Name() { return "Atanh"; }
+   static std::string Op(const std::string &X) { return "std::atanh(" + X + ")"; }
+};
+
+template <typename T, EBasicUnaryOperator Op>
+class ROperator_BasicUnary final : public ROperator {
+private:
+   std::string fNX;
+   std::string fNY;
+
+   std::vector<Dim> fShapeX;
+   std::vector<Dim> fShapeY;
+
+public:
+   ROperator_BasicUnary() {}
+
+   ROperator_BasicUnary(std::string nameX, std::string nameY)
+      : fNX(UTILITY::Clean_name(nameX)), fNY(UTILITY::Clean_name(nameY))
+   {
+         fInputTensorNames =  { fNX };
+         fOutputTensorNames = { fNY };
+   }
+
+   void Initialize(RModel& model) override {
+      if (!model.CheckIfTensorAlreadyExist(fNX)) {
+         throw std::runtime_error("TMVA::SOFIE - Tensor " + fNX + " not found.");
+      }
+      fShapeX = model.GetDimTensorShape(fNX);
+      fShapeY = fShapeX;
+      model.AddIntermediateTensor(fNY, model.GetTensorType(fNX), fShapeY);
+
+      model.AddNeededStdLib("cmath");
+   }
+
+   std::string Generate(std::string OpName) override
+   {
+      OpName = "op_" + OpName;
+      std::stringstream out;
+
+      out << SP << "\n//---- Operator" << UnaryOpTraits<T, Op>::Name() << " " << OpName << "\n";
+      auto length = ConvertDimShapeToLength(fShapeX);
+      out << SP << "for (size_t i = 0; i < " << length << "; i++) {\n";
+      out << SP << SP << "tensor_" << fNY << "[i] = " << UnaryOpTraits<T, Op>::Op("tensor_" + fNX + "[i]") << ";\n";
+      out << SP << "}\n";
+      return out.str();
+   }
+
+   std::vector<std::string> GetStdLibs() override {
+      return { std::string("cmath") };
+   }
+};
+
+} // namespace SOFIE
+} // namespace Experimental
+} // namespace TMVA
+
+#endif

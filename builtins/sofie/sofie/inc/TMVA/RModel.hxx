@@ -1,0 +1,380 @@
+#ifndef TMVA_SOFIE_RMODEL
+#define TMVA_SOFIE_RMODEL
+
+#include "TMVA/SOFIE_common.hxx"
+
+#include "Rtypes.h" // for ClassDefNV
+
+#include <ctime>
+#include <fstream>
+#include <iomanip>
+#include <iostream>
+#include <memory>
+#include <set>
+#include <sstream>
+#include <type_traits>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+namespace TMVA::Experimental::SOFIE {
+
+enum class Options {
+   kDefault = 0x0,
+   kNoWeightFile = 0x2,
+   // Write the weight tensors in the binary safetensors format
+   // (https://huggingface.co/docs/safetensors) instead of the text format
+   kSafetensorsWeightFile = 0x4,
+};
+
+// Optimization levels inspired by ONNXRuntime.
+// We only get Operator Fusion with the Basic, and
+// memory reuse with Extended. kExtended is enabled
+// by default
+enum class OptimizationLevel {
+   kBasic = 0x0,
+   kExtended = 0x1,
+};
+
+enum class WeightFileType { None, Safetensors, Text };
+
+std::underlying_type_t<Options> operator|(Options opA, Options opB);
+std::underlying_type_t<Options> operator|(std::underlying_type_t<Options> opA, Options opB);
+
+// The ROperator interface is an implementation detail of the code generation
+// and deliberately not exposed to the public: only this forward declaration
+// is visible here, the full definition (TMVA/ROperator.hxx) is a private
+// header of the SOFIE libraries.
+class ROperator;
+
+class RModel final {
+
+private:
+   std::string fFileName;  // file name of original model file for identification
+   std::string fParseTime; // UTC date and time string at parsing
+
+   WeightFileType fWeightFile = WeightFileType::Text;
+
+   std::unordered_set<std::string> fNeededBlasRoutines;
+   // Set to true once GenerateHeaderInfo has emitted the extern "C" declaration
+   // of the BLAS sgemm_ routine (from fNeededBlasRoutines). It lets the
+   // standalone Gemm_Call helper skip emitting a second, duplicate declaration.
+   bool fBlasSgemmDeclared = false;
+
+   std::unordered_set<std::string> fNeededStdLib = {"vector"};
+   std::unordered_set<std::string> fCustomOpHeaders;
+
+   // Inference helper functions (from SOFIE_common) that the generated code
+   // needs. Their standalone definitions are emitted into the generated header
+   // so that it does not depend on including TMVA/SOFIE_common.hxx.
+   std::set<std::string> fNeededHelperFunctions;
+
+   std::string fName = "UnnamedModel";
+   std::string fGC; // generated code
+   bool fUseWeightFile = true;
+
+   // Placeholder tokens emitted by GenerateHeaderInfo and later replaced by
+   // EmitHelperFunctionsCode with the actual helper includes / definitions.
+   // This two-step approach is needed because the full set of required helpers
+   // is only known once all operators (and sub-graphs) have been generated.
+   static constexpr const char *kHelperIncludesMarker = "//@SOFIE_HELPER_INCLUDES@\n";
+   static constexpr const char *kHelperFunctionsMarker = "//@SOFIE_HELPER_FUNCTIONS@\n";
+
+   bool fIsInitialized = false;
+   bool fIsSubGraph = false;
+   bool fUseVDT = false;
+   int fVerbose = 0;
+   int fBatchSize = -1;
+   size_t fConstantTensorSize = 0; // size  (in Bytes) of the allocated constant tensors
+   size_t fWeightsTensorSize = 0;  // size  (in Bytes) of the allocated weight tensors
+   size_t fOtherTensorSize = 0;    // size  (in Bytes) of intermediate tensors which are not managed by the memory pool
+
+   OptimizationLevel fOptimizationLevel = OptimizationLevel::kExtended;
+
+   std::unordered_map<std::string, InputTensorInfo> fInputTensorInfos; // input tensors where shape may not fully defined or other graph inputs?
+   std::unordered_map<std::string, TensorInfo> fReadyInputTensorInfos; // input tensors where shape is full defined
+   std::unordered_map<std::string, InitializedTensor> fInitializedTensors;
+   std::unordered_map<std::string, TensorInfo> fIntermediateTensorInfos;
+   std::unordered_map<std::string, DynamicTensorInfo> fDynamicTensorInfos;
+   std::unordered_map<std::string, std::pair<std::vector<Dim>, bool>> fShapeTensors; // constant tensors describing a shape
+   std::unordered_map<std::string, std::string> fShapeParams; // parameters defining the dynamic shape (e.g. batch size), store also its default value
+   std::unordered_set<std::string> fComputedShapeParams;      ///<! shape parameters computed at run time by an operator
+   std::unordered_map<std::string, std::string> fAliasTensors;   // list of alias tensors
+   std::vector<std::string> fDimShapeNames; // parameter names used to define the shapes
+   std::vector<std::string> fOutputTensorNames;
+   std::vector<std::string> fInputTensorNames; // input tensor names using ONNX order
+
+   // A bare std::unique_ptr<ROperator> would require the complete ROperator
+   // type wherever a destroyed RModel is instantiated; with the
+   // out-of-line-deleter declared here and defined in RModel.cxx the
+   // forward declaration above is enough, so the ROperator interface can stay
+   // private.
+   struct ROperatorDeleter {
+      void operator()(ROperator *ptr) const;
+   };
+   std::vector<std::unique_ptr<ROperator, ROperatorDeleter>> fOperators;
+
+   std::vector<std::shared_ptr<RModel>> fSubGraphs;    ///<!  sub-graph models (transient)
+   RModel * fParentGraph = nullptr;
+
+   // memory pool information for intermediate tensors
+   MemoryPoolInfo fIntermediateMemoryInfo;    ///<!  intermediate memory info (transient)
+   std::unordered_map<std::string_view, size_t> fIntermediateTensorFrequencyLookup;    ///<!  lookup table for intermediate tensor frequency (transient)
+
+   std::string fExtraCodeForDimShapes; // extra code needed for initialization of dynamic parameters (e.g. number of non zero elements in NonZero operator)
+
+   /// Shape parameters of a dynamic tensor that an operator computes at run time and
+   /// that are Session constructor arguments
+   std::vector<std::string> RuntimeBoundParams(const std::string &name) const;
+
+public:
+   /**
+       Default constructor. Needed to allow serialization of ROOT objects. See
+       https://root.cern/manual/io_custom_classes/#restrictions-on-types-root-io-can-handle
+   */
+   RModel() = default;
+   RModel(std::string name, std::string parsedtime) : fFileName(std::move(name)), fParseTime(std::move(parsedtime))
+   {
+      fName = fFileName.substr(0, fFileName.rfind("."));
+      fName = UTILITY::Clean_name(fName);
+   }
+
+   // Defined out of line because ROperator is an incomplete type in this
+   // header (the definition is a private implementation header).
+   ~RModel();
+   RModel(RModel &&);
+   RModel &operator=(RModel &&);
+   RModel(RModel const &) = delete;
+   RModel &operator=(RModel const &) = delete;
+
+   int Verbose() const { return fVerbose;}
+
+   std::vector<size_t> GetTensorShape(const std::string & name) const;
+   std::vector<Dim> GetDimTensorShape(const std::string & name) const;
+   std::vector<Dim> GetDynamicTensorShape(const std::string & name) const ;
+
+   // get the values for the tensor representing a shape
+   const std::vector<Dim> & GetShapeTensorValues(const std::string & tensor_name) const;
+
+   ETensorType GetTensorType(std::string name) const;
+
+
+   bool CheckIfTensorAlreadyExist(std::string tensor_name);
+   void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<Dim> shape);
+   void AddInputTensorInfo(std::string input_name, ETensorType type, std::vector<size_t> shape);
+   void AddOperator(std::unique_ptr<ROperator> op, int order_execution = -1);
+   void AddInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
+                             std::shared_ptr<void> data);
+   void AddInitializedTensor(const std::string &tensor_name, ETensorType tensor_type,
+                             const std::vector<std::size_t> &shape, void *raw_data);
+   void AddConstantTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
+                             std::shared_ptr<void> data);
+
+   // Make tensor_name share the memory of orig_tensor_name, for operators such as Reshape
+   // whose output only reinterprets the shape of its input.
+   // Returns false, and registers nothing, when tensor_name needs storage of its own.
+   bool AddAliasTensor(const std::string &tensor_name, const std::string &orig_tensor_name);
+
+   template<class T>
+   void AddConstantTensor(const std::string & name, const std::vector<size_t> & shape, const T * data) {
+      size_t length = ConvertShapeToLength(shape);
+      std::shared_ptr<void> data_ptr(malloc(length * sizeof(T)), free);
+      std::memcpy(data_ptr.get(), (void*) data, length * sizeof(T));
+      AddConstantTensor(name, GetTemplatedType<T>(T()), shape, data_ptr);
+   }
+   // for boolean can be more convenient passing an std::vector
+   template<class T>
+   void AddConstantTensor(const std::string & name, const std::vector<size_t> & shape, const std::vector<T> & data) {
+      size_t length = data.size();
+      std::shared_ptr<void> data_ptr(malloc(length * sizeof(T)), free);
+      std::copy(data.begin(), data.end(), (T*) data_ptr.get());
+      //std::memcpy(data_ptr.get(), (void*) data, length * sizeof(T));
+      AddConstantTensor(name, GetTemplatedType<T>(T()), shape, data_ptr);
+   }
+
+   void AddShapeTensor(const std::string & name, const std::vector<Dim> & shapeValues, bool scalar = false);
+
+   void AddExtraCodeForDimShapes(const std::string & code) { fExtraCodeForDimShapes += code; }
+
+   // add and initialize subgraph to the model
+   void InitializeSubGraph(std::shared_ptr<RModel>  graph);
+
+   // set a flag to indicate tensor does not need to be written in a weight file
+   // (e.g. shape tensors used as input to define a shape (in Reshape))
+   void SetNotWritableInitializedTensor(const std::string & tensor_name);
+
+   // Check if a tensor is initialized
+   bool IsInitializedTensor(const std::string &name) const;
+   // Check if a tensor is Constant (note a Constant tensor is also initialized)
+   bool IsConstantTensor(const std::string &name) const;
+   bool IsDynamicTensor(const std::string &name) const;
+   // Check if tensor is a input dynamic tensor (without a specified shape, based on Sim structure
+   bool IsDimInputTensor(const std::string &name) const;
+   // check if tensor is a fully specified input tensor
+   bool IsReadyInputTensor(const std::string &name) const;
+   /// check if a tensor is a shape tensor
+   bool IsShapeTensor(const std::string & name) const;
+   /// check if a tensor is a alias tensor
+   bool IsAliasTensor(const std::string & name) const;
+
+   // Add intermediate tensor
+   void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<Dim> dim_shape);
+   void AddIntermediateTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape);
+   // Add an intermediate dynamic tensor
+   void AddDynamicTensor(std::string tensor_name, ETensorType type, std::vector<Dim> shape);
+   // void Add a shape parameter
+   void AddShapeParam(const std::string & name, size_t def_value = 0);
+   /// Declare a shape parameter as computed at run time by an operator
+   void AddComputedShapeParam(const std::string &name);
+   bool IsComputedShapeParam(const std::string &name) const { return fComputedShapeParams.count(name) != 0; }
+   /// Line for an operator's Generate(), where its size variables are declared and before it writes the output.
+   /// It is replaced by a check that the shape parameters, computed at run time, do not exceed the maximum
+   /// values given to the Session constructor.
+   static std::string SizeCheckMarker(const std::string &name);
+   void AddInputTensorName(std::string name);
+   void AddOutputTensorNameList(std::vector<std::string> output_tensor_names);
+   void
+   UpdateOutputTensorList(std::vector<std::string> curr_output_tensor, std::vector<std::string> modify_output_tensor);
+   void UpdateInitializedTensor(std::string tensor_name, ETensorType type, std::vector<std::size_t> shape,
+                                std::shared_ptr<void> data);
+   std::shared_ptr<void> GetInitializedTensorData(std::string tensor_name);
+
+   template<class T>
+   std::vector<T> GetTensorData(const std::string & name);
+
+   void Initialize(int batchSize = -1, bool verbose = false);
+   void Initialize(const std::map<std::string,size_t> & inputParams, bool verbose = false);
+
+   void Generate(std::underlying_type_t<Options> options, int batchSize = -1, bool verbose = false);
+   void Generate(Options options = Options::kDefault, int batchSize = -1, bool verbose = false)
+   {
+      Generate(static_cast<std::underlying_type_t<Options>>(options), batchSize, verbose);
+   }
+   // generate the infer function signature. If isdecl= false generate the calling infer function
+   // used to infer the sub-graphs
+   std::string GenerateInferSignature(bool isdecl = true);
+
+   // calculate total intermediate memory and position intermediate tensor addresses
+   std::string AllocateIntermediateMemory(std::span<const std::string_view> op_output_tensors);
+   void CheckAndFlushIntermediateMemory(std::span<const std::string_view> op_output_tensors, const size_t& op_idx);
+
+   void SetOptimizationLevel(OptimizationLevel optim_level) { fOptimizationLevel = optim_level; }
+
+   // get the size in bytes of the constant tensors
+   size_t GetConstantTensorSize() const { return fConstantTensorSize; }
+   // get the size in bytes of the weight tensors
+   size_t GetWeightsTensorSize() const { return fWeightsTensorSize; }
+   // get the size in bytes of the intermediate tensors which are not part of the memory pool
+   size_t GetOtherTensorSize() const { return fOtherTensorSize; }
+   // get the size in bytes of the intermediate tensors managed by the memory pool
+   size_t GetIntermediateTensorSize() const {
+      return (!fIntermediateMemoryInfo.total_stack.empty())
+                ? fIntermediateMemoryInfo.total_stack.rbegin()->first + fIntermediateMemoryInfo.total_stack.rbegin()->second.tensor_size
+                : 0;
+   }
+
+protected:
+   // internal functions
+   // generate code for the initialized tensors
+   void GenerateInitializedTensorInfo();
+   // generate code for the intermediate tensors
+   void GenerateIntermediateTensorInfo();
+   // generate code for the dynamic tensors
+   void GenerateDynamicTensorInfo();
+   // generate code for declarations needed by operators
+   void GenerateOperatorDeclarations();
+   // generate code for inference
+   void GenerateOutput();
+   // generate code for initializing memory pool for intermediate tensors
+   void GenerateIntermediateMemoryPool();
+   // Generate all session code
+   void GenerateSessionCode();
+   bool IsInputTensorShapeParam(std::string const &name) const;
+   std::vector<std::string> CollectTensorMemberNames(const std::string &input);
+   void GenerateRequiredInputTensorInfo();
+
+public:
+   const std::vector<std::string> & GetInputTensorNames() const { return fInputTensorNames; }
+   const std::vector<std::string> & GetOutputTensorNames() const { return fOutputTensorNames; }
+   const std::vector<std::string> & GetDimShapeNames() const { return fDimShapeNames; }
+
+   void ReadInitializedTensorsFromFile();
+   long WriteInitializedTensorsToFile(std::string filename = "");
+   // Write the weight tensors as a safetensors payload to a stream or to an
+   // in-memory buffer (e.g. for use with a blob-based Session constructor)
+   void WriteInitializedTensorsToStream(std::ostream &os);
+   std::string WriteInitializedTensorsToBuffer();
+
+   void PrintSummary() const;
+   void PrintIntermediateTensors() const;
+   void PrintOutputTensors() const;
+   void OutputGenerated(std::string filename = "", bool append = false);
+   void SetFilename(std::string filename) { fName = filename; }
+   std::string GetFilename() { return fName; }
+   const std::string &GetName() const { return fName; }
+
+   void AddBlasRoutines(std::vector<std::string> routines)
+   {
+      for (auto &routine : routines) {
+         fNeededBlasRoutines.insert(routine);
+      }
+   }
+   void AddNeededStdLib(std::string libname)
+   {
+      // if the library is already in the set, insert does nothing, so we don't need to check before inserting
+      fNeededStdLib.insert(std::move(libname));
+   }
+   void AddNeededCustomHeader(std::string filename)
+   {
+      fCustomOpHeaders.insert(std::move(filename));
+   }
+   // Register an inference helper function that the generated code needs. See
+   // EmitHelperFunctionsCode for the list of recognised keys.
+   void AddNeededHelperFunction(std::string name)
+   {
+      fNeededHelperFunctions.insert(std::move(name));
+   }
+   const std::set<std::string> &GetNeededHelperFunctions() const { return fNeededHelperFunctions; }
+
+   void GenerateHeaderInfo(std::string &hgname);
+   // Replace the helper markers in the generated code with the standalone
+   // definitions of the helper functions collected in fNeededHelperFunctions.
+   void EmitHelperFunctionsCode();
+   void PrintGenerated(std::ostream &os = std::cout) { os << fGC; }
+   std::string ReturnGenerated() { return fGC; }
+
+   void PrintRequiredInputTensors() const;
+   void PrintInitializedTensors() const;
+   void PrintDynamicTensors() const;
+   void HeadInitializedTensors(std::string name, int n_print = 50);
+
+   // flag to use vdt for fast math functions (e.g. exp in softmax)
+   void SetUseVDT(bool on) {
+      fUseVDT = on;
+   }
+   bool UseVDT() const { return fUseVDT;}
+
+   // RModel is an internal representation that doesn't support ROOT IO (if you need model IO, use ONNX directly).
+   ClassDefNV(RModel, 0);
+};
+
+// need to implement here templated member functions and its specialization
+
+
+template<class T>
+inline std::vector<T> RModel::GetTensorData(const std::string & name) {
+   if (!IsInitializedTensor(name)) return std::vector<T>{};
+   T * data = static_cast<T*>(GetInitializedTensorData(name).get());
+   size_t size = ConvertShapeToLength(GetTensorShape(name));
+   return std::vector<T>(data, data+size);
+}
+
+template<>
+inline std::vector<Dim> RModel::GetTensorData<Dim>(const std::string & name) {
+   if (!IsShapeTensor(name)) return std::vector<Dim>{};
+   return GetShapeTensorValues(name);
+}
+
+} // namespace TMVA::Experimental::SOFIE
+
+#endif // TMVA_SOFIE_RMODEL
