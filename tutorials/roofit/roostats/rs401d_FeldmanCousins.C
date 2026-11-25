@@ -229,7 +229,7 @@ void rs401d_FeldmanCousins(bool doFeldmanCousins = false, bool doMCMC = true)
 
       RooArgList axisList(deltaMSq, sinSq2theta);
       MCMCCalculator mc(*data, modelConfig);
-      mc.SetNumIters(5000);
+      mc.SetNumIters(1000);
       mc.SetNumBurnInSteps(100);
       mc.SetUseKeys(true);
       mc.SetTestSize(.1);
