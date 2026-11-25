@@ -61,34 +61,40 @@ A more thorough explanation of how to use C++ code from Python can be found in t
 
 #### Python code
 
-ROOT also offers the option to compile Python functions with fundamental types and arrays thereof using [Numba](https://numba.pydata.org/).
-Such compiled functions can then be used in a C++ expression provided to RDataFrame.
+ROOT can translate a Python function over fundamental types and arrays thereof into C++ source, and declare that
+to the interpreter. The result is an ordinary C++ function, so it can be used in a C++ expression provided to
+RDataFrame and is inlined into the event loop like any other.
 
-The function to be compiled should be decorated with `ROOT.Numba.Declare`, which allows to specify the parameter and
-return types. See the following snippet for a simple example or the full tutorial [here](pyroot004__NumbaDeclare_8py.html).
+The function to be translated should be decorated with `ROOT.Py.Declare`, which allows to specify the parameter and
+return types. See the following snippet for a simple example or the full tutorial [here](df038__NumbaDeclare_8py.html).
+The decorator is also available as `ROOT.Numba.Declare`, which declares into the `Numba` C++ namespace instead; that
+spelling predates the translation and is kept so that existing code keeps working.
 
 ~~~{.py}
-@ROOT.Numba.Declare(["float"], "bool")
+@ROOT.Py.Declare(["float"], "bool")
 def myFilter(x):
     return x > 10
 
 df = ROOT.RDataFrame("myTree", "myFile.root")
-sum = df.Filter("Numba::myFilter(x)").Sum("y")
+sum = df.Filter("Py::myFilter(x)").Sum("y")
 print(sum.GetValue())
 ~~~
 
-It also works with collections: `RVec` objects of fundamental types can be transparently converted to/from numpy arrays:
+It also works with collections: `RVec`, `std::vector` and `std::array` of fundamental types support the numpy
+spelling of element-wise operations and reductions:
 
 ~~~{.py}
-@ROOT.Numba.Declare(['RVec<float>', 'int'], 'RVec<float>')
-def pypowarray(numpyvec, pow):
-    return numpyvec**pow
+@ROOT.Py.Declare(['RVec<float>', 'int'], 'RVec<float>')
+def pypowarray(vec, pow):
+    return vec**pow
 
 df.Define('array', 'ROOT::RVecF{1.,2.,3.}')\
-  .Define('arraySquared', 'Numba::pypowarray(array, 2)')
+  .Define('arraySquared', 'Py::pypowarray(array, 2)')
 ~~~
 
-Note that this functionality requires the Python packages `numba` and `cffi` to be installed.
+The generated C++ is available on the decorated callable as `__cpp_wrapper__`. Only a subset of Python can be
+translated; anything outside it is reported when the function is declared, quoting the offending source line.
+This functionality requires no third-party Python packages.
 
 ### Interoperability with NumPy
 

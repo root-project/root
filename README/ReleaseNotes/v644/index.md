@@ -28,6 +28,7 @@ The following people have contributed to this new version:
 * The TMVA deep learning methods `MethodDL` (`TMVA::Types::kDL`) and `MethodDNN` (`TMVA::Types::kDNN`), together with all classes in the `TMVA::DNN` namespace and their helper classes `TMVA::Monitoring` and `Pattern`, are deprecated and will be removed in ROOT 6.46. Neural networks are nowadays trained with dedicated machine learning libraries, so maintaining a separate implementation with its own CPU, CUDA and cuDNN backends is no longer justified. Users are encouraged to train their models directly with these libraries, which integrate well with ROOT via the `ROOT.Experimental.ML.RDataLoader`, and to use SOFIE for inference in C++. The `TMVA_CNN_Classification` and `TMVA_RNN_Classification` tutorials are removed already, and the other TMVA tutorials do not use these methods anymore.
   We are aware that models trained with these methods may be stored in TMVA XML weight files and still be evaluated via `TMVA::Reader` in production workflows. If you need to keep running such models after ROOT 6.46, please reach out to the ROOT team by opening a [GitHub issue](https://github.com/root-project/root/issues) or posting on the [ROOT forum](https://root-forum.cern.ch/), so that a migration path to SOFIE can be provided.
 * The build options `tmva-cpu`, `tmva-gpu`, `tmva-cudnn` and `use_gsl_cblas` only affect the deprecated TMVA deep learning methods, so they are deprecated as well and will be removed in ROOT 6.46. The `tmva-cpu` option is now `OFF` by default, also with `-Dall=ON`, so `MethodDL` runs on a single thread without BLAS and `MethodDNN` cannot be trained, unless ROOT is configured with `-Dtmva-cpu=ON`. Evaluating existing weight files with `TMVA::Reader` works in both cases.
+* `numba` and `cffi` are no longer dependencies of PyROOT. `ROOT.Numba.Declare` translates the Python callable to C++ instead of compiling it with numba; see the Python Interface section.
 
 ## Build system
 
@@ -41,6 +42,56 @@ After ROOT 6.44, the minimum may rise to 3.31 if an upgrade to LLVM 24 or later 
 RenderCore, the WebGL engine of the REve client, is fetched at build time as the tarball of its release, from [SPI](https://spi.web.cern.ch)'s [website](https://lcgpackages.web.cern.ch/) first and from its GitHub release second, instead of being bundled in `builtins/rendercore/`. A build without a network takes the tarball from `ROOT_DOWNLOAD_DIR`, as for every builtin. The build option `builtin_rendercore`, ON by default, controls the download. REve has no web location of RenderCore to fall back to, so the option can be OFF only when REve is not built, that is with `root7` or `webgui` OFF; otherwise the configuration stops with an error.
 
 ## Python Interface
+
+### `ROOT.Numba.Declare` no longer uses numba
+
+The decorator now translates the decorated Python callable to C++ source and declares that to the interpreter, instead
+of compiling it with numba and calling into it through a function pointer. The spelling and the `Numba` C++ namespace
+are unchanged, so existing code such as
+
+~~~{.py}
+@ROOT.Numba.Declare(["float", "int"], "float")
+def pypow(x, y):
+    return x**y
+
+df.Define("y", "Numba::pypow(x, 3)")
+~~~
+
+keeps working, and numba and cffi are no longer dependencies of PyROOT.
+
+The same decorator is available as `ROOT.Py.Declare`, which declares into the `Py` namespace and is the recommended
+spelling for new code. Because the result is ordinary C++ rather than an opaque address, it is inlined into the
+RDataFrame event loop, it can call anything the interpreter already knows -- methods on ROOT classes, functions such
+as `TMath::Abs`, other declared callables -- and the generated code can be read back from the callable as
+`__cpp_wrapper__`.
+
+Practical consequences:
+
+* Callables returning an `RVec`, `std::vector` or `std::array` no longer allocate and copy the result twice per entry.
+* Declaring a function is roughly an order of magnitude faster, which is noticeable in notebooks.
+* Methods on C++ objects, for example `ROOT::Math::PtEtaPhiMVector::M()`, work on every platform rather than only
+  where the experimental cppyy/numba bridge is tested.
+
+Only a subset of Python is translated. Anything outside it is refused when the function is declared, with the
+offending source line quoted, rather than being approximated in C++. Constructs that numba accepted and this
+translation does not include comprehensions, tuple unpacking, dictionaries, sets, strings, `try`, `with`, lambdas in
+the function body, array allocation such as `np.zeros`, calls to other plain Python functions, and any third-party
+call -- `np.random` in particular, because no C++ generator reproduces numpy's stream and silently different random
+numbers are worse than an error. The supported subset is documented in the RDataFrame Python section and in
+`bindings/pyroot/pythonizations/python/ROOT/_pydeclare/README.md` in the source tree.
+
+Two further differences from the numba implementation are worth knowing about when migrating:
+
+* The translation reads the Python source of the callable with `inspect.getsource`, so a callable whose source is not
+  available cannot be translated. In practice this means functions typed at the plain `python` prompt, passed to
+  `python -c`, piped in on standard input, or built with `exec()`. Functions in a file, in a Jupyter or IPython cell,
+  and in a notebook all work.
+* The decorated callable no longer carries the `numba_func`, `__py_wrapper__` and `__numba_cfunc__` attributes. The
+  generated C++ is available instead as `__cpp_wrapper__`.
+
+Note that `ROOT.NumbaExt`, which enables numba-compiled Python to call into C++ through cppyy, is a separate feature
+and is unaffected. numba is therefore still an optional dependency, needed only for that bridge; cffi is not needed at
+all any more.
 
 ## I/O
 
