@@ -1075,13 +1075,10 @@ endfunction()
 #                        BUILTINS dep1 dep2              # dependencies to builtins)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_LINKER_LIBRARY library)
-  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;TEST;NOINSTALL" "TYPE" "LIBRARIES;DEPENDENCIES;BUILTINS"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "DLLEXPORT;CMAKENOEXPORT;NOINSTALL" "TYPE" "LIBRARIES;DEPENDENCIES;BUILTINS"  ${ARGN})
   ROOT_GET_SOURCES(lib_srcs src ${ARG_UNPARSED_ARGUMENTS})
   if(NOT ARG_TYPE)
     set(ARG_TYPE SHARED)
-  endif()
-  if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
-    set(_all EXCLUDE_FROM_ALL)
   endif()
   if(TARGET ${library})
     message(FATAL_ERROR "Target ${library} already exists.")
@@ -1138,7 +1135,7 @@ function(ROOT_LINKER_LIBRARY library)
   endif()
 
   #----Installation details-------------------------------------------------------
-  if(NOT ARG_TEST AND NOT ARG_NOINSTALL AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
+  if(NOT ARG_NOINSTALL AND CMAKE_LIBRARY_OUTPUT_DIRECTORY)
     if(NOT MSVC)
       ROOT_APPEND_LIBDIR_TO_INSTALL_RPATH(${library} ${CMAKE_INSTALL_LIBDIR})
     endif()
@@ -1584,15 +1581,12 @@ endfunction()
 #---ROOT_EXECUTABLE( <name> source1 source2 ... LIBRARIES library1 library2 ... BUILTINS dep1 dep2 ...)
 #---------------------------------------------------------------------------------------------------
 function(ROOT_EXECUTABLE executable)
-  CMAKE_PARSE_ARGUMENTS(ARG "CMAKENOEXPORT;NOINSTALL;TEST" "" "LIBRARIES;BUILTINS;ADDITIONAL_COMPILE_FLAGS"  ${ARGN})
+  CMAKE_PARSE_ARGUMENTS(ARG "CMAKENOEXPORT;NOINSTALL" "" "LIBRARIES;BUILTINS;ADDITIONAL_COMPILE_FLAGS"  ${ARGN})
   ROOT_GET_SOURCES(exe_srcs src ${ARG_UNPARSED_ARGUMENTS})
   set(executable_name ${executable})
   if(TARGET ${executable})
     message("Target ${executable} already exists. Renaming target name to ${executable}_new")
     set(executable ${executable}_new)
-  endif()
-  if(ARG_TEST) # we are building a test, so add EXCLUDE_FROM_ALL
-    set(_all EXCLUDE_FROM_ALL)
   endif()
   if(NOT (PROJECT_NAME STREQUAL "ROOT"))
     # only for non-ROOT executable use $ROOTSYS/include
@@ -3749,22 +3743,6 @@ function(ROOT_SET_OUTPUT_DIRECTORIES library)
         set_target_properties(${library} PROPERTIES ARCHIVE_OUTPUT_DIRECTORY_${OUTPUTCONFIG} ${CMAKE_CURRENT_BINARY_DIR})
       endforeach(OUTPUTCONFIG CMAKE_CONFIGURATION_TYPES)
    endif()
-endfunction()
-
-#---------------------------------------------------------------------------------------------------
-# function ROOTTEST_LINKER_LIBRARY( <name> source1 source2 ...[TYPE STATIC|SHARED] [DLLEXPORT]
-#                                   [NOINSTALL] LIBRARIES library1 library2 ...
-#                                   DEPENDENCIES dep1 dep2
-#                                   BUILTINS dep1 dep2)
-#
-# this function simply calls the ROOT function ROOT_LINKER_LIBRARY, and sets the output directories
-# from the standard output directory (CMAKE_CURRENT_BINARY_DIR/$<CONFIG>) to its parent directory
-# (CMAKE_CURRENT_BINARY_DIR) on Windows
-#
-#---------------------------------------------------------------------------------------------------
-function(ROOTTEST_LINKER_LIBRARY library)
-   ROOT_LINKER_LIBRARY(${ARGV})
-   ROOT_SET_OUTPUT_DIRECTORIES(${library})
 endfunction()
 
 #---------------------------------------------------------------------------------------------------
