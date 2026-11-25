@@ -10,68 +10,64 @@ if(pyroot)
   ROOT_ADD_PYUNITTEST(compression_settings test_compression_settings.py GENERIC PYTHON_DEPS pytest)
 endif()
 
+set(DIR "${CMAKE_CURRENT_SOURCE_DIR}")
+
 # merge 2 RNTuples passing an explicit compression
-ROOTTEST_ADD_TEST(test_MergeChangeComp_explicit
-                  COPY_TO_BUILDDIR merge_gen_input_tuples.C merge_changeComp_check_output.C
-                  PRECMD ${ROOT_root_CMD} -q -b "merge_gen_input_tuples.C(\"test_comp_in1.root\", \"test_comp_in2.root\")"
+ROOTTEST_ADD_TEST(test_hadd_MergeChangeComp_explicit
+                  PRECMD ${ROOT_root_CMD} -q -b "${DIR}/merge_gen_input_tuples.C(\"test_comp_in1.root\", \"test_comp_in2.root\")"
                   COMMAND ${ROOT_hadd_CMD} -f404 test_comp_out.root test_comp_in1.root test_comp_in2.root
-                  POSTCMD ${ROOT_root_CMD} -q -b "merge_changeComp_check_output.C(404, 404, \"test_comp_out.root\", \"test_comp_in1.root\", \"test_comp_in2.root\")"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/merge_changeComp_check_output.C(404, 404, \"test_comp_out.root\", \"test_comp_in1.root\", \"test_comp_in2.root\")"
                   FIXTURES_SETUP root-io-hadd-test_MergeChangeComp_explicit-fixture
 )
 
 # merge 2 RNTuples without passing a compression
-ROOTTEST_ADD_TEST(test_MergeChangeComp_default
+ROOTTEST_ADD_TEST(test_hadd_MergeChangeComp_default
                   FIXTURES_REQUIRED root-io-hadd-test_MergeChangeComp_explicit-fixture
-                  PRECMD ${ROOT_root_CMD} -q -b "merge_gen_input_tuples.C(\"test_comp_in_def_1.root\", \"test_comp_in_def_2.root\")"
+                  PRECMD ${ROOT_root_CMD} -q -b "${DIR}/merge_gen_input_tuples.C(\"test_comp_in_def_1.root\", \"test_comp_in_def_2.root\")"
                   COMMAND ${ROOT_hadd_CMD} -f test_comp_out_def.root test_comp_in_def_1.root test_comp_in_def_2.root
-                  POSTCMD ${ROOT_root_CMD} -q -b "merge_changeComp_check_output.C(505, 101, \"test_comp_out_def.root\", \"test_comp_in_def_1.root\", \"test_comp_in_def_2.root\")"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/merge_changeComp_check_output.C(505, 101, \"test_comp_out_def.root\", \"test_comp_in_def_1.root\", \"test_comp_in_def_2.root\")"
 )
 
 # merge 2 RNTuples using the first tuple's compression
 # NOTE: merge_gen_input_tuples.C generates the first tuple as 505 and the second as 101
-ROOTTEST_ADD_TEST(test_MergeChangeComp_first
+ROOTTEST_ADD_TEST(test_hadd_MergeChangeComp_first
                   FIXTURES_REQUIRED root-io-hadd-test_MergeChangeComp_explicit-fixture
-                  PRECMD ${ROOT_root_CMD} -q -b "merge_gen_input_tuples.C(\"test_comp_in_ff_1.root\", \"test_comp_in_ff_2.root\")"
+                  PRECMD ${ROOT_root_CMD} -q -b "${DIR}/merge_gen_input_tuples.C(\"test_comp_in_ff_1.root\", \"test_comp_in_ff_2.root\")"
                   COMMAND ${ROOT_hadd_CMD} -ff test_comp_out_ff.root test_comp_in_ff_2.root test_comp_in_ff_1.root
-                  POSTCMD ${ROOT_root_CMD} -q -b "merge_changeComp_check_output.C(101, 101, \"test_comp_out_ff.root\", \"test_comp_in_ff_1.root\", \"test_comp_in_ff_2.root\")"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/merge_changeComp_check_output.C(101, 101, \"test_comp_out_ff.root\", \"test_comp_in_ff_1.root\", \"test_comp_in_ff_2.root\")"
 )
 
-ROOTTEST_ADD_TEST(test_TreeChangeComp
-                  COPY_TO_BUILDDIR hadd_gen_input_tree.C hadd_check_comp_tree.C
-                  PRECMD ${ROOT_root_CMD} -q -b "hadd_gen_input_tree.C(\"test_comp_tree_in.root\")"
+ROOTTEST_ADD_TEST(test_hadd_TreeChangeComp
+                  PRECMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_gen_input_tree.C(\"test_comp_tree_in.root\")"
                   COMMAND ${ROOT_hadd_CMD} -f401 test_comp_tree_out.root test_comp_tree_in.root
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_check_comp_tree.C(\"test_comp_tree_out.root\", \"test_comp_tree_in.root\", 401)"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_check_comp_tree.C(\"test_comp_tree_out.root\", \"test_comp_tree_in.root\", 401)"
 )
 
 ################################################################
 #                 miscellaneous tests                          #
 ################################################################
 
-ROOTTEST_ADD_TEST(test_MergeNestedSameName
-                  COPY_TO_BUILDDIR hadd_check_nested_same_name.C
-                  COMMAND ${ROOT_root_CMD} -q -b "hadd_check_nested_same_name.C"
+ROOTTEST_ADD_TEST(test_hadd_MergeNestedSameName
+                  COMMAND ${ROOT_root_CMD} -q -b "${DIR}/hadd_check_nested_same_name.C"
                   OUTREF hadd_check_nested_same_name.ref
 )
 
-ROOTTEST_ADD_TEST(test_MergeCMSOpenDataRNTuples
-                  COPY_TO_BUILDDIR hadd_check_cms.C cms_opendata_0_100.root cms_opendata_100_200.root cms_opendata_0_200.root
-                  COMMAND ${ROOT_hadd_CMD} -f cms_opendata_merged.root cms_opendata_0_100.root cms_opendata_100_200.root
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_check_cms.C(\"cms_opendata_merged.root\", \"cms_opendata_0_200.root\")"
+ROOTTEST_ADD_TEST(test_hadd_MergeCMSOpenDataRNTuples
+                  COMMAND ${ROOT_hadd_CMD} -f cms_opendata_merged.root ${DIR}/cms_opendata_0_100.root ${DIR}/cms_opendata_100_200.root
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_check_cms.C(\"cms_opendata_merged.root\", \"${DIR}/cms_opendata_0_200.root\")"
 )
 
-ROOTTEST_ADD_TEST(test_MergeFilterBlacklist
-                  COPY_TO_BUILDDIR hadd_gen_input_files.C hadd_check_filtered.C hadd_filter.txt
-                  PRECMD ${ROOT_root_CMD} -q -b "hadd_gen_input_files.C(\"hadd_input\")"
-                  COMMAND ${ROOT_hadd_CMD} -L hadd_filter.txt -Ltype SkipListed -f filtered_blacklist.root hadd_input0.root hadd_input1.root hadd_input2.root hadd_input3.root
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_check_filtered.C(\"filtered_blacklist.root\", \"blacklist\")"
+ROOTTEST_ADD_TEST(test_hadd_MergeFilterBlacklist
+                  PRECMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_gen_input_files.C(\"hadd_input\")"
+                  COMMAND ${ROOT_hadd_CMD} -L ${DIR}/hadd_filter.txt -Ltype SkipListed -f filtered_blacklist.root hadd_input0.root hadd_input1.root hadd_input2.root hadd_input3.root
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_check_filtered.C(\"filtered_blacklist.root\", \"blacklist\")"
                   FIXTURES_SETUP root-io-hadd-test_MergeFilterBlacklist-fixture
 )
 
-ROOTTEST_ADD_TEST(test_MergeFilterWhitelist
-                  COPY_TO_BUILDDIR hadd_gen_input_files.C hadd_check_filtered.C hadd_filter.txt
+ROOTTEST_ADD_TEST(test_hadd_MergeFilterWhitelist
                   FIXTURES_REQUIRED root-io-hadd-test_MergeFilterBlacklist-fixture
-                  COMMAND ${ROOT_hadd_CMD} -L hadd_filter.txt -Ltype OnlyListed -f filtered_whitelist.root hadd_input0.root hadd_input1.root hadd_input2.root hadd_input3.root
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_check_filtered.C(\"filtered_whitelist.root\", \"whitelist\")"
+                  COMMAND ${ROOT_hadd_CMD} -L ${DIR}/hadd_filter.txt -Ltype OnlyListed -f filtered_whitelist.root hadd_input0.root hadd_input1.root hadd_input2.root hadd_input3.root
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_check_filtered.C(\"filtered_whitelist.root\", \"whitelist\")"
 )
 
 ################################################################
@@ -88,9 +84,8 @@ ROOTTEST_ADD_TEST(test_hadd_args_missing_input
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_gen_input
-                  COPY_TO_BUILDDIR hadd_gen_input_tree.C hadd_args_verify.C
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_in.root
-                  COMMAND ${ROOT_root_CMD} -q -b "hadd_gen_input_tree.C(\"hadd_args_in.root\")"
+                  COMMAND ${ROOT_root_CMD} -q -b "${DIR}/hadd_gen_input_tree.C(\"hadd_args_in.root\")"
                   FIXTURES_SETUP root-io-hadd-test_hadd_args_gen_input-fixture
 )
 
@@ -117,7 +112,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_n0
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_n0_out.root
                   COMMAND ${ROOT_hadd_CMD} -n0 hadd_args_n0_out.root hadd_args_in.root
                   OUTREF hadd_args_n0.ref
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_args_verify.C(\"hadd_args_n0_out.root\")"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_args_verify.C(\"hadd_args_n0_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_na
@@ -132,7 +127,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_n_1
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_n_1_out.root
                   COMMAND ${ROOT_hadd_CMD} -n=1 hadd_args_n_1_out.root hadd_args_in.root
                   OUTREF hadd_args_n_1.ref
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_args_verify.C(\"hadd_args_n_1_out.root\")"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_args_verify.C(\"hadd_args_n_1_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_jfa
@@ -154,7 +149,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_j
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_j_out.root
                   COMMAND ${ROOT_hadd_CMD} -j hadd_args_j_out.root hadd_args_in.root
                   PASSRC 0
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_args_verify.C(\"hadd_args_j_out.root\")"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_args_verify.C(\"hadd_args_j_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_ff_dbg_j_2
@@ -162,7 +157,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_ff_dbg_j_2
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_ff_dbg_j_2_out.root
                   COMMAND ${ROOT_hadd_CMD} -ff hadd_args_ff_dbg_j_2_out.root hadd_args_in.root hadd_args_in.root -dbg -j 2
                   OUTREF hadd_args_ff_dbg_j_2.ref
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_args_verify.C(\"hadd_args_ff_dbg_j_2_out.root\")"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_args_verify.C(\"hadd_args_ff_dbg_j_2_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_minusminus
@@ -170,7 +165,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_minusminus
                   PRECMD ${CMAKE_COMMAND} -E rm -f -- --hadd_args_out.root
                   COMMAND ${ROOT_hadd_CMD} -f0 -- --hadd_args_out.root hadd_args_in.root
                   OUTREF hadd_args_minusminus.ref
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_args_verify.C(\"--hadd_args_out.root\")"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_args_verify.C(\"--hadd_args_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_minusminus2
@@ -182,7 +177,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_minusminus2
                   PASSREGEX "missing input file"
                   # File should not exist
                   PASSRC 2
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_args_verify.C(\"--hadd_args2_out.root\")"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_args_verify.C(\"--hadd_args2_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_multiple_pos
@@ -197,7 +192,7 @@ ROOTTEST_ADD_TEST(test_hadd_args_cachesize
                   PRECMD ${CMAKE_COMMAND} -E rm -f hadd_args_cachesize_out.root
                   COMMAND ${ROOT_hadd_CMD} hadd_args_cachesize_out.root hadd_args_in.root -cachesize 100M -f
                   OUTREF hadd_args_cachesize.ref
-                  POSTCMD ${ROOT_root_CMD} -q -b "hadd_args_verify.C(\"hadd_args_cachesize_out.root\")"
+                  POSTCMD ${ROOT_root_CMD} -q -b "${DIR}/hadd_args_verify.C(\"hadd_args_cachesize_out.root\")"
 )
 
 ROOTTEST_ADD_TEST(test_hadd_args_missing_arg
@@ -276,13 +271,10 @@ endif()
 
 # Verify that the hadd (or rather, the RNTupleMerger) is able to cope with RNTuples written before schema version
 # 1.0.0.1 (meaning they have the wrong type name normalization)
-configure_file(test_hadd_merge_rntuple_634_1.root . COPYONLY)
-configure_file(test_hadd_merge_rntuple_634_2.root . COPYONLY)
-configure_file(check_merge_rntuple_634.C . COPYONLY)
 ROOTTEST_ADD_TEST(test_hadd_merge_rntuple_634,
                   PRECMD ${CMAKE_COMMAND} -E rm -f test_hadd_merge_rntuple_634_merged.root
-                  COMMAND ${ROOT_hadd_CMD} -f test_hadd_merge_rntuple_634_merged.root test_hadd_merge_rntuple_634_1.root test_hadd_merge_rntuple_634_2.root
-                  POSTCMD ${ROOT_root_CMD} -q check_merge_rntuple_634.C
+                  COMMAND ${ROOT_hadd_CMD} -f test_hadd_merge_rntuple_634_merged.root ${DIR}/test_hadd_merge_rntuple_634_1.root ${DIR}/test_hadd_merge_rntuple_634_2.root
+                  POSTCMD ${ROOT_root_CMD} -q ${DIR}/check_merge_rntuple_634.C
                   PASSRC 0)
 
 
@@ -290,22 +282,19 @@ ROOTTEST_ADD_TEST(test_hadd_merge_rntuple_634,
 # "test_hadd_nested_objects_23666.root" contains a TTree in a nested directory
 # "A/B/tree" with one branch "x", and one entry where "x" is 42.
 configure_file(test_hadd_nested_objects_23666.root . COPYONLY)
-configure_file(hadd_check_nested_objects_argn_23666.C . COPYONLY)
 ROOTTEST_ADD_TEST(test_hadd_nested_objects_argn_23666,
                   PRECMD ${CMAKE_COMMAND} -E rm -f test_hadd_nested_objects_argn_23666_merged.root
-                  COMMAND ${ROOT_hadd_CMD} -f -n 3 test_hadd_nested_objects_argn_23666_merged.root test_hadd_nested_objects_23666.root test_hadd_nested_objects_23666.root test_hadd_nested_objects_23666.root
-                  POSTCMD ${ROOT_root_CMD} -q hadd_check_nested_objects_argn_23666.C
+                  COMMAND ${ROOT_hadd_CMD} -f -n 3 test_hadd_nested_objects_argn_23666_merged.root ${DIR}/test_hadd_nested_objects_23666.root ${DIR}/test_hadd_nested_objects_23666.root test_hadd_nested_objects_23666.root
+                  POSTCMD ${ROOT_root_CMD} -q ${DIR}/hadd_check_nested_objects_argn_23666.C
                   PASSRC 0)
 
-configure_file(hadd_check_nested_objects_128files_23666.C . COPYONLY)
-configure_file(test_hadd_nested_objects_128files_23666.txt . COPYONLY)
 ROOTTEST_ADD_TEST(test_hadd_nested_objects_128files_23666,
                   PRECMD ${CMAKE_COMMAND} -E rm -f test_hadd_nested_objects_128files_23666_merged.root
-                  COMMAND ${ROOT_hadd_CMD} -f test_hadd_nested_objects_128files_23666_merged.root @test_hadd_nested_objects_128files_23666.txt
-                  POSTCMD ${ROOT_root_CMD} -q hadd_check_nested_objects_128files_23666.C
+                  COMMAND ${ROOT_hadd_CMD} -f test_hadd_nested_objects_128files_23666_merged.root @${DIR}/test_hadd_nested_objects_128files_23666.txt
+                  POSTCMD ${ROOT_root_CMD} -q ${DIR}/hadd_check_nested_objects_128files_23666.C
                   PASSRC 0)
 ROOTTEST_ADD_TEST(test_hadd_nested_objects_128files_n16_23666,
                   PRECMD ${CMAKE_COMMAND} -E rm -f test_hadd_nested_objects_128files_23666_merged.root
-                  COMMAND ${ROOT_hadd_CMD} -f -n 16 test_hadd_nested_objects_128files_23666_merged.root @test_hadd_nested_objects_128files_23666.txt
-                  POSTCMD ${ROOT_root_CMD} -q hadd_check_nested_objects_128files_23666.C
+                  COMMAND ${ROOT_hadd_CMD} -f -n 16 test_hadd_nested_objects_128files_23666_merged.root @${DIR}/test_hadd_nested_objects_128files_23666.txt
+                  POSTCMD ${ROOT_root_CMD} -q ${DIR}/hadd_check_nested_objects_128files_23666.C
                   PASSRC 0)

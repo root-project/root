@@ -10,10 +10,9 @@ int hadd_check_cms(const char *merged, const char *reference)
       ~Defer()
       {
          gSystem->Unlink(merg);
-         gSystem->Unlink(ref);
       }
-      const char *merg, *ref;
-  } defer { merged, reference };
+      const char *merg;
+  } defer { merged };
 
   if (mergedDesc.GetNEntries() != refDesc.GetNEntries()) {
     printf("Merged RNTuple has a different number of fields from reference: %" PRIu64 " (merged) vs %" PRIu64 " (ref)\n",
