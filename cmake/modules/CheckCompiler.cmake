@@ -258,11 +258,6 @@ if(gcctoolchain)
   endif()
 endif()
 
-if(gnuinstall)
-  set(R__HAVE_CONFIG 1)
-endif()
-
-
 #---Check if the std::vector implementation is using three pointers or one pointer and two integers
 message(STATUS "Checking std::vector layout")
 try_run(RUN_CHECK_LIBCPP_VECTOR_RESULT COMPILE_CHECK_LIBCPP_VECTOR_RESULT
