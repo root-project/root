@@ -772,7 +772,7 @@ ROOT Architecture: ${ROOT_ARCHITECTURE}
 Processor:         ${PROCESSOR} (${CMAKE_SYSTEM_PROCESSOR})
 Build type:        ${CMAKE_BUILD_TYPE}
 Install path:      ${CMAKE_INSTALL_PREFIX}
-Compiler:          ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION}
+Compiler:          ${CMAKE_CXX_COMPILER_ID} ${CMAKE_CXX_COMPILER_VERSION} (Launcher: '${CMAKE_CXX_COMPILER_LAUNCHER}')
 C++ standard:      ${CMAKE_CXX_STANDARD}
 Compiler flags:")
 if(MSVC AND NOT CMAKE_GENERATOR MATCHES Ninja)
