@@ -142,6 +142,13 @@ struct NodeInfo {
    std::vector<NodeInfo *> clientInfos;
 };
 
+/// Delegating constructor that inits members.
+// This constructor ensures that the destructor runs even if a constructor throws.
+Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU, InitMembersTag)
+   : _topNode{const_cast<RooAbsReal &>(absReal)}, _useGPU{useGPU}
+{
+}
+
 /// Construct a new Evaluator. The constructor analyzes and saves metadata about the graph,
 /// useful for the evaluation of it that will be done later. In case the CUDA mode is selected,
 /// there's also some CUDA-related initialization.
@@ -149,9 +156,11 @@ struct NodeInfo {
 /// \param[in] absReal The RooAbsReal object that sits on top of the
 ///            computation graph that we want to evaluate.
 /// \param[in] useGPU Whether the evaluation should be preferably done on the GPU.
-Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
-   : _topNode{const_cast<RooAbsReal &>(absReal)}, _useGPU{useGPU}
+Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU) : Evaluator{absReal, useGPU, InitMembersTag{}}
 {
+   // Note that due to using a delegating constructor, the object is already constructed when we get to here.
+   // This means that if we throw (e.g. GPU not available), the destructor runs correctly.
+   // Otherwise, the program can crash instead of displaying the exception below.
    RooBatchCompute::initCPU();
    if (useGPU && RooBatchCompute::initCUDA() != 0) {
       throw std::runtime_error("Can't create Evaluator in CUDA mode because RooBatchCompute CUDA could not be loaded!");
@@ -177,6 +186,14 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
    std::size_t iNode = 0;
    for (RooAbsArg *arg : serverSet) {
 
+      // Set the data token before adding the node to the list. If it throws
+      // because the node is already used by another Evaluator, the destructor
+      // must not reset the token that belongs to the other Evaluator.
+      const bool isVariable = dynamic_cast<RooRealVar const *>(arg);
+      if (!isVariable) {
+         arg->setDataToken(iNode, this);
+      }
+
       _nodes.emplace_back();
       auto &nodeInfo = _nodes.back();
       _nodesMap[arg->namePtr()] = &nodeInfo;
@@ -184,13 +201,8 @@ Evaluator::Evaluator(const RooAbsReal &absReal, bool useGPU)
       nodeInfo.absArg = arg;
       nodeInfo.originalOperMode = arg->operMode();
       nodeInfo.iNode = iNode;
+      nodeInfo.isVariable = isVariable;
       nodeInfos[arg] = &nodeInfo;
-
-      if (dynamic_cast<RooRealVar const *>(arg)) {
-         nodeInfo.isVariable = true;
-      } else {
-         arg->setDataToken(iNode, this);
-      }
       if (dynamic_cast<RooAbsCategory const *>(arg)) {
          nodeInfo.isCategory = true;
       }

@@ -16,6 +16,7 @@ if(mathmore)
 endif()
 if(cuda)
   set_tests_properties(gtest-roofit-roostats-stressRooStats PROPERTIES RESOURCE_LOCK GPU)
+  set_property(TEST gtest-roofit-roostats-stressRooStats APPEND PROPERTY LABELS cuda)
 endif()
 # Like the non-default-minimizer variant in the original suite, the Minuit
 # variant only runs the cpu backend (that is also why it doesn't
