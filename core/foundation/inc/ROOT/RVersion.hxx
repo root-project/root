@@ -3,9 +3,9 @@
 
 /* Update on release: */
 #define ROOT_VERSION_MAJOR 6
-#define ROOT_VERSION_MINOR 41
-#define ROOT_VERSION_PATCH 99 // When changing the version number here, never add leading zeroes!
-#define ROOT_RELEASE_DATE "Oct 29 2026"
+#define ROOT_VERSION_MINOR 42
+#define ROOT_VERSION_PATCH 00 // When changing the version number here, never add leading zeroes!
+#define ROOT_RELEASE_DATE "Nov 26 2026"
 
 /* not updated anymore */
 #define ROOT_RELEASE_TIME "00:00:00"
