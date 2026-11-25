@@ -660,6 +660,12 @@ Data parseData(Detail::JSONNode const &data, Diagnostics &diagnostics);
 /// Reads the axes of binned data that doesn't come with a document.
 std::vector<BinnedAxis> parseBinnedAxes(Detail::JSONNode const &axes, Diagnostics &diagnostics);
 
+/// What the validation needs of a generic distribution, which the document doesn't interpret otherwise: the names
+/// of its "factors" (a product_dist), and its "axes" (a bin-count distribution), or nothing if it has none or they
+/// are not valid, which is reported when the distribution is read.
+std::vector<std::string> factorsOf(GenericObject const &object);
+std::optional<std::vector<BinnedAxis>> axesOf(GenericObject const &object);
+
 /// Reads the functions "interpolation" and "interpolation0d", which don't come with a document. Older versions of
 /// RooFit wrote integer "interpolationCodes" instead of "interpolations".
 InterpolatedFunction parseInterpolatedFunction(Detail::JSONNode const &node, Diagnostics &diagnostics);

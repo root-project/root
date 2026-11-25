@@ -1339,6 +1339,32 @@ std::vector<BinnedAxis> parseBinnedAxes(JSONNode const &axes, Diagnostics &diagn
    return out;
 }
 
+std::vector<std::string> factorsOf(GenericObject const &object)
+{
+   std::vector<std::string> out;
+   if (object.node && object.node->has_child("factors")) {
+      for (JSONNode const &factor : (*object.node)["factors"].children()) {
+         if (!factor.is_container()) {
+            out.push_back(factor.val());
+         }
+      }
+   }
+   return out;
+}
+
+std::optional<std::vector<BinnedAxis>> axesOf(GenericObject const &object)
+{
+   if (!object.node || !object.node->has_child("axes")) {
+      return std::nullopt;
+   }
+   Diagnostics diagnostics;
+   std::vector<BinnedAxis> axes = parseBinnedAxes((*object.node)["axes"], diagnostics);
+   if (hasErrors(diagnostics)) {
+      return std::nullopt;
+   }
+   return axes;
+}
+
 InterpolatedFunction parseInterpolatedFunction(JSONNode const &node, Diagnostics &diagnostics)
 {
    return parseInterpolated<InterpolatedFunction>(

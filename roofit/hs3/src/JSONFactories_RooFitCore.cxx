@@ -34,6 +34,8 @@
 #include <RooFormulaVar.h>
 #include <RooGamma.h>
 #include <RooGaussian.h>
+#include <RooGlobalFunc.h>
+#include <RooConstVar.h>
 #include <RooGenericPdf.h>
 #include <RooHistFunc.h>
 #include <RooHistPdf.h>
@@ -75,9 +77,11 @@
 
 #include <algorithm>
 #include <cctype>
+#include <cmath>
 #include <memory>
 #include <initializer_list>
 #include <set>
+#include <sstream>
 #include <string_view>
 #include <vector>
 
@@ -605,6 +609,87 @@ void importBinSamplingPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
    tool->wsEmplace<RooBinSamplingPdf>(name, *obs, *pdf, epsilon);
 }
 
+// A bin-count distribution of HS3 is the product of the Poisson distributions of the counts of the bins, with the
+// expected counts nu_i = integral of the rate density over bin i. In RooFit, it is a RooBinSamplingPdf of an extended
+// pdf: fitted to a RooDataHist with the binning of the "axes", it gives
+//    -log L = -sum_i n_i log(p_i / width_i) + nu - N log(nu),    nu_i = nu * p_i,
+// which is the Poisson likelihood up to terms that don't depend on the parameters, since the p_i sum to one: the
+// axis must cover the range of the variate, over which it is normalized. There is one axis, as a RooBinSamplingPdf
+// has one observable.
+void importBinCounts(RooJSONFactoryWSTool *tool, const JSONNode &p, RooAbsPdf &extended)
+{
+   const std::string name(RooJSONFactoryWSTool::name(p));
+   if (!p.has_child("axes")) {
+      RooJSONFactoryWSTool::error("the bin-count distribution '" + name + "' has no \"axes\", which RooFit requires");
+   }
+   RooArgSet axes = RooJSONFactoryWSTool::readAxes(p);
+   if (axes.size() != 1) {
+      RooJSONFactoryWSTool::error("the bin-count distribution '" + name + "' has " + std::to_string(axes.size()) +
+                                  " axes, but RooFit supports only bin-count distributions with one axis");
+   }
+   auto const &axis = static_cast<RooRealVar const &>(*axes.first());
+   RooRealVar *obs = tool->request<RooRealVar>(axis.GetName(), name);
+   if (!extended.dependsOn(*obs)) {
+      RooJSONFactoryWSTool::error("the bin-count distribution '" + name + "' has the axis '" + obs->GetName() +
+                                  "', which is not a variate of its underlying distribution");
+   }
+   // The expected counts are the integrals of the rate density of the variate, which is normalized over its own range
+   // (the one of the domains of the analysis, or of the data), and not over the range of the axis.
+   RooAbsBinning const &binning = axis.getBinning();
+   const double tolerance = 1e-9 * (binning.highBound() - binning.lowBound());
+   if (!(std::abs(obs->getMin() - binning.lowBound()) <= tolerance) ||
+       !(std::abs(obs->getMax() - binning.highBound()) <= tolerance)) {
+      std::stringstream ss;
+      ss << "the axis '" << obs->GetName() << "' of the bin-count distribution '" << name << "' has the range ["
+         << binning.lowBound() << ", " << binning.highBound() << "], but its variate has the range [" << obs->getMin()
+         << ", " << obs->getMax()
+         << "]: RooFit supports only bin-count distributions whose bins cover the range of the variate";
+      RooJSONFactoryWSTool::error(ss.str());
+   }
+   obs->setBinning(binning);
+   // HS3 leaves the numerical method of the bin integrals to the implementation: the default precision of RooFit.
+   tool->wsEmplace<RooBinSamplingPdf>(name, *obs, extended);
+}
+
+// nu_i = rate * integral of the density of "dist" over bin i. If "dist" is extended in RooFit, e.g. a mixture_dist
+// with yields, only its density counts: a RooExtendPdf would multiply the rate with its expected number of events,
+// while a RooAddPdf of the pdf alone, with the rate as its coefficient, has the rate as the expected number.
+void importBinCountsExtended(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   const std::string name(RooJSONFactoryWSTool::name(p));
+   RooAbsPdf *dist = tool->requestArg<RooAbsPdf>(p, "dist");
+   RooAbsReal *rate = tool->requestArg<RooAbsReal>(p, "rate");
+   if (dist->canBeExtended()) {
+      importBinCounts(tool, p,
+                      tool->wsEmplace<RooAddPdf>(name + binCountsExtendedSuffix, RooArgList{*dist}, RooArgList{*rate}));
+   } else {
+      importBinCounts(tool, p, tool->wsEmplace<RooExtendPdf>(name + binCountsExtendedSuffix, *dist, *rate));
+   }
+}
+
+// nu_i = integral of "density" over bin i. An extended RooRealSumPdf of the density with the coefficient one is the
+// density normalized over "x". Its expected number of events is the integral of the density over "x", and not the
+// coefficient: RooRealSumPdf::expectedEvents() is the integral of the sum, which is the sum of the coefficients only
+// for functions that are normalized.
+void importBinCountsDensity(RooJSONFactoryWSTool *tool, const JSONNode &p)
+{
+   const std::string name(RooJSONFactoryWSTool::name(p));
+   RooAbsReal *density = tool->requestArg<RooAbsReal>(p, "density");
+   RooRealVar *x = tool->requestArg<RooRealVar>(p, "x");
+   // importBinCounts() integrates over the variable of the axis, which must be the variate.
+   if (p.has_child("axes")) {
+      for (JSONNode const &axis : p["axes"].children()) {
+         if (axis.has_child("name") && axis["name"].val() != x->GetName()) {
+            RooJSONFactoryWSTool::error("the bin-count distribution '" + name + "' has the axis '" +
+                                        axis["name"].val() + "', but its variate \"x\" is '" + x->GetName() + "'");
+         }
+      }
+   }
+   importBinCounts(tool, p,
+                   tool->wsEmplace<RooRealSumPdf>(name + binCountsDensitySuffix, RooArgList{*density},
+                                                  RooArgList{RooFit::RooConst(1.0)}, /*extended=*/true));
+}
+
 void importRealSumPdf(RooJSONFactoryWSTool *tool, const JSONNode &p)
 {
    std::string name(RooJSONFactoryWSTool::name(p));
@@ -1115,11 +1200,63 @@ bool importHist(RooJSONFactoryWSTool *tool, const JSONNode &p)
    return true;
 }
 
-void exportBinSamplingPdf(RooJSONFactoryWSTool *, RooBinSamplingPdf const &pdf, JSONNode &elem)
+// A RooBinSamplingPdf of an extended pdf is a bin-count distribution of HS3 (see importBinCounts()), if the pdf is the
+// product of a rate and a density that the document can name:
+// - a RooExtendPdf of a pdf that is not extended: its rate and its pdf,
+// - an extended RooRealSumPdf of one function with the coefficient one: the function is the rate density,
+// - a RooAddPdf with one yield per pdf: the yield and the pdf if there is one, and otherwise the sum of the yields,
+//   which is written as a function of its own, and the RooAddPdf.
+// Any other RooBinSamplingPdf is written as a binsampling_dist, which is not part of HS3.
+void exportBinSamplingPdf(RooJSONFactoryWSTool *tool, RooBinSamplingPdf const &pdf, JSONNode &elem)
 {
-   elem["pdf"] << pdf.pdf().GetName();
-   elem["observable"] << pdf.observable().GetName();
-   elem["epsilon"] << pdf.epsilon();
+   RooAbsPdf const &inner = pdf.pdf();
+   auto const *obs = dynamic_cast<RooRealVar const *>(&pdf.observable());
+   auto const *extended = dynamic_cast<RooExtendPdf const *>(&inner);
+   auto const *density = dynamic_cast<RooRealSumPdf const *>(&inner);
+   auto const *mixture = dynamic_cast<RooAddPdf const *>(&inner);
+   auto isOne = [](RooAbsArg const &arg) {
+      auto const *constant = dynamic_cast<RooConstVar const *>(&arg);
+      return constant && constant->getVal() == 1.0;
+   };
+   if (obs && extended && !extended->getRangeName() && !extended->pdf().canBeExtended()) {
+      elem["type"] << "bincounts_extended_dist";
+      writeReference(elem["rate"], extended->getN());
+      elem["dist"] << extended->pdf().GetName();
+      tool->queueExport(extended->getN());
+      tool->queueExport(extended->pdf());
+   } else if (obs && density && density->extendMode() != RooAbsPdf::CanNotBeExtended &&
+              density->funcList().size() == 1 && density->coefList().size() == 1 && isOne(density->coefList()[0])) {
+      elem["type"] << "bincounts_density_dist";
+      elem["x"] << obs->GetName();
+      elem["density"] << density->funcList()[0].GetName();
+      tool->queueExport(density->funcList()[0]);
+   } else if (obs && mixture && !mixture->coefList().empty() &&
+              mixture->coefList().size() == mixture->pdfList().size()) {
+      elem["type"] << "bincounts_extended_dist";
+      if (mixture->pdfList().size() == 1) {
+         writeReference(elem["rate"], mixture->coefList()[0]);
+         elem["dist"] << mixture->pdfList()[0].GetName();
+         tool->queueExport(mixture->coefList()[0]);
+         tool->queueExport(mixture->pdfList()[0]);
+      } else {
+         const std::string rate = std::string(pdf.GetName()) + "_rate";
+         elem["rate"] << rate;
+         elem["dist"] << inner.GetName();
+         tool->queueExportTemporary(new RooAddition(rate.c_str(), rate.c_str(), mixture->coefList()));
+         tool->queueExport(inner);
+      }
+   } else {
+      elem["pdf"] << inner.GetName();
+      elem["observable"] << pdf.observable().GetName();
+      elem["epsilon"] << pdf.epsilon();
+      tool->queueExport(inner);
+      tool->queueExport(pdf.observable());
+      return;
+   }
+   // The precision of the bin integrals is not written for the bin-count distributions: HS3 leaves the numerical
+   // method to the implementation.
+   tool->queueExport(*obs);
+   HS3::writeAxis(elem["axes"].set_seq().append_child(), HS3::toBinnedAxis(*obs));
 }
 
 void exportBinWidthFunction(RooJSONFactoryWSTool *, RooBinWidthFunction const &pdf, JSONNode &elem)
@@ -1608,7 +1745,7 @@ void registerDeprecatedKey(const std::string &key, const std::string &replacemen
 // Registers the importers and exporters when the library is loaded.
 const bool registered = []() {
    registerType("bernstein_poly_dist", importBernstein, exportBernstein);
-   registerType("binsampling_dist", importBinSamplingPdf, exportBinSamplingPdf);
+   registerType("binsampling_dist", importBinSamplingPdf, exportBinSamplingPdf, /*autoExportDependants=*/false);
    registerType("binvolume", importBinWidthFunction<false>, exportBinWidthFunction);
    registerType("crystalball_doublesided_dist", importCrystalBallDoubleSided, exportCrystalBall);
    registerType("decay_dist", importDecay, exportDecay, /*autoExportDependants=*/false);
@@ -1673,6 +1810,8 @@ const bool registered = []() {
 
    // The types that are only read: the ones that RooFit writes in another way, and other names of the types above.
    registerImporter("array_dist", importArrayDist);
+   registerImporter("bincounts_density_dist", importBinCountsDensity);
+   registerImporter("bincounts_extended_dist", importBinCountsExtended);
    registerImporter("combined_dist", importCombinedDist);
    registerImporter("extend_pdf", importExtendPdf);
    registerImporter("generic_function", importFormulaArg<RooFormulaVar>);
