@@ -3506,6 +3506,12 @@ void TGCocoa::SetDoubleBuffer(Int_t windowID, Int_t mode)
    //In ROOT, canvas has a "double buffer" - pixmap attached to 'wid'.
    assert(windowID > (Int_t)fPimpl->GetRootWindowID() && "SetDoubleBuffer called for root window");
 
+   // only workaround for canvas which is closed but pixmap/window id remains
+   // cocoa destroys them when widget is closed but ids remains set
+   // FIXME: correctly reset canvas/pads ids in cocoa
+   if (!fPimpl->HasDrawable(windowID))
+      return;
+
    if (windowID == 999) {//Comment in TVirtaulX suggests, that 999 means all windows.
       Warning("SetDoubleBuffer", "called with wid == 999");
       //Window with id 999 can not exists - this is checked in CocoaPrivate.

@@ -62,6 +62,7 @@ private:
    CocoaPrivate &operator = (const CocoaPrivate &rhs);
 
    Drawable_t             RegisterDrawable(NSObject *nsObj);
+   bool                   HasDrawable(Drawable_t drawableID)const;
    NSObject<X11Drawable> *GetDrawable(Drawable_t drawableD)const;
    NSObject<X11Window>   *GetWindow(Window_t windowID)const;
    void                   DeleteDrawable(Drawable_t drawableID);
