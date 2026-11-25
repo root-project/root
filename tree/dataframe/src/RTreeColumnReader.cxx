@@ -119,18 +119,6 @@ void *ROOT::Internal::RDF::RTreeUntypedArrayColumnReader::ReadRVec(Long64_t entr
          fRVec.clear();
       }
    } else {
-      // The storage is not contiguous: we cannot but copy into the RVec
-#ifndef NDEBUG
-      if (!fCopyWarningPrinted && !(fCollectionType == ECollectionType::kRVecBool)) {
-         Warning("RTreeColumnReader::Get",
-                 "Branch %s hangs from a non-split branch. A copy is being performed in order "
-                 "to properly read the content.",
-                 readerArray.GetBranchName());
-         fCopyWarningPrinted = true;
-      }
-#else
-      (void)fCopyWarningPrinted;
-#endif
       if (readerArraySize > 0) {
          // Caching the value type size since GetValueSize might be expensive.
          if (fValueSize == 0)

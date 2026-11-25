@@ -276,17 +276,6 @@ TEST_P(ClassWithSequenceContainersTest, ExpectedTypes)
 
 TEST_P(ClassWithSequenceContainersTest, TakeExpectedTypes)
 {
-#ifndef NDEBUG
-   // The following warning is only for debugging purposes with the TTree data source. It happens in this test
-   // because we are reading a class partially, i.e. the branch type is std::vector<ClassWithSequenceContainers> but
-   // we are only reading the data member fArrFl with the column name "classWithArrays.fArrFl[3]" as an
-   // RVec<std::array<float, 3>>.
-   ROOT::TestSupport::CheckDiagsRAII diagRAII;
-   diagRAII.optionalDiag(
-      kWarning, "RTreeColumnReader::Get",
-      "hangs from a non-split branch. A copy is being performed in order to properly read the content.", false);
-#endif
-
    ROOT::RDataFrame df{fDatasetName, fFileName};
 
    auto data = generateClassWithSequenceContainersData();
