@@ -171,18 +171,12 @@ std::size_t chunkSize(std::size_t iChunk, std::size_t nEvents)
    return std::min(parallelChunkSize, nEvents - chunkBegin(iChunk));
 }
 
-#endif // R__USE_IMT
-
 bool useParallelEvaluation(RooBatchCompute::Config const &cfg, std::size_t nEvents)
 {
-#ifdef R__USE_IMT
    return cfg.nThreads() > 1 && nEvents >= minParallelSize;
-#else
-   (void)cfg;
-   (void)nEvents;
-   return false;
-#endif
 }
+
+#endif // R__USE_IMT
 
 } // namespace
 
