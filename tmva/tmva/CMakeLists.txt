@@ -477,7 +477,6 @@ set(TMVAUTILS_HEADERS
   TMVA/RReader.hxx
   TMVA/RInferenceUtils.hxx
   TMVA/RBDT.hxx
-  TMVA/RSofieReader.hxx
 )
 
 ROOT_STANDARD_LIBRARY_PACKAGE(TMVAUtils

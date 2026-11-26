@@ -365,14 +365,12 @@ else()
 
   if (NOT BLAS_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
   endif()
   # These SOFIE tutorials take the ONNX HiggsModel trained with PyTorch as input
   if (NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RSofieReader.C)
     list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.py)
   endif()
 
@@ -607,7 +605,6 @@ set (machine_learning-pytorch-RegressionPyTorch-depends tutorial-machine_learnin
 set (machine_learning-pytorch-ApplicationRegressionPyTorch-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
 set (machine_learning-TMVA_SOFIE_RDataFrame-depends tutorial-machine_learning-TMVA_SOFIE_PyTorch_HiggsModel-py)
 set (machine_learning-TMVA_SOFIE_RDataFrame_JIT-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame)
-set (machine_learning-TMVA_SOFIE_RSofieReader-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame_JIT)
 set (machine_learning-keras-RegressionKeras-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
 set (machine_learning-keras-ClassificationKeras-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
 set (machine_learning-keras-ApplicationRegressionKeras-depends tutorial-machine_learning-keras-RegressionKeras-py)
