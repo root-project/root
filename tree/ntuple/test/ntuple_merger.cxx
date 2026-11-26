@@ -5009,9 +5009,6 @@ TEST(RNTupleMerger, MergeRealRegularQuantMixed)
 
 TEST(RNTupleMerger, MergeWithAttributesSimple)
 {
-   ROOT::TestSupport::CheckDiagsRAII diagsRAII;
-   diagsRAII.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    // Write two test ntuples to be merged.
    // These files have a single attribute set in common.
    // We expect the output file to contain it, with the union of all the sources' attribute entries.
@@ -5091,9 +5088,6 @@ TEST(RNTupleMerger, MergeWithAttributesSimple)
 
 TEST(RNTupleMerger, MergeWithAttributes)
 {
-   ROOT::TestSupport::CheckDiagsRAII diagsRAII;
-   diagsRAII.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    // Write two test ntuples to be merged.
    // These files both have 2 attribute sets, one of which (AttrSet1) is common to both.
    // We expect the output file to contain all 3 attribute sets, where AttrSet1 has the union of both sets' entries.
@@ -5221,9 +5215,6 @@ TEST(RNTupleMerger, MergeWithAttributes)
 
 TEST(RNTupleMerger, MergeWithAttributesMissingFields)
 {
-   ROOT::TestSupport::CheckDiagsRAII diagsRAII;
-   diagsRAII.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    // Write two test ntuples to be merged.
    // These files have 1 attribute set with the same name, but the first contains extra fields.
    // We expect the output file to contain that attribute field with the union of all attributes.
@@ -5313,9 +5304,6 @@ TEST(RNTupleMerger, MergeWithAttributesMissingFields)
 
 TEST(RNTupleMerger, MergeWithAttributesLateModelExtend)
 {
-   ROOT::TestSupport::CheckDiagsRAII diagsRAII;
-   diagsRAII.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    // Write two test ntuples to be merged.
    // These files have 1 attribute set with the same name, but the second contains extra fields.
    // We expect the output file to contain that attribute field with the union of all attributes.

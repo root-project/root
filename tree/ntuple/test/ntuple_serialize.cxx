@@ -2287,8 +2287,6 @@ TEST(RNTuple, SerializeDescriptorWithAttrSets)
 
    auto context = RNTupleSerializer::SerializeHeader(nullptr, desc).Unwrap();
    auto bufHeader = MakeUninitArray<unsigned char>(context.GetHeaderSize());
-   ROOT::TestSupport::CheckDiagsRAII diagsRAII;
-   diagsRAII.requiredDiag(kWarning, "ROOT.NTuple", "Attributes are experimental", false);
    context = RNTupleSerializer::SerializeHeader(bufHeader.get(), desc).Unwrap();
 
    std::vector<ROOT::DescriptorId_t> physClusterIDs{context.MapClusterId(0)};
