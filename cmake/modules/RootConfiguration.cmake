@@ -471,6 +471,12 @@ if (geom)
 else()
   set(hasgeom undef)
 endif()
+# Since VecGeom 2.3 its volume classes are memory-space templates: TGeoVGShape.h must use its forward declarations
+if (vecgeom AND VecGeom_VERSION VERSION_GREATER_EQUAL 2.3)
+  set(hasvecgeomvolumesfwd define)
+else()
+  set(hasvecgeomvolumesfwd undef)
+endif()
 
 
 CHECK_CXX_SOURCE_COMPILES("

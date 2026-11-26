@@ -19,16 +19,23 @@
 //                                                                        //
 ////////////////////////////////////////////////////////////////////////////
 
-// VecGeom provides Version.h since 1.2.4
-#if __has_include(<VecGeom/base/Version.h>)
-#include <VecGeom/base/Version.h>
-#endif
-#if defined(VECGEOM_VERSION) && VECGEOM_VERSION >= 0x020300
-// Since VecGeom 2.3 the volume classes are memory-space templates: use its forward declarations
-#include <VecGeom/volumes/VolumesFwd.h>
+#include "RConfigure.h"
+
+// The VecGeom types used here, declared without VecGeom headers so that clients need none. The declarations follow
+// the VecGeom version ROOT was built with; TGeoVGShape.cxx checks them against VecGeom's own.
+#ifdef R__HAS_VECGEOM_VOLUMESFWD
+// Since VecGeom 2.3 the volume classes are templates on the memory space (host = 0)
 namespace vecgeom {
+enum class MemSpace;
+template <MemSpace M>
+class VPlacedVolumeT;
+template <MemSpace M>
+class VUnplacedVolumeT;
 class Transformation3D;
 } // namespace vecgeom
+using TGeoVGPlacedVolume_t = vecgeom::VPlacedVolumeT<static_cast<vecgeom::MemSpace>(0)>;
+using TGeoVGUnplacedVolume_t = vecgeom::VUnplacedVolumeT<static_cast<vecgeom::MemSpace>(0)>;
+using TGeoVGTransformation_t = vecgeom::Transformation3D;
 #else
 namespace vecgeom {
 inline namespace cxx {
@@ -37,21 +44,24 @@ class VPlacedVolume;
 class VUnplacedVolume;
 } // namespace cxx
 } // namespace vecgeom
+using TGeoVGPlacedVolume_t = vecgeom::cxx::VPlacedVolume;
+using TGeoVGUnplacedVolume_t = vecgeom::cxx::VUnplacedVolume;
+using TGeoVGTransformation_t = vecgeom::cxx::Transformation3D;
 #endif
 
 class TGeoVGShape : public TGeoBBox {
 private:
-   vecgeom::cxx::VPlacedVolume *fVGShape; ///<! VecGeom placed solid
+   TGeoVGPlacedVolume_t *fVGShape;        ///<! VecGeom placed solid
    TGeoShape *fShape;                     // ROOT shape
 
-   static vecgeom::cxx::VPlacedVolume *CreateVecGeomSolid(TGeoShape *shape);
-   TGeoVGShape(TGeoShape *shape, vecgeom::cxx::VPlacedVolume *vgshape);
+   static TGeoVGPlacedVolume_t *CreateVecGeomSolid(TGeoShape *shape);
+   TGeoVGShape(TGeoShape *shape, TGeoVGPlacedVolume_t *vgshape);
 
 public:
    TGeoVGShape() : TGeoBBox(), fVGShape(nullptr), fShape(nullptr) {}
    ~TGeoVGShape() override;
-   static vecgeom::cxx::Transformation3D *Convert(TGeoMatrix const *const geomatrix);
-   static vecgeom::cxx::VUnplacedVolume *Convert(TGeoShape const *const shape);
+   static TGeoVGTransformation_t *Convert(TGeoMatrix const *const geomatrix);
+   static TGeoVGUnplacedVolume_t *Convert(TGeoShape const *const shape);
    static TGeoVGShape *Create(TGeoShape *shape);
    Double_t Capacity() const override;
    void ComputeBBox() override;
@@ -115,7 +125,7 @@ public:
    void Sizeof3D() const override { fShape->Sizeof3D(); }
 
    TGeoShape *GetShape() const { return fShape; }
-   vecgeom::cxx::VPlacedVolume *GetVGShape() const { return fVGShape; }
+   TGeoVGPlacedVolume_t *GetVGShape() const { return fVGShape; }
 
    ClassDefOverride(TGeoVGShape, 1) // Adapter for a VecGeom shape
 };

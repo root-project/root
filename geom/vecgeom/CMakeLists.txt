@@ -29,6 +29,12 @@ ROOT_STANDARD_LIBRARY_PACKAGE(ConverterVG
     Geom
 )
 
+# A VecGeom built with a device backend keeps its device code in its final library, which the programs loading this
+# library do not link: link it here, also with --as-needed (link feature of the CudaRdcUtils loaded by VecGeom)
+if(TARGET VecGeom::vecgeom_final)
+  target_link_libraries(ConverterVG PRIVATE "$<LINK_LIBRARY:rdc_no_as_needed,VecGeom::vecgeom_final>")
+endif()
+
 set(RELATIVE_INC_HEADERS ${VECGEOM_HEADERS})
 list(TRANSFORM RELATIVE_INC_HEADERS PREPEND inc/)
 

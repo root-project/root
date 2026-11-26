@@ -63,5 +63,6 @@
 #@hasuring@ R__HAS_URING /**/
 
 #@hasgeom@ R__HAS_GEOM /**/
+#@hasvecgeomvolumesfwd@ R__HAS_VECGEOM_VOLUMESFWD /**/
 
 #endif
