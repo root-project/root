@@ -1830,7 +1830,9 @@ Bool_t TRootCanvas::HandleContainerButton(Event_t *event)
          fToolTip->Hide();
          // do not sync GL canvas - avoid flicking
          if (!fCanvas->UseGL() && (fCanvasID != -1)) {
-            gVirtualX->UpdateWindowW(gVirtualX->GetWindowContext(fCanvasID), 0);
+            auto drawable = gVirtualX->GetDrawable(fCanvasID);
+            if (drawable)
+               drawable->UpdateWindow(0);
             gSystem->ProcessEvents();
          }
       }

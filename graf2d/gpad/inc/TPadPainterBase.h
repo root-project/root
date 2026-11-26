@@ -17,12 +17,14 @@
 #include "TAttLine.h"
 #include "TAttMarker.h"
 #include "TAttText.h"
+#include "TVirtualX.h"
+
 
 class TTFhandle;
 
 class TPadPainterBase : public TVirtualPadPainter {
 protected:
-   WinContext_t   fWinContext = (WinContext_t) 0;
+   std::shared_ptr<TVirtualX::XDrawable> fDrawable; ///< drawable selected for current pad
    TVirtualPad   *fPad = nullptr;
 
    TAttFill   fAttFill;   ///< current fill attributes
