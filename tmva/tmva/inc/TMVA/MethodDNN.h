@@ -73,6 +73,7 @@
 
 namespace TMVA {
 
+// TODO: refer to the external SOFIE package, which is not part of ROOT anymore, once it exists
 class R__DEPRECATED(6, 46,
                     "Please train neural networks with a dedicated machine learning library instead, and use SOFIE "
                     "for inference in C++.") MethodDNN : public MethodBase

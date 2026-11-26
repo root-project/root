@@ -25,6 +25,7 @@
  * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
+// TODO: refer to the external SOFIE package, which is not part of ROOT anymore, once it exists
 /*! \class TMVA::MethodDL
 \ingroup TMVA
 Deep neural network method, with dense, convolutional and recurrent layers.
@@ -444,6 +445,7 @@ void MethodDL::ProcessOptions()
 /// default initializations
 void MethodDL::Init()
 {
+   // TODO: refer to the external SOFIE package, which is not part of ROOT anymore, once it exists
    Log() << kWARNING
          << "MethodDL is deprecated and will be removed in ROOT 6.46. Please train neural networks with a "
             "dedicated machine learning library instead, and use SOFIE for inference in C++."
