@@ -189,4 +189,3 @@ parser.CheckModel("example_model.ONNX");
     - [TMVA_SOFIE_RDataFrame](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RDataFrame.C)
     - [TMVA_SOFIE_RDataFrame](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RDataFrame.py)
     - [TMVA_SOFIE_RDataFrame_JIT](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
-    - [TMVA_SOFIE_RSofieReader](https://github.com/root-project/root/blob/master/tutorials/machine_learning/TMVA_SOFIE_RSofieReader.C)

@@ -110,7 +110,6 @@
 | | TMVA_SOFIE_PyTorch_HiggsModel.py | Train a model on the Higgs dataset with PyTorch, export it to ONNX and run the SOFIE parser on it to generate the C++ inference code used by the RDataFrame Higgs SOFIE tutorials. |
 | TMVA_SOFIE_RDataFrame.C | TMVA_SOFIE_RDataFrame.py | Inference with SOFIE and RDataFrame, of a model trained with PyTorch. |
 | TMVA_SOFIE_RDataFrame_JIT.C | | Using a trained model with PyTorch and make inference using SOFIE and RDataFrame. |
-| TMVA_SOFIE_RSofieReader.C | | Using a trained model with PyTorch and make inference using SOFIE with the RSofieReader class. |
 
 \anchor data_loading
 ## Data loading for training
