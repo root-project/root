@@ -37,6 +37,7 @@ echo "        ../../graf2d/cocoa/              \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/fitsio/             \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/gpad/               \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/gpadv7/             \\" >> Doxyfile_INPUT
+echo "        ../../graf2d/padpainter/         \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/graf/               \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/gviz/               \\" >> Doxyfile_INPUT
 echo "        ../../graf2d/postscript/         \\" >> Doxyfile_INPUT
@@ -54,7 +55,6 @@ echo "        ../../hist/                      \\" >> Doxyfile_INPUT
 echo "        ../../io/doc/TFile               \\" >> Doxyfile_INPUT
 echo "        ../../io/dcache/                 \\" >> Doxyfile_INPUT
 echo "        ../../io/io/                     \\" >> Doxyfile_INPUT
-echo "        ../../io/sql/                    \\" >> Doxyfile_INPUT
 echo "        ../../io/xml/                    \\" >> Doxyfile_INPUT
 echo "        ../../io/xmlparser/              \\" >> Doxyfile_INPUT
 echo "        ../../main/src/hadd.cxx          \\" >> Doxyfile_INPUT
