@@ -922,6 +922,9 @@ void TGX11::FindBestVisual()
       fBlackPixel = BlackPixel((Display*)fDisplay, fScreenNumber);
       fWhitePixel = WhitePixel((Display*)fDisplay, fScreenNumber);
    }
+
+   ConfigureColorsHandler();
+
    if (gDebug > 1)
       Printf("Selected visual 0x%lx: depth %d, class %d, colormap: %s",
              fVisual->visualid, fDepth, fVisual->c_class,
@@ -987,6 +990,8 @@ void TGX11::FindUsableVisual(RXVisualInfo *vlist, Int_t nitems)
          XFreeColormap((Display*)fDisplay, attr.colormap);
    }
    XSetErrorHandler(oldErrorHandler);
+
+   ConfigureColorsHandler();
 }
 
 ////////////////////////////////////////////////////////////////////////////////

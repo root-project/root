@@ -3041,7 +3041,7 @@ void TRootBrowserLite::BrowseTextFile(const char *file)
                                  kSunkenFrame | kDoubleBorder);
       TColor *col = gROOT->GetColor(19);
       if (col)
-         fTextEdit->SetBackgroundColor(col->GetPixel());
+         fTextEdit->SetBackgroundColor(gVirtualX->GetPixel(col->GetNumber()));
       if (TGSearchDialog::SearchDialog()) {
          TGSearchDialog::SearchDialog()->Connect("TextEntered(char *)", "TGTextEdit",
                                                  fTextEdit, "Search(char *,Bool_t,Bool_t)");

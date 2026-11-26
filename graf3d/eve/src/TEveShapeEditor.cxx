@@ -13,6 +13,7 @@
 #include "TEveShape.h"
 
 #include "TColor.h"
+#include "TVirtualX.h"
 
 #include "TGLabel.h"
 #include "TGButton.h"
@@ -81,7 +82,7 @@ void TEveShapeEditor::SetModel(TObject* obj)
    fM = dynamic_cast<TEveShape*>(obj);
 
    fLineWidth->SetNumber(fM->fLineWidth);
-   fLineColor->SetColor(TColor::Number2Pixel(fM->fLineColor), kFALSE);
+   fLineColor->SetColor(TVirtualX::Number2Pixel(fM->fLineColor), kFALSE);
    fDrawFrame     ->SetState(fM->fDrawFrame      ? kButtonDown : kButtonUp);
    fHighlightFrame->SetState(fM->fHighlightFrame ? kButtonDown : kButtonUp);
 }
@@ -100,7 +101,7 @@ void TEveShapeEditor::DoLineWidth()
 
 void TEveShapeEditor::DoLineColor(Pixel_t pixel)
 {
-   fM->SetLineColor(TColor::GetColor(pixel));
+   fM->SetLineColor(TVirtualX::Pixel2Number(pixel));
    Update();
 }
 

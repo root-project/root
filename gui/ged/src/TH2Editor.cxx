@@ -955,7 +955,7 @@ void TH2Editor::SetModel(TObject* obj)
    fContLevels->SetIntNumber(fHist->GetContour());
    fContLevels1->SetIntNumber(fHist->GetContour());
 
-   fFrameColor->SetColor(TColor::Number2Pixel(fGedEditor->GetPad()->GetFrameFillColor()));
+   fFrameColor->SetColor(TVirtualX::Number2Pixel(fGedEditor->GetPad()->GetFrameFillColor()));
    fFramePattern->SetPattern(fGedEditor->GetPad()->GetFrameFillStyle());
 
    TTreePlayer *player = (TTreePlayer*)TVirtualTreePlayer::GetCurrentPlayer();
@@ -2681,7 +2681,7 @@ void TH2Editor::DoFillColor(Pixel_t color)
 {
    if (fAvoidSignal || !fGedEditor->GetPad()) return;
    fGedEditor->GetPad()->cd();
-   fGedEditor->GetPad()->SetFrameFillColor(TColor::GetColor(color));
+   fGedEditor->GetPad()->SetFrameFillColor(TVirtualX::Pixel2Number(color));
    Update();
 }
 

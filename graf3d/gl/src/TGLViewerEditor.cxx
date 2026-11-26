@@ -20,6 +20,7 @@
 #include "TG3DLine.h"
 #include "TGButton.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TString.h"
 #include "TGLabel.h"
 #include "TGComboBox.h"
@@ -194,7 +195,7 @@ void TGLViewerEditor::SetModel(TObject* obj)
    fClipSet->SetModel(fViewer->GetClipSet());
 
    // style tab
-   fClearColor->SetColor(TColor::Number2Pixel(fViewer->RnrCtx().ColorSet().Background().GetColorIndex()), kFALSE);
+   fClearColor->SetColor(TVirtualX::Number2Pixel(fViewer->RnrCtx().ColorSet().Background().GetColorIndex()), kFALSE);
    fClearColor->Enable(!fViewer->IsUsingDefaultColorSet());
    fIgnoreSizesOnUpdate->SetState(fViewer->GetIgnoreSizesOnUpdate() ? kButtonDown : kButtonUp);
    fResetCamerasOnUpdate->SetState(fViewer->GetResetCamerasOnUpdate() ? kButtonDown : kButtonUp);
@@ -263,9 +264,9 @@ void TGLViewerEditor::SetModel(TObject* obj)
 ////////////////////////////////////////////////////////////////////////////////
 /// Clear-color was changed.
 
-void TGLViewerEditor::DoClearColor(Pixel_t color)
+void TGLViewerEditor::DoClearColor(Pixel_t pixel)
 {
-   fViewer->RnrCtx().ColorSet().Background().SetColor(Color_t(TColor::GetColor(color)));
+   fViewer->RnrCtx().ColorSet().Background().SetColor(Color_t(TVirtualX::Pixel2Number(pixel)));
    ViewerRedraw();
 }
 

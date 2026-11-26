@@ -22,6 +22,7 @@
 #include "TGComboBox.h"
 #include "TGColorSelect.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TG3DLine.h"
 #include "TGSlider.h"
 #include "TGDoubleSlider.h"
@@ -340,7 +341,7 @@ void TParallelCoordEditor::CleanUpSelections()
          fSelectionSelect->AddEntry(sel->GetTitle(),i);
          TGLBEntry *entry = fSelectionSelect->GetListBox()->GetEntry(i);
          if (entry)
-            entry->SetBackgroundColor(TColor::Number2Pixel(sel->GetLineColor()));
+            entry->SetBackgroundColor(TVirtualX::Number2Pixel(sel->GetLineColor()));
          ++i;
       }
       sel = fParallel->GetCurrentSelection();
@@ -349,7 +350,7 @@ void TParallelCoordEditor::CleanUpSelections()
          Color_t c;
          Pixel_t p;
          c = sel->GetLineColor();
-         p = TColor::Number2Pixel(c);
+         p = TVirtualX::Number2Pixel(c);
          fSelectLineColor->SetColor(p);
          fSelectLineWidth->Select(sel->GetLineWidth());
          fActivateSelection->SetOn(sel->TestBit(TParallelCoordSelect::kActivated));
@@ -664,7 +665,7 @@ void TParallelCoordEditor::DoGlobalLineColor(Pixel_t a)
 
    if (TColor *color = gROOT->GetColor(fParallel->GetLineColor())) {
       color->SetAlpha(1);
-      color = gROOT->GetColor(TColor::GetColor(a));
+      color = gROOT->GetColor(TVirtualX::Pixel2Number(a));
       if (color) {
          color->SetAlpha((Float_t)fAlphaField->GetNumber());
          fParallel->SetLineColor(color->GetNumber());
@@ -718,7 +719,7 @@ void TParallelCoordEditor::DoHistColorSelect(Pixel_t p)
 {
    if (fAvoidSignal) return;
 
-   Color_t col = TColor::GetColor(p);
+   Color_t col = TVirtualX::Pixel2Number(p);
    TIter next(fParallel->GetVarList());
    TParallelCoordVar *var = nullptr;
    while ((var = (TParallelCoordVar*)next())) var->SetFillColor(col);
@@ -863,7 +864,7 @@ void TParallelCoordEditor::DoSelectLineColor(Pixel_t a)
    if (fAvoidSignal) return;
 
    TParallelCoordSelect* sel = fParallel->GetCurrentSelection();
-   if (sel) sel->SetLineColor(TColor::GetColor(a));
+   if (sel) sel->SetLineColor(TVirtualX::Pixel2Number(a));
    fSelectionSelect->GetSelectedEntry()->SetBackgroundColor(a);
    Update();
 }
@@ -892,7 +893,7 @@ void TParallelCoordEditor::DoSelectionSelect(const char* title)
    if (!fParallel->SetCurrentSelection(title)) return;
 
    Color_t c = fParallel->GetCurrentSelection()->GetLineColor();
-   Pixel_t p = TColor::Number2Pixel(c);
+   Pixel_t p = TVirtualX::Number2Pixel(c);
    fSelectLineColor->SetColor(p,false);
 
    fSelectLineWidth->Select(fParallel->GetCurrentSelection()->GetLineWidth(),false);
@@ -957,7 +958,7 @@ void TParallelCoordEditor::SetModel(TObject* obj)
    fAvoidSignal = true;
 
    Color_t c = fParallel->GetLineColor();
-   Pixel_t p = TColor::Number2Pixel(c);
+   Pixel_t p = TVirtualX::Number2Pixel(c);
    fGlobalLineColor->SetColor(p);
 
    fGlobalLineWidth->Select(fParallel->GetLineWidth());
@@ -996,7 +997,7 @@ void TParallelCoordEditor::SetModel(TObject* obj)
    fWeightCut->SetPosition(fParallel->GetWeightCut());
    fWeightCutField->SetNumber(fParallel->GetWeightCut());
 
-   fHistColorSelect->SetColor(TColor::Number2Pixel(((TParallelCoordVar*)fParallel->GetVarList()->Last())->GetFillColor()), false);
+   fHistColorSelect->SetColor(TVirtualX::Number2Pixel(((TParallelCoordVar*)fParallel->GetVarList()->Last())->GetFillColor()), false);
    fHistPatternSelect->SetPattern(((TParallelCoordVar*)fParallel->GetVarList()->Last())->GetFillStyle(),false);
 
    if (fInit) ConnectSignals2Slots();

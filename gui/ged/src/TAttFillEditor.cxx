@@ -22,6 +22,7 @@ Implements GUI for editing fill attributes.
 #include "TGedPatternSelect.h"
 #include "TGColorSelect.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TGLabel.h"
 #include "TGSlider.h"
 #include "TGNumberEntry.h"
@@ -113,7 +114,7 @@ void TAttFillEditor::SetModel(TObject* obj)
    fAvoidSignal = kTRUE;
 
    Color_t c = fAttFill->GetFillColor();
-   Pixel_t p = TColor::Number2Pixel(c);
+   Pixel_t p = TVirtualX::Number2Pixel(c);
    fColorSelect->SetColor(p, kFALSE);
 
    Style_t s = fAttFill->GetFillStyle();
@@ -149,9 +150,9 @@ void TAttFillEditor::DoFillAlphaColor(ULongptr_t p)
 void TAttFillEditor::DoFillColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAttFill->SetFillColor(TColor::GetColor(color));
+   fAttFill->SetFillColor(TVirtualX::Pixel2Number(color));
 
-   if (TColor *tcolor = gROOT->GetColor(TColor::GetColor(color))) {
+   if (TColor *tcolor = gROOT->GetColor(TVirtualX::Pixel2Number(color))) {
       fAlpha->SetPosition((Int_t)(tcolor->GetAlpha()*1000));
       fAlphaField->SetNumber(tcolor->GetAlpha());
    }

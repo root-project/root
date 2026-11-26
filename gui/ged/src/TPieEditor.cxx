@@ -243,7 +243,7 @@ void TPieEditor::SetModel(TObject* obj)
    fTypeCombo->Select(fPie->GetTextFont() / 10);
 
    Color_t c = fPie->GetTextColor();
-   Pixel_t p = TColor::Number2Pixel(c);
+   Pixel_t p = TVirtualX::Number2Pixel(c);
    fColorSelect->SetColor(p, kFALSE);
 
    Float_t s = fPie->GetTextSize();
@@ -367,7 +367,7 @@ void TPieEditor::DoTextChange()
    if (fAvoidSignal) return;
 
    // font color
-   fPie->SetTextColor(TColor::GetColor(fColorSelect->GetColor()));
+   fPie->SetTextColor(TVirtualX::Pixel2Number(fColorSelect->GetColor()));
 
    // font type
    Int_t fontPrec = fPie->GetTextFont()%10;

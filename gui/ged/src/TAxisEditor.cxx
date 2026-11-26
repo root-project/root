@@ -41,6 +41,7 @@ Implements GUI for axis attributes.
 #include "TGLabel.h"
 #include "TColor.h"
 #include "TVirtualPad.h"
+#include "TVirtualX.h"
 #include "TStyle.h"
 
 
@@ -278,7 +279,7 @@ void TAxisEditor::SetModel(TObject* obj)
    fAvoidSignal = kTRUE;
 
    Color_t c = fAxis->GetAxisColor();
-   Pixel_t p = TColor::Number2Pixel(c);
+   Pixel_t p = TVirtualX::Number2Pixel(c);
    fAxisColor->SetColor(p);
 
    Float_t fl = fAxis->GetTickLength();
@@ -318,7 +319,7 @@ void TAxisEditor::SetModel(TObject* obj)
    fTitle->SetText(text);
 
    c = fAxis->GetTitleColor();
-   p = TColor::Number2Pixel(c);
+   p = TVirtualX::Number2Pixel(c);
    fTitleColor->SetColor(p);
 
    fl = fAxis->GetTitleSize();
@@ -340,7 +341,7 @@ void TAxisEditor::SetModel(TObject* obj)
    else         fRotated->SetState(kButtonUp);
 
    c = fAxis->GetLabelColor();
-   p = TColor::Number2Pixel(c);
+   p = TVirtualX::Number2Pixel(c);
    fLabelColor->SetColor(p);
 
    fl = fAxis->GetLabelSize();
@@ -371,7 +372,7 @@ void TAxisEditor::SetModel(TObject* obj)
 void TAxisEditor::DoAxisColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAxis->SetAxisColor(TColor::GetColor(color));
+   fAxis->SetAxisColor(TVirtualX::Pixel2Number(color));
    Update();
 }
 
@@ -475,7 +476,7 @@ void TAxisEditor::DoTitle(const char *text)
 void TAxisEditor::DoTitleColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAxis->SetTitleColor(TColor::GetColor(color));
+   fAxis->SetTitleColor(TVirtualX::Pixel2Number(color));
    Update();
 }
 
@@ -540,7 +541,7 @@ void TAxisEditor::DoTitleRotated()
 void TAxisEditor::DoLabelColor(Pixel_t color)
 {
    if (fAvoidSignal) return;
-   fAxis->SetLabelColor(TColor::GetColor(color));
+   fAxis->SetLabelColor(TVirtualX::Pixel2Number(color));
    Update();
 }
 

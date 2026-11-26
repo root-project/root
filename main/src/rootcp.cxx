@@ -26,26 +26,7 @@
 
 using namespace ROOT::CmdLine;
 
-static const char *const kShortHelp = "usage: rootcp [-h] [-c COMPRESS] [--recreate] [-r|--recursive] [--replace] "
-                                      "[-v|--verbose] [-a|--abort-on-failure] SOURCE [SOURCE ...] DEST\n";
-static const char *const kLongHelp = R"(
-Copy objects from ROOT files into another
-
-positional arguments:
-  SOURCE                  Source file(s)
-  DEST                    Destination file
-
-options:
-  -h, --help              show this help message and exit
-  -c, --compress COMPRESS
-                          change the compression settings of the destination file (if not already
-                          existing).
-  --recreate              recreate the destination file.
-  -r, --recursive         recurse inside directories
-  --replace               replace object if already existing
-  -a, --abort-on-failure  abort if any object fails to be copied (instead of skipping such objects)
-  -v                      be verbose
-  -vv                     be even more verbose
+static const char *const kDescription = R"(Copy objects from ROOT files into another
 
 Note: If an object has been written to a file multiple times, rootcp will copy only the latest version of that object.
 
@@ -74,15 +55,13 @@ Examples:
     * -c 207 : LZMA with compression level 7
   For more information see https://root.cern.ch/doc/latest-stable/classTFile.html#ad0377adf2f3d88da1a1f77256a140d60
   and https://root.cern.ch/doc/latest-stable/structROOT_1_1RCompressionSetting.html
-)";
+
+positional arguments:
+  SOURCE             Source file(s)
+  DEST               Destination file)";
 
 struct RootCpArgs {
-   enum class EPrintUsage {
-      kNo,
-      kShort,
-      kLong
-   };
-   EPrintUsage fPrintHelp = EPrintUsage::kNo;
+   std::string fHelp;
    std::optional<int> fCompression = std::nullopt;
    bool fRecreate = false;
    bool fReplace = false;
@@ -94,31 +73,38 @@ struct RootCpArgs {
 static RootCpArgs ParseArgs(const char **args, int nArgs)
 {
    using ROOT::RCmdLineOpts;
+   using FT = RCmdLineOpts::EFlagType;
 
    RootCpArgs outArgs;
 
    RCmdLineOpts opts;
-   opts.AddFlag({"-c", "--compress"}, RCmdLineOpts::EFlagType::kWithArg);
-   opts.AddFlag({"--recreate"});
-   opts.AddFlag({"--replace"});
-   opts.AddFlag({"-r", "--recursive"});
-   opts.AddFlag({"-a", "--abort-on-failure"});
-   opts.AddFlag({"-h", "--help"});
-   opts.AddFlag({"-v"});
-   opts.AddFlag({"-vv"});
+   opts.AddFlag({"-c", "--compress"}, FT::kWithArg,
+                "change the compression settings of the destination file (if not already existing)");
+   opts.AddFlag({"--recreate"}, FT::kSwitch, "recreate the destination file");
+   opts.AddFlag({"--replace"}, FT::kSwitch, "replace object if already existing");
+   opts.AddFlag({"-r", "--recursive"}, FT::kSwitch, "recurse inside directories");
+   opts.AddFlag({"-a", "--abort-on-failure"}, FT::kSwitch,
+                "abort if any object fails to be copied (instead of skipping such objects)");
+   opts.AddFlag({"-h", "--help"}, FT::kSwitch, "show this help message and exit");
+   opts.AddFlag({"-v"}, FT::kSwitch, "be verbose. Repeat for additional verbosity", RCmdLineOpts::kFlagAllowMultiple);
 
    opts.Parse(args, nArgs);
+
+   RCmdLineOpts::RMakeHelpOptions helpOpts;
+   helpOpts.fDescription = kDescription;
+   helpOpts.fWrapDescription = false;
+   helpOpts.fPositionalArgs = "SOURCE [SOURCE...] DEST";
 
    for (const auto &err : opts.GetErrors()) {
       std::cerr << err << "\n";
    }
    if (!opts.GetErrors().empty()) {
-      outArgs.fPrintHelp = RootCpArgs::EPrintUsage::kShort;
+      outArgs.fHelp = opts.MakeShortHelp(Detail::gLogName, helpOpts);
       return outArgs;
    }
 
    if (opts.GetSwitch("help")) {
-      outArgs.fPrintHelp = RootCpArgs::EPrintUsage::kLong;
+      outArgs.fHelp = opts.MakeLongHelp(Detail::gLogName, helpOpts);
       return outArgs;
    }
 
@@ -129,14 +115,11 @@ static RootCpArgs ParseArgs(const char **args, int nArgs)
    outArgs.fRecreate = opts.GetSwitch("recreate");
    outArgs.fAbortOnFailure = opts.GetSwitch("abort-on-failure");
 
-   if (opts.GetSwitch("vv"))
-      SetLogVerbosity(3);
-   else if (opts.GetSwitch("v"))
-      SetLogVerbosity(2);
+   SetLogVerbosity(opts.GetSwitch("v") + 1);
 
    outArgs.fSources = opts.GetArgs();
    if (outArgs.fSources.size() < 2)
-      outArgs.fPrintHelp = RootCpArgs::EPrintUsage::kShort;
+      outArgs.fHelp = opts.MakeShortHelp(Detail::gLogName, helpOpts);
 
    return outArgs;
 }
@@ -327,12 +310,8 @@ int main(int argc, char **argv)
 
    // Parse arguments
    auto args = ParseArgs(const_cast<const char **>(argv) + 1, argc - 1);
-   if (args.fPrintHelp != RootCpArgs::EPrintUsage::kNo) {
-      std::cerr << kShortHelp;
-      if (args.fPrintHelp == RootCpArgs::EPrintUsage::kLong) {
-         std::cerr << kLongHelp;
-         return 0;
-      }
+   if (!args.fHelp.empty()) {
+      std::cerr << args.fHelp << "\n";
       return 1;
    }
 

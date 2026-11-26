@@ -17,6 +17,7 @@
 #include <TDataMember.h>
 #include <TVirtualCollectionProxy.h>
 #include <TClassEdit.h>
+#include <TVirtualX.h>
 #include <vector>
 
 
@@ -452,7 +453,7 @@ void TStructViewer::SetColor(TString name, Int_t color)
    TStructNodeProperty* prop;
    while ((prop = (TStructNodeProperty*) it() )) {
       if (name == prop->GetName()) {
-         prop->SetColor(TColor::GetColor(color));
+         prop->SetColor(TVirtualX::Pixel2Number(color));
          fGUI->Update();
 
          return;

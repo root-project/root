@@ -25,6 +25,7 @@
 #include "TG3DLine.h"
 #include "TGButtonGroup.h"
 #include "TColor.h"
+#include "TVirtualX.h"
 #include "TGColorSelect.h"
 
 #include "TMathBase.h"
@@ -209,7 +210,7 @@ void TEveCaloVizEditor::MakeSliceInfo()
 
          threshold->GetLabel()->SetText(si.fName);
          threshold->SetValue(si.fThreshold);
-         color->SetColor(TColor::Number2Pixel(si.fColor), kFALSE);
+         color->SetColor(TVirtualX::Number2Pixel(si.fColor), kFALSE);
          transp->SetNumber(si.fTransparency);
 
          if (! fr->IsMapped()) {
@@ -364,7 +365,7 @@ void TEveCaloVizEditor::DoSliceThreshold()
 void TEveCaloVizEditor::DoSliceColor(Pixel_t pixel)
 {
    TGColorSelect *cs = (TGColorSelect *) gTQSender;
-   fM->SetDataSliceColor(cs->WidgetId(), Color_t(TColor::GetColor(pixel)));
+   fM->SetDataSliceColor(cs->WidgetId(), Color_t(TVirtualX::Pixel2Number(pixel)));
    Update();
 }
 

@@ -1650,7 +1650,7 @@ void TGListTree::DrawItemName(Handle_t id, TGListTreeItem *item)
 
    if (fColorMode != 0 && item->HasColor()) {
       UInt_t width = TextWidth(item->GetText());
-      gVirtualX->SetForeground(fColorGC, TColor::Number2Pixel(item->GetColor()));
+      gVirtualX->SetForeground(fColorGC, TVirtualX::Number2Pixel(item->GetColor()));
       if (fColorMode & kColorUnderline) {
          Int_t y = item->fYtext-pos.fY + FontAscent() + 2;
          gVirtualX->DrawLine(id, fColorGC, item->fXtext, y,

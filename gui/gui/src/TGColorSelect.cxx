@@ -128,22 +128,22 @@ TG16ColorSelector::TG16ColorSelector(const TGWindow *p) :
 {
    SetLayoutManager(new TGMatrixLayout(this, 4, 4, 1, 1));
 
-   fCe[0]  = new TGColorFrame(this, TColor::Number2Pixel(0), 0);
-   fCe[1]  = new TGColorFrame(this, TColor::Number2Pixel(1), 1);
-   fCe[2]  = new TGColorFrame(this, TColor::Number2Pixel(2), 2);
-   fCe[3]  = new TGColorFrame(this, TColor::Number2Pixel(3), 3);
-   fCe[4]  = new TGColorFrame(this, TColor::Number2Pixel(4), 4);
-   fCe[5]  = new TGColorFrame(this, TColor::Number2Pixel(5), 5);
-   fCe[6]  = new TGColorFrame(this, TColor::Number2Pixel(6), 6);
-   fCe[7]  = new TGColorFrame(this, TColor::Number2Pixel(7), 7);
-   fCe[8]  = new TGColorFrame(this, TColor::Number2Pixel(8), 8);
-   fCe[9]  = new TGColorFrame(this, TColor::Number2Pixel(9), 9);
-   fCe[10] = new TGColorFrame(this, TColor::Number2Pixel(30), 10);
-   fCe[11] = new TGColorFrame(this, TColor::Number2Pixel(38), 11);
-   fCe[12] = new TGColorFrame(this, TColor::Number2Pixel(41), 12);
-   fCe[13] = new TGColorFrame(this, TColor::Number2Pixel(42), 13);
-   fCe[14] = new TGColorFrame(this, TColor::Number2Pixel(50), 14);
-   fCe[15] = new TGColorFrame(this, TColor::Number2Pixel(51), 15);
+   fCe[0]  = new TGColorFrame(this, TVirtualX::Number2Pixel(0), 0);
+   fCe[1]  = new TGColorFrame(this, TVirtualX::Number2Pixel(1), 1);
+   fCe[2]  = new TGColorFrame(this, TVirtualX::Number2Pixel(2), 2);
+   fCe[3]  = new TGColorFrame(this, TVirtualX::Number2Pixel(3), 3);
+   fCe[4]  = new TGColorFrame(this, TVirtualX::Number2Pixel(4), 4);
+   fCe[5]  = new TGColorFrame(this, TVirtualX::Number2Pixel(5), 5);
+   fCe[6]  = new TGColorFrame(this, TVirtualX::Number2Pixel(6), 6);
+   fCe[7]  = new TGColorFrame(this, TVirtualX::Number2Pixel(7), 7);
+   fCe[8]  = new TGColorFrame(this, TVirtualX::Number2Pixel(8), 8);
+   fCe[9]  = new TGColorFrame(this, TVirtualX::Number2Pixel(9), 9);
+   fCe[10] = new TGColorFrame(this, TVirtualX::Number2Pixel(30), 10);
+   fCe[11] = new TGColorFrame(this, TVirtualX::Number2Pixel(38), 11);
+   fCe[12] = new TGColorFrame(this, TVirtualX::Number2Pixel(41), 12);
+   fCe[13] = new TGColorFrame(this, TVirtualX::Number2Pixel(42), 13);
+   fCe[14] = new TGColorFrame(this, TVirtualX::Number2Pixel(50), 14);
+   fCe[15] = new TGColorFrame(this, TVirtualX::Number2Pixel(51), 15);
 
    for (Int_t i = 0; i < 16; i++)
       AddFrame(fCe[i], new TGLayoutHints(kLHintsCenterX | kLHintsCenterY));
@@ -390,7 +390,7 @@ void TGColorPopup::PreviewAlphaColor(ULongptr_t color)
    if (fClient->IsEditable()) return;
 
    TColor *tcolor = (TColor *)color;
-   fCurrentColor = tcolor->GetPixel();
+   fCurrentColor = gVirtualX->GetPixel(tcolor->GetNumber());
    SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED), 0, (ULongptr_t)tcolor);
 }
 
@@ -404,7 +404,7 @@ TGColorSelect::TGColorSelect(const TGWindow *p, Pixel_t color, Int_t id) :
    TGCheckButton(p, "", id)
 {
    if (!p && fClient->IsEditable() && !color) {
-      color = TColor::Number2Pixel(6); // magenta
+      color = TVirtualX::Number2Pixel(6); // magenta
    }
 
    fColor = color;
@@ -677,8 +677,8 @@ void TGColorSelect::SavePrimitive(std::ostream &out, Option_t *option /*= ""*/)
    TString cvar = TString::Format("ColPar%d",nn++);
 
    ULong_t color = GetColor();
-   const char *colorname = TColor::PixelAsHexString(color);
-   gClient->GetColorByName(colorname, color);
+   TString colorname = TVirtualX::PixelAsHexString(color);
+   gClient->GetColorByName(colorname.Data(), color);
 
    out << "\n   // color select widget\n";
    out << "   ULong_t " << cvar << ";\n";
