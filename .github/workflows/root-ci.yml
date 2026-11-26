@@ -182,7 +182,7 @@ jobs:
       - name: Nightlies and push to branch
         if:   github.event_name == 'schedule' || github.event_name == 'push'
         env:
-          OVERRIDES: ${{ github.event_name == 'push' && format('{0} {1} {2}', '--overrides', env.GLOBAL_OVERRIDES, join( matrix.overrides, ' ')) || '' }}
+          OVERRIDES: ${{ github.event_name == 'push' && format('{0} {1} {2}', '--overrides', env.GLOBAL_OVERRIDES || '', join( matrix.overrides, ' ')) || '' }}
           BASE_REF:  ${{ github.event_name == 'push' && github.ref_name || inputs.ref_name }}
           # For pushes, build exactly the pushed commit, not wherever the
           # branch happens to be when the job starts (issue #14061).
@@ -453,11 +453,6 @@ jobs:
             is_special: true
             property: "benchmark build"
             overrides: ["CMAKE_CXX_STANDARD=20"]
-          # Disable GPU builds until the DNS problem is solved
-          # - image: ubuntu2404-cuda
-          #   is_special: true
-          #   property: gpu
-          #   extra-runs-on: gpu
           # openSUSE Leap
           - image: opensuse16
             platform_config: opensuse16-march_native
@@ -479,11 +474,9 @@ jobs:
       options: --security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }} # KEEP IN SYNC WITH env key below
       env:
         CONTAINER_IMAGE: "registry.cern.ch/root-ci/${{ matrix.image }}:buildready" #KEEP IN SYNC WITH ABOVE
-        CONTAINER_OPTIONS: "--security-opt label=disable --rm ${{ matrix.property == 'gpu' && '--device nvidia.com/gpu=all' || '' }}" #KEEP IN SYNC WITH ABOVE
 
     env:
       BUILD_DIR: /github/home/ROOT-CI/build
-      CCACHE_DISABLE: 1
       INSTALL_DIR: /github/home/ROOT-CI/install
       POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
       PYTHON_VENV: ${{ matrix.python_venv || '/py-venv/ROOT-CI' }}
@@ -491,9 +484,8 @@ jobs:
     steps:
       - name: Set up environment
         run: |
-          ccache -s || true
           if [ -d "$PYTHON_VENV/bin/" ]; then
-            . "$PYTHON_VENV/bin/activate" && echo PATH=$PATH >> $GITHUB_ENV;
+            echo "$PYTHON_VENV/bin/" >> $GITHUB_PATH;
           fi
           if ${{ contains(matrix.property, 'auto-registration off') }}; then
             echo "Disabling ROOT's object auto registration for this job"
@@ -509,26 +501,25 @@ jobs:
         env:
           GITHUB_CONTEXT: ${{ toJSON(github) }}
           JOB_CONTEXT: ${{ toJSON(job) }}
-          ENV_CONTEXT: ${{ toJSON(env) }}
         run: |
           echo "$GITHUB_CONTEXT"
           echo "--------------------------"
           echo "$JOB_CONTEXT"
-          echo "--------------------------"
-          echo "$ENV_CONTEXT"
 
       - name: Print debug info
-        run:  'printf "%s@%s\\n" "$(whoami)" "$(hostname)";
-               ls -la;
-               echo "Path is: $PATH"
-              '
+        run: |
+          printf "%s@%s\\n" "$(whoami)" "$(hostname)";
+          ls -la;
+          echo "Path is: $PATH";
+          python3 --version;
 
       - uses: root-project/gcc-problem-matcher-improved@main
         with:
           build-directory: /github/home/ROOT-CI/src/
 
       - name: Pull Request Build
-        if:   ${{ github.event_name == 'pull_request' }}
+        if: ${{ github.event_name == 'pull_request' }}
+        id: PR
         env:
           INCREMENTAL: ${{ !contains(github.event.pull_request.labels.*.name, 'clean build') }}
           GITHUB_PR_ORIGIN: ${{ github.event.pull_request.head.repo.clone_url }}
@@ -537,7 +528,6 @@ jobs:
                     --buildtype       RelWithDebInfo
                     --platform        ${{ matrix.image }}
                     --platform_config ${{ matrix.platform_config }}
-                    --dockeropts      \"$CONTAINER_OPTIONS\"
                     --incremental     $INCREMENTAL
                     --base_ref        ${{ github.base_ref }}
                     --sha             ${{ github.sha }}
@@ -562,6 +552,7 @@ jobs:
               "
 
       - name: Nightly build
+        id: Nightly
         if:   github.event_name == 'schedule'
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
@@ -584,7 +575,7 @@ jobs:
                     --incremental    false
                     --base_ref       ${{ github.ref_name }}
                     --sha            ${{ github.sha }}
-                    --binaries       ${{ startsWith(github.ref, 'refs/tags/') }}
+                    --binaries       false
                     --repository     ${{ github.server_url }}/${{ github.repository }}
                     --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
               "
@@ -604,13 +595,9 @@ jobs:
           path: /github/home/ROOT-CI/packages/root_v*
           if-no-files-found: error
 
-      - name: ccache info (post)
-        run: |
-          ccache -s || true
-
       - name: Install
         id: install
-        if: ${{ !cancelled() && !(matrix.is_special && github.event_name == 'workflow_dispatch') }}
+        if: ${{ steps.PR.outcome == 'success' || steps.Nightly.outcome == 'success' }}
         run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}
 
       - name: Check headers
