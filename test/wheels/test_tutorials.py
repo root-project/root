@@ -31,6 +31,12 @@ SKIP_TUTORIALS = {
     "hist039_TH2Poly_usa.C",  # requires reading remote data via HTTP
 }
 
+
+def fail_on_stderr_errors(stderr):
+    errors = [line for line in stderr.splitlines() if "error" in line.lower()]
+    assert not errors, "\n".join(errors)
+
+
 # ----------------------
 # Python tutorials tests
 # ----------------------
@@ -70,6 +76,7 @@ def test_tutorial(tutorial):
             text=True,
         )
         print("Test stderr:", result.stderr)
+        fail_on_stderr_errors(result.stderr)
 
     except subprocess.TimeoutExpired:
         pytest.skip(f"Tutorial {tutorial} timed out")
@@ -115,6 +122,7 @@ def test_cpp_tutorial(tutorial):
             text=True,
         )
         print("Test stderr:", result.stderr)
+        fail_on_stderr_errors(result.stderr)
 
     except subprocess.TimeoutExpired:
         pytest.skip(f"Tutorial {tutorial} timed out")
