@@ -14,12 +14,13 @@
 
 #include <RooMsgService.h>
 
+#include "SofieLoader.h"
+
 #include <TBuffer.h>
 #include <TInterpreter.h>
-#include <TSystem.h>
+#include <TString.h>
 
 #include <fstream>
-#include <mutex>
 
 /**
  \file RooONNXFunc.cxx
@@ -35,7 +36,9 @@
  depend on any Python packages and fully supports ROOT IO,
 
  The ONNX model is evaluated through compiled C++ code generated at runtime
- using **TMVA SOFIE**. Automatic differentiation is supported via
+ using **SOFIE**, which is loaded at runtime: it is built together with ROOT if
+ RooFit is enabled. An external SOFIE library has to be in the library path
+ (e.g. in `LD_LIBRARY_PATH`) to be loaded. Automatic differentiation is supported via
  [Clad](https://github.com/vgvassilev/clad), allowing RooFit to access
  analytical gradients for fast minimization with Minuit 2.
 
@@ -125,35 +128,6 @@ std::vector<std::uint8_t> fileToBytes(std::string const &filePath)
    }
 
    return bytes;
-}
-
-template <typename Fn>
-Fn resolveLazy(std::string const &name, const char *code)
-{
-   static Fn fn = nullptr;
-   static std::once_flag flag;
-
-   std::call_once(flag, [&] {
-      // Try to declare the code
-      if (!gInterpreter->Declare(code)) {
-         throw std::runtime_error(std::string("ROOT JIT Declare failed for code defining ") + name);
-      }
-
-      // Try to resolve the symbol
-      void *symbol = reinterpret_cast<void *>(gInterpreter->ProcessLine((name + ";").c_str()));
-
-      if (!symbol) {
-         throw std::runtime_error(std::string("ROOT JIT failed to resolve symbol: ") + name);
-      }
-
-      fn = reinterpret_cast<Fn>(symbol);
-
-      if (!fn) {
-         throw std::runtime_error(std::string("ROOT JIT produced null function pointer for: ") + name);
-      }
-   });
-
-   return fn;
 }
 
 template <typename T>
@@ -260,40 +234,14 @@ void RooONNXFunc::initialize()
 
    _runtime = std::make_unique<RuntimeCache>();
 
-   // We are jitting the SOFIE invocation lazily at runtime, to avoid the
-   // link-time dependency to the SOFIE parser library.
-   if (gSystem->Load("libROOTTMVASofieParser") < 0) {
-      throw std::runtime_error("RooONNXFunc: cannot load ONNX file since SOFIE ONNX parser is missing."
-                               " Please build ROOT with tmva=ON.");
-   }
-   using OnnxToCpp = std::string (*)(std::uint8_t const *, std::size_t, const char *);
-   auto onnxToCppWithSofie = resolveLazy<OnnxToCpp>("_RooONNXFunc_onnxToCppWithSofie",
-                                                    R"(
-#include "TMVA/RModelParser_ONNX.hxx"
-
-std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::size_t onnxBytesSize, const char *outputName)
-{
-   namespace SOFIE = TMVA::Experimental::SOFIE;
-
-   std::string buffer{reinterpret_cast<const char *>(onnxBytes), onnxBytesSize};
-   std::istringstream stream{buffer};
-
-   SOFIE::RModel rmodel = SOFIE::RModelParser_ONNX{}.Parse(stream, outputName);
-   rmodel.SetOptimizationLevel(SOFIE::OptimizationLevel::kBasic);
-   rmodel.Generate(SOFIE::Options::kNoWeightFile);
-
-   std::stringstream ss{};
-   rmodel.PrintGenerated(ss);
-   return ss.str();
-}
-)");
-
    static int counter = 0;
    _funcName = "roo_onnx_func_" + std::to_string(counter);
-   std::string namespaceName = "TMVA_SOFIE_" + _funcName + "";
+   std::string namespaceName = "SOFIE_" + _funcName;
    counter++;
 
-   std::string modelCode = onnxToCppWithSofie(_onnxBytes.data(), _onnxBytes.size(), _funcName.c_str());
+   // SOFIE is loaded at runtime, to avoid any build-time dependency on it
+   std::string modelCode = RooFit::Detail::GenerateCodeFromONNX(
+      {reinterpret_cast<const char *>(_onnxBytes.data()), _onnxBytes.size()}, _funcName);
    gInterpreter->Declare(modelCode.c_str());
 
    auto nInputTensors = static_cast<unsigned long>(
@@ -318,7 +266,7 @@ std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::
       gInterpreter->Declare(ss.str().c_str());
    }
 
-   std::string sessionName = "::TMVA_SOFIE_" + _funcName + "::Session";
+   std::string sessionName = "::" + namespaceName + "::Session";
 
    _runtime->_session.emplace(sessionName);
 
@@ -331,7 +279,7 @@ std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::
 std::string RooONNXFunc::outerWrapperName() const
 {
    declareCodegenFunctions();
-   return "TMVA_SOFIE_" + funcName() + "::roo_outer_wrapper";
+   return "SOFIE_" + funcName() + "::roo_outer_wrapper";
 }
 
 void RooONNXFunc::declareCodegenFunctions() const
@@ -342,7 +290,7 @@ void RooONNXFunc::declareCodegenFunctions() const
    _runtime->_codegenDeclared = true;
 
    const std::size_t nInputTensors = _runtime->_nInputTensors;
-   std::string namespaceName = "TMVA_SOFIE_" + _funcName;
+   std::string namespaceName = "SOFIE_" + _funcName;
    std::string sessionName = "::" + namespaceName + "::Session";
    auto ptrSession = toPtrString(_runtime->_session.ptr, sessionName);
 
