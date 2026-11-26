@@ -26,6 +26,15 @@ class TPadPainter : public TPadPainterBase {
 protected:
    Int_t          fDoubleBuffer = 1;
 
+   template<typename T>
+   void DrawFillAreaAux(Int_t nPoints, const T *xs, const T *ys, Bool_t add_first_point);
+
+   template<typename T>
+   void DrawPolyLineAux(unsigned nPoints, const T *xs, const T *ys);
+
+   template<typename T>
+   void DrawPolyMarkerAux(unsigned nPoints, const T *xs, const T *ys);
+
 public:
    TPadPainter();
 
