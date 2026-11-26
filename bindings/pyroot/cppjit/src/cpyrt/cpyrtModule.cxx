@@ -1114,6 +1114,13 @@ PyObject* Init() {
   static MemoryRegulator s_memory_regulator;
 
   Py_INCREF(gThisModule);
+
+  // Avoid fallback to the GIL when importing this module in a free-threaded
+  // Python build.
+#ifdef Py_GIL_DISABLED
+  PyUnstable_Module_SetGIL(gThisModule, Py_MOD_GIL_NOT_USED);
+#endif
+
   return gThisModule;
 }
 
