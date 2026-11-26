@@ -480,8 +480,20 @@ jobs:
       INSTALL_DIR: /github/home/ROOT-CI/install
       POST_INSTALL_DIR: /github/home/ROOT-CI/PostInstall
       PYTHON_VENV: ${{ matrix.python_venv || '/py-venv/ROOT-CI' }}
+      # From forks, USE_SCCACHE is always unset, so for PRs we default to trying to read it
+      SCCACHE_ENABLED: ${{ github.event_name == 'pull_request' || ( vars.USE_SCCACHE == 'true' && contains(fromJSON('["pull_request", "workflow_dispatch", "push"]'), github.event_name) ) }}
+      SCCACHE_GHA_ENABLED: false
+      SCCACHE_BUCKET: ROOT-build-artifacts
+      SCCACHE_ENDPOINT: https://s3.cern.ch
+      SCCACHE_REGION: auto
+      SCCACHE_S3_KEY_PREFIX: 'sccache/${{ matrix.image }}'
+      SCCACHE_S3_NO_CREDENTIALS: 1 # Read-only mode. For jobs with write access, this needs to be overridden.
 
     steps:
+      - name: Set up sccache-cache
+        if: env.SCCACHE_ENABLED == 'true'
+        uses: mozilla-actions/sccache-action@v0.0.11
+
       - name: Set up environment
         run: |
           if [ -d "$PYTHON_VENV/bin/" ]; then
@@ -490,6 +502,11 @@ jobs:
           if ${{ contains(matrix.property, 'auto-registration off') }}; then
             echo "Disabling ROOT's object auto registration for this job"
             echo ROOT_OBJECT_AUTO_REGISTRATION=0 >> $GITHUB_ENV;
+          fi
+          if [ "${SCCACHE_ENABLED}" = "true" ]; then
+            echo "CMAKE_CXX_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
+            echo "CMAKE_C_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
+            echo "CMAKE_CUDA_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
           fi
 
       - name: Checkout
@@ -568,6 +585,9 @@ jobs:
         if:   github.event_name == 'push'
         env:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
+          AWS_ACCESS_KEY_ID: ${{ env.SCCACHE_ENABLED == 'true' && vars.SCCACHE_S3_ACCESS_KEY || '' }}
+          AWS_SECRET_ACCESS_KEY: ${{ env.SCCACHE_ENABLED == 'true' && secrets.SCCACHE_S3_ACCESS_SECRET || '' }}
+          SCCACHE_S3_NO_CREDENTIALS: ${{ env.SCCACHE_ENABLED == 'true' && '' || '1'}}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
