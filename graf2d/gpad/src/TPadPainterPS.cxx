@@ -25,10 +25,13 @@
 #include "TMath.h"
 #include "TPad.h"
 
-/** \class TPadPainter
+/** \class TPadPainterPS
 \ingroup gpad
 
-Implement TVirtualPadPainter which abstracts painting operations.
+TPadPainterPS is an attempt to abstract
+pad painting operation to the TVirtualPS interface.
+So using same API as for normal object drawing on interactive canvas,
+one also will be able to produce vector-based and binary images
 */
 
 ////////////////////////////////////////////////////////////////////////////////
