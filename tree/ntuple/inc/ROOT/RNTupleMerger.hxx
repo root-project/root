@@ -113,7 +113,7 @@ enum class ENTupleMergeActionResult {
 
 // clang-format off
 /**
- * \class ROOT::Experimental::Internal::RNTupleMergeActions
+ * \class ROOT::Internal::RNTupleMergeActions
  * \ingroup NTuple
  * \brief Container for callbacks that are invoked during the "slow merge" process.
  *        This allows customizing how the merging happens entry-by-entry, enabling things like dropping individual
@@ -173,6 +173,8 @@ class RNTupleMerger final {
 public:
    /// Creates a RNTupleMerger with the given destination.
    explicit RNTupleMerger(std::unique_ptr<ROOT::Internal::RPagePersistentSink> destination);
+   // NOTE: outlined to avoid including RNTupleModel.hxx
+   ~RNTupleMerger();
 
    /// Merge a given set of sources into the destination.
    /// Note that sources with an empty schema (i.e. created from a Model that had no fields added to it) are in
