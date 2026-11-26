@@ -438,7 +438,7 @@ Bool_t TGColorSelect::ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t p
             case kCOL_SELCHANGED:
                {
                   if (parm1 == 0) {
-                     SetAlphaColor((ULong_t)parm2);
+                     SetAlphaColor((ULongptr_t)parm2);
                      parm1 = (Longptr_t)fWidgetId;  // parm1 needs to pass the widget Id
                      SendMessage(fMsgWindow, MK_MSG(kC_COLORSEL, kCOL_SELCHANGED),
                                  parm1, parm2);
@@ -660,7 +660,7 @@ void TGColorSelect::SetColor(ULong_t color, Bool_t emit)
 ////////////////////////////////////////////////////////////////////////////////
 /// Set color.
 
-void TGColorSelect::SetAlphaColor(ULong_t color, Bool_t emit)
+void TGColorSelect::SetAlphaColor(ULongptr_t color, Bool_t emit)
 {
    if (emit) {
       AlphaColorSelected(color); //emit opacity signal

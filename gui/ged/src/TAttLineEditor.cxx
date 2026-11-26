@@ -100,7 +100,7 @@ TAttLineEditor::~TAttLineEditor()
 void TAttLineEditor::ConnectSignals2Slots()
 {
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttLineEditor", this, "DoLineColor(Pixel_t)");
-   fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttLineEditor", this, "DoLineAlphaColor(ULong_t)");
+   fColorSelect->Connect("AlphaColorSelected(ULongptr_t)", "TAttLineEditor", this, "DoLineAlphaColor(ULongptr_t)");
    fStyleCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineStyle(Int_t)");
    fWidthCombo->Connect("Selected(Int_t)", "TAttLineEditor", this, "DoLineWidth(Int_t)");
    fAlpha->Connect("Released()","TAttLineEditor", this, "DoAlpha()");
