@@ -102,6 +102,7 @@ mathmore="ON"
 # see https://github.com/pypa/manylinux/pull/1727
 [[tool.scikit-build.overrides]]
 if.platform-system = "linux"
+inherit.cmake.define = "append" # keep all the settings above, without this the override replaces them
 cmake.define.CLING_CXX_PATH = "g++" # setting it directly skips the symlink lookup, as suggested in https://github.com/root-project/root/issues/10556#issuecomment-1968689038
 
 # Expose the ROOT cli as an executable command via _rootcli wrapper 
