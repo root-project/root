@@ -14,12 +14,6 @@
 
 #include "TPadPainterBase.h"
 
-/*
-TPadPainterPS is an attempt to abstract
-pad painting operation to the TVirtualPS interface.
-So using same API as for normal object drawing on interactive canvas,
-one also will be able to produce vector-based and binary images  */
-
 class TVirtualPad;
 class TVirtualPS;
 
