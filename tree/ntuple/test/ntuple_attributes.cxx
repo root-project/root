@@ -15,9 +15,6 @@ TEST(RNTupleAttributes, CreateWriter)
 {
    FileRaii fileGuard("ntuple_attr_create_writer.root");
 
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    auto model = RNTupleModel::Create();
 
@@ -54,9 +51,6 @@ TEST(RNTupleAttributes, AttributeSetDuplicateName)
 {
    FileRaii fileGuard("test_ntuple_attrs_duplicate_name.root");
 
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    // Create a RNTuple
    auto model = RNTupleModel::Create();
    auto pInt = model->MakeField<int>("int");
@@ -76,9 +70,6 @@ TEST(RNTupleAttributes, AttributeSetDuplicateName)
 TEST(RNTupleAttributes, BasicReadingWriting)
 {
    FileRaii fileGuard("ntuple_attr_basic_readwriting.root");
-
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    /// Writing
    {
@@ -170,9 +161,6 @@ TEST(RNTupleAttributes, BasicReadingWriting)
 TEST(RNTupleAttributes, BasicReadingWritingTFile)
 {
    FileRaii fileGuard("ntuple_attr_basic_readwriting_tfile.root");
-
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    /// Writing
    {
@@ -266,9 +254,6 @@ TEST(RNTupleAttributes, BasicWritingWithExplicitEntry)
 {
    FileRaii fileGuard("ntuple_attr_basic_writing_entry.root");
 
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    auto model = RNTupleModel::Create();
    auto pInt = model->MakeField<int>("int");
@@ -313,9 +298,6 @@ TEST(RNTupleAttributes, NoCommitRange)
 {
    FileRaii fileGuard("ntuple_attr_no_commit_range.root");
 
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    auto model = RNTupleModel::Create();
    auto pInt = model->MakeField<int>("int");
@@ -325,6 +307,7 @@ TEST(RNTupleAttributes, NoCommitRange)
    auto pAttr = attrModel->MakeField<std::string>("attr");
    auto attrSetWriter = writer->CreateAttributeSet(std::move(attrModel), "AttrSet1");
 
+   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
    diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "A pending attribute range was not committed", false);
 
    auto attrRange = attrSetWriter->BeginRange();
@@ -342,9 +325,6 @@ TEST(RNTupleAttributes, MultipleCommitRange)
    // since CommitRange requires you to move the handle - meaning the second time you are passing an invalid handle.)
 
    FileRaii fileGuard("test_ntuple_attrs_multipleend.root");
-
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    auto model = RNTupleModel::Create();
    auto pInt = model->MakeField<int>("int");
@@ -378,9 +358,6 @@ TEST(RNTupleAttributes, AccessPastCommitRange)
 {
    FileRaii fileGuard("test_ntuple_attrs_pastcommitrange.root");
 
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    auto model = RNTupleModel::Create();
    auto pInt = model->MakeField<int>("int");
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
@@ -410,9 +387,6 @@ TEST(RNTupleAttributes, NoImplicitCommitRange)
    // forgetting to call CommitRange will cause the attribute range not to be saved.
 
    FileRaii fileGuard("test_ntuple_attrs_auto_end_range.root");
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    {
       auto model = RNTupleModel::Create();
       auto pInt = model->MakeField<int>("int");
@@ -450,8 +424,6 @@ TEST(RNTupleAttributes, MultipleSets)
    // Create multiple sets and interleave attribute ranges
 
    FileRaii fileGuard("test_ntuple_attrs_multiplesets.root");
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    /// Writing
    {
@@ -598,8 +570,6 @@ TEST(RNTupleAttributes, MultipleSetsTFile)
    // (Same as MultipleSets but using TFile backend)
 
    FileRaii fileGuard("test_ntuple_attrs_multiplesets.root");
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    /// Writing
    {
@@ -784,9 +754,6 @@ TEST(RNTupleAttributes, InterleavingRanges)
 
    FileRaii fileGuard("test_ntuple_attrs_multiplebegin.root");
 
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    {
       auto model = RNTupleModel::Create();
       auto pInt = model->MakeField<int>("int");
@@ -848,9 +815,6 @@ TEST(RNTupleAttributes, AttributeInvalidCommitRange)
 
    FileRaii fileGuard("test_ntuple_attrs_invalid_endrange.root");
 
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    // Create a RNTuple
    auto model = RNTupleModel::Create();
    auto pInt = model->MakeField<int>("int");
@@ -884,9 +848,6 @@ TEST(RNTupleAttributes, InvalidPendingRange)
 {
    FileRaii fileGuard("test_ntuple_attr_invalid_pendingrange.root");
 
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    auto model = RNTupleModel::Create();
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    auto writer = RNTupleWriter::Append(std::move(model), "ntpl", *file);
@@ -909,19 +870,17 @@ TEST(RNTupleAttributes, ReassignPendingRange)
    // verify that reassigning a pending range and not committing it properly triggers the warning.
    FileRaii fileGuard("test_ntuple_attr_reassign_range.root");
 
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
    auto writer = RNTupleWriter::Append(RNTupleModel::Create(), "ntpl", *file);
    auto attrSet = writer->CreateAttributeSet(RNTupleModel::Create(), "MyAttributes");
+
+   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
+   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "A pending attribute range was not committed", false);
 
    auto attrRange = attrSet->BeginRange();
    attrSet->CommitRange(std::move(attrRange));
    // reassign the range but never commit it.
    attrRange = attrSet->BeginRange();
-
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "A pending attribute range was not committed", false);
 }
 
 TEST(RNTupleAttributes, AssignMetadataAfterData)
@@ -930,8 +889,6 @@ TEST(RNTupleAttributes, AssignMetadataAfterData)
    // the corresponding rows - provided it's done between a BeginRange() and an CommitRange().
 
    FileRaii fileGuard("test_ntuple_attrs_assign_after.root");
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    {
       auto model = RNTupleModel::Create();
@@ -995,8 +952,6 @@ TEST(RNTupleAttributes, ReadRanges)
    // Testing reading attribute ranges with a [startIdx, endIdx].
 
    FileRaii fileGuard("test_ntuple_attrs_readranges.root");
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    {
       auto model = RNTupleModel::Create();
@@ -1087,8 +1042,6 @@ TEST(RNTupleAttributes, ReadRanges)
 TEST(RNTupleAttributes, EmptyAttrRange)
 {
    FileRaii fileGuard("test_ntuple_attrs_empty.root");
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    {
       auto model = RNTupleModel::Create();
@@ -1132,8 +1085,6 @@ TEST(RNTupleAttributes, EmptyAttrRange)
 TEST(RNTupleAttributes, AccessAttrSetReaderAfterClosingMainReader)
 {
    FileRaii fileGuard("test_ntuple_attrs_readerafterclosing.root");
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    {
       auto model = RNTupleModel::Create();
@@ -1177,8 +1128,6 @@ TEST(RNTupleAttributes, AccessAttrSetReaderAfterClosingMainReader)
 TEST(RNTupleAttributes, AccessAttrSetWriterAfterClosingMainWriter)
 {
    FileRaii fileGuard("test_ntuple_attrs_writerafterclosing.root");
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    {
       auto model = RNTupleModel::Create();
@@ -1190,6 +1139,7 @@ TEST(RNTupleAttributes, AccessAttrSetWriterAfterClosingMainWriter)
       auto pMyAttr = attrModel->MakeField<std::string>("myAttr");
       auto attrSet = writer->CreateAttributeSet(std::move(attrModel), "MyAttrSet");
 
+      ROOT::TestSupport::CheckDiagsRAII diagsRaii;
       diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "range was not committed", false);
 
       auto attrEntry = attrSet->BeginRange();
@@ -1208,9 +1158,6 @@ TEST(RNTupleAttributes, ReadAttributesUnknownMajor)
 {
    // Try reading an attribute set with an unknown Major schema version and verify it fails.
    FileRaii fileGuard("test_ntuple_attrs_futuremajorschema.root");
-
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    // Write a regular RNTuple with attributes
    {
@@ -1260,9 +1207,6 @@ TEST(RNTupleAttributes, ReadAttributesUnknownMinor)
    // Try reading an attribute set with an unknown Minor schema version and verify it works.
    FileRaii fileGuard("test_ntuple_attrs_futureminorschema.root");
 
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    // Write a regular RNTuple with attributes
    {
       auto file = std::unique_ptr<TFile>(TFile::Open(fileGuard.GetPath().c_str(), "RECREATE"));
@@ -1302,9 +1246,6 @@ TEST(RNTupleAttributes, ReadAttributesUnknownMinor)
 TEST(RNTupleAttributes, WriteZeroAttributes)
 {
    FileRaii fileGuard("ntuple_attr_writezero.root");
-
-   ROOT::TestSupport::CheckDiagsRAII diagsRaii;
-   diagsRaii.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
 
    /// Writing
    {
