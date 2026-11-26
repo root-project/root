@@ -32,7 +32,6 @@ private:
    Rgl::Pad::Tesselator        fTess;
    Rgl::Pad::GLLimits          fLimits;
 
-   WinContext_t   fWinContext; // context of selected drawable
    TAttFill       fGlFillAtt;  // fill attributes used for GL
 
    std::vector<Double_t>       fVs;//Vertex buffer for tesselator.
