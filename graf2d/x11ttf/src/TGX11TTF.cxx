@@ -420,37 +420,6 @@ Bool_t TGX11TTF::Init(void *display)
    return res;
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Draw TTF glyphs on the specified window context
-
-void TGX11TTF::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode)
-{
-   auto ctxt = (X11DrawableTTF *) wctxt;
-   ctxt->DrawTTFglyphs(x1, y1, ttf, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw text using TrueType fonts. If TrueType fonts are not available the
-/// text is drawn with TGX11::DrawTextW.
-
-void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                         const char *text, ETextMode mode)
-{
-   auto ctxt = (X11DrawableTTF *) wctxt;
-   ctxt->DrawText(x, y, angle, mgn, text, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw text using TrueType fonts. If TrueType fonts are not available the
-/// text is drawn with TGX11::DrawTextW.
-
-void TGX11TTF::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                         const wchar_t *text, ETextMode mode)
-{
-   auto ctxt = (X11DrawableTTF *) wctxt;
-   ctxt->DrawText(x, y, angle, mgn, text, mode);
-}
-
 
 #ifdef R__HAS_XFT
 

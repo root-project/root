@@ -307,16 +307,6 @@ void TGX11::ClearWindow()
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Clear specified window.
-
-void TGX11::ClearWindowW(WinContext_t wctxt)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   if (ctxt)
-      ctxt->ClearWindow();
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Delete current pixmap.
 
 void TGX11::ClosePixmap()
@@ -352,18 +342,6 @@ void TGX11::CopyPixmap(int wid, int xpos, int ypos)
 void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 {
    gCws->DrawBox(x1, y1, x2, y2, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw a box on specified window
-///
-///  - mode=0 hollow  (kHollow)
-///  - mode=1 solid   (kSolid)
-
-void TGX11::DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   ctxt->DrawBox(x1, y1, x2, y2, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -414,18 +392,6 @@ void TGX11::DrawFillArea(int n, TPoint *xy)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill area described by polygon on specified window
-///
-///  \param [in] n     number of points
-///  \param [in] xy   list of points
-
-void TGX11::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   ctxt->DrawFillArea(n, xy);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Draw a line.
 ///
 ///  \param [in] x1,y1        : begin of line
@@ -434,18 +400,6 @@ void TGX11::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 void TGX11::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
    gCws->DrawLine(x1, y1, x2, y2);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw a line on specified window.
-///
-///  \param [in] x1,y1        : begin of line
-///  \param [in] x2,y2        : end of line
-
-void TGX11::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   ctxt->DrawLine(x1, y1, x2, y2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -460,18 +414,6 @@ void TGX11::DrawPolyLine(int n, TPoint *xy)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw a line through all points on specified window.
-///
-///  \param [in] n     number of points
-///  \param [in] xy   list of points
-
-void TGX11::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   ctxt->DrawPolyLine(n, xy);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Draws N segments between provided points
 ///
 /// \param [in] n    number of segements
@@ -483,18 +425,6 @@ void TGX11::DrawLinesSegments(Int_t n, TPoint *xy)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draws N segments between provided points on specified windows
-///
-/// \param [in] n    number of segements
-/// \param [in] xy   list of points, size 2*n
-
-void TGX11::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   ctxt->DrawLinesSegments(n, xy);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Draw n markers with the current attributes at position x, y.
 ///
 ///  \param [in] n     number of markers to draw
@@ -503,18 +433,6 @@ void TGX11::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy)
 void TGX11::DrawPolyMarker(int n, TPoint *xy)
 {
    gCws->DrawPolyMarker(n, xy);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw n markers with the current attributes at position x, y on specified window.
-///
-///  \param [in] n     number of markers to draw
-///  \param [in] xy   x,y coordinates of markers
-
-void TGX11::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   ctxt->DrawPolyMarker(n, xy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -549,24 +467,6 @@ void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                      const wchar_t *text, ETextMode mode)
 {
    gCws->DrawText(x, y, angle, mgn, text, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw a text string using current font on specified window.
-///
-///  \param [in] mode       : drawing mode
-///              - mode=0     : the background is not drawn (kClear)
-///              - mode=1     : the background is drawn (kOpaque)
-///  \param [in] x,y        : text position
-///  \param [in] angle      : text angle
-///  \param [in] mgn        : magnification factor
-///  \param [in] text       : text string
-
-void TGX11::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                      const char *text, ETextMode mode)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   ctxt->DrawText(x, y, angle, mgn, text, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2006,7 +1906,8 @@ void TGX11::SetDoubleBufferON()
 
 void TGX11::SetDrawMode(EDrawMode mode)
 {
-   SetDrawModeW((WinContext_t) gCws, mode);
+   if (gCws)
+      gCws->SetDrawMode(mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2018,10 +1919,11 @@ void TGX11::SetFillColor(Color_t cindex)
 
    TAttFill::SetFillColor(cindex);
 
-   TAttFill arg(gCws->fAttFill);
-   arg.SetFillColor(cindex);
-
-   SetAttFill((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttFill arg(gCws->fAttFill);
+      arg.SetFillColor(cindex);
+      gCws->SetAttFill(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2045,10 +1947,11 @@ void TGX11::SetFillStyle(Style_t fstyle)
 {
    TAttFill::SetFillStyle(fstyle);
 
-   TAttFill arg(gCws->fAttFill);
-   arg.SetFillStyle(fstyle);
-
-   SetAttFill((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttFill arg(gCws->fAttFill);
+      arg.SetFillStyle(fstyle);
+      gCws->SetAttFill(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2089,10 +1992,11 @@ void TGX11::SetLineColor(Color_t cindex)
 
    TAttLine::SetLineColor(cindex);
 
-   TAttLine arg(gCws->fAttLine);
-   arg.SetLineColor(cindex);
-
-   SetAttLine((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttLine arg(gCws->fAttLine);
+      arg.SetLineColor(cindex);
+      gCws->SetAttLine(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2118,10 +2022,11 @@ void TGX11::SetLineStyle(Style_t lstyle)
 {
    TAttLine::SetLineStyle(lstyle);
 
-   TAttLine arg(gCws->fAttLine);
-   arg.SetLineStyle(lstyle);
-
-   SetAttLine((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttLine arg(gCws->fAttLine);
+      arg.SetLineStyle(lstyle);
+      gCws->SetAttLine(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2143,10 +2048,11 @@ void TGX11::SetLineWidth(Width_t width)
 {
    TAttLine::SetLineWidth(width);
 
-   TAttLine arg(gCws->fAttLine);
-   arg.SetLineWidth(width);
-
-   SetAttLine((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttLine arg(gCws->fAttLine);
+      arg.SetLineWidth(width);
+      gCws->SetAttLine(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2168,10 +2074,11 @@ void TGX11::SetMarkerColor(Color_t cindex)
 
    TAttMarker::SetMarkerColor(cindex);
 
-   TAttMarker arg(gCws->fAttMarker);
-   arg.SetMarkerColor(cindex);
-
-   SetAttMarker((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttMarker arg(gCws->fAttMarker);
+      arg.SetMarkerColor(cindex);
+      gCws->SetAttMarker(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2183,10 +2090,11 @@ void TGX11::SetMarkerSize(Float_t msize)
 {
    TAttMarker::SetMarkerSize(msize);
 
-   TAttMarker arg(gCws->fAttMarker);
-   arg.SetMarkerSize(msize);
-
-   SetAttMarker((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttMarker arg(gCws->fAttMarker);
+      arg.SetMarkerSize(msize);
+      gCws->SetAttMarker(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2196,10 +2104,11 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
 {
    TAttMarker::SetMarkerStyle(markerstyle);
 
-   TAttMarker arg(gCws->fAttMarker);
-   arg.SetMarkerStyle(markerstyle);
-
-   SetAttMarker((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttMarker arg(gCws->fAttMarker);
+      arg.SetMarkerStyle(markerstyle);
+      gCws->SetAttMarker(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2211,7 +2120,8 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
 
 void TGX11::SetOpacity(Int_t percent)
 {
-   SetOpacityW((WinContext_t) gCws, percent);
+   if (gCws)
+      gCws->SetOpacity(percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2257,10 +2167,11 @@ void TGX11::SetTextAlign(Short_t talign)
 {
    TAttText::SetTextAlign(talign);
 
-   TAttText arg(gCws->fAttText);
-   arg.SetTextAlign(talign);
-
-   SetAttText((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttText arg(gCws->fAttText);
+      arg.SetTextAlign(talign);
+      gCws->SetAttText(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2272,10 +2183,11 @@ void TGX11::SetTextColor(Color_t cindex)
 
    TAttText::SetTextColor(cindex);
 
-   TAttText arg(gCws->fAttText);
-   arg.SetTextColor(cindex);
-
-   SetAttText((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttText arg(gCws->fAttText);
+      arg.SetTextColor(cindex);
+      gCws->SetAttText(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2334,10 +2246,11 @@ void TGX11::SetTextFont(Font_t fontnumber)
 {
    TAttText::SetTextFont(fontnumber);
 
-   TAttText arg(gCws->fAttText);
-   arg.SetTextFont(fontnumber);
-
-   SetAttText((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttText arg(gCws->fAttText);
+      arg.SetTextFont(fontnumber);
+      gCws->SetAttText(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2347,10 +2260,11 @@ void TGX11::SetTextSize(Float_t textsize)
 {
    TAttText::SetTextSize(textsize);
 
-   TAttText arg(gCws->fAttText);
-   arg.SetTextSize(textsize);
-
-   SetAttText((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttText arg(gCws->fAttText);
+      arg.SetTextSize(textsize);
+      gCws->SetAttText(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2385,47 +2299,8 @@ void TGX11::Sync(int mode)
 
 void TGX11::UpdateWindow(int mode)
 {
-   UpdateWindowW((WinContext_t) gCws, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Update display for specified window.
-///
-///  \param [in] mode : (1) update (0) sync
-///
-/// Synchronise client and server once (not permanent).
-/// Copy the pixmap gCws->fDrawing on the window gCws->fWindow
-/// if the double buffer is on.
-
-void TGX11::UpdateWindowW(WinContext_t wctxt, Int_t mode)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   if (ctxt)
-      ctxt->UpdateWindow(mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set opacity of a specified window. This image manipulation routine works
-/// by adding to a percent amount of neutral to each pixels RGB.
-/// Since it requires quite some additional color map entries is it
-/// only supported on displays with more than > 8 color planes (> 256
-/// colors).
-
-void TGX11::SetOpacityW(WinContext_t wctxt, Int_t percent)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetOpacity(percent);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy the pixmap wid at the position xpos, ypos in the specified window.
-
-void TGX11::CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   if (ctxt)
-      ctxt->CopyPixmap(wid, xpos, ypos);
+   if (gCws)
+      gCws->UpdateWindow(mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2471,17 +2346,7 @@ void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
 
 Int_t TGX11::WriteGIF(char *name)
 {
-   return gCws->WriteGIF(name);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Writes the specified window into GIF file. Returns 1 in case of success,
-/// 0 otherwise.
-
-Int_t TGX11::WriteGIFW(WinContext_t wctxt, const char *name)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   return ctxt->WriteGIF(name);
+   return gCws ? gCws->WriteGIF(name) : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2738,77 +2603,3 @@ std::shared_ptr<TVirtualX::XDrawable> TGX11::GetDrawable(Int_t wid)
    return fWindows[wid];
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Returns window context for specified window id
-/// Window context is valid until window not closed or destroyed
-/// Provided methods to work with window context like DrawLineW allows to
-/// perform actions independently on different windows
-
-WinContext_t TGX11::GetWindowContext(Int_t wid)
-{
-   if ((wid < 0) || (fWindows.count(wid) == 0))
-      return (WinContext_t) nullptr;
-
-   return (WinContext_t) fWindows[wid].get();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set fill attributes for specified window
-
-void TGX11::SetAttFill(WinContext_t wctxt, const TAttFill &att)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetAttFill(att);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set line attributes for specified window
-
-void TGX11::SetAttLine(WinContext_t wctxt, const TAttLine &att)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetAttLine(att);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set marker attributes for specified window
-
-void TGX11::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetAttMarker(att);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set text attributes for specified window
-
-void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetAttText(att);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set window draw mode
-
-void TGX11::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
-{
-   fDrawMode = mode;
-
-   auto ctxt = (X11Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetDrawMode(mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns window draw mode
-
-TVirtualX::EDrawMode TGX11::GetDrawModeW(WinContext_t wctxt)
-{
-   auto ctxt = (X11Drawable *) wctxt;
-   return ctxt ? ctxt->GetDrawMode() : kCopy;
-}
