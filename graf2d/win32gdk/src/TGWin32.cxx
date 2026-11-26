@@ -1016,30 +1016,6 @@ void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Draw TTF glyphs on the specified window context
-
-void TGWin32::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->DrawTTFglyphs(x1, y1, ttf, mode);
-}
-
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw text using TrueType fonts on specified window.
-/// If TrueType fonts are not available the
-/// text is drawn with TGWin32::DrawText.
-
-void TGWin32::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                        const char *text, ETextMode mode)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->DrawText(x, y, angle, mgn, text, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Draw text using TrueType fonts. If TrueType fonts are not available the
 /// text is drawn with TGWin32::DrawText.
 
@@ -1047,19 +1023,6 @@ void TGWin32::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                        const wchar_t *text, ETextMode mode)
 {
    gCws->DrawText(x, y, angle, mgn, text, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw text using TrueType fonts on specified window.
-/// If TrueType fonts are not available the
-/// text is drawn with TGWin32::DrawText.
-
-void TGWin32::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                        const wchar_t *text, ETextMode mode)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->DrawText(x, y, angle, mgn, text, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1111,16 +1074,6 @@ void TGWin32::ClearWindow()
 {
    if (gCws)
       gCws->ClearWindow();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clear specified window.
-
-void TGWin32::ClearWindowW(WinContext_t wctxt)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->ClearWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1187,17 +1140,6 @@ void TGWin32::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
    gCws->DrawBox(x1, y1, x2, y2, mode);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Draw a box on specified window.
-/// mode=0 hollow  (kHollow)
-/// mode=1 solid   (kSolid)
-
-void TGWin32::DrawBoxW(WinContext_t wctxt, int x1, int y1, int x2, int y2, EBoxMode mode)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->DrawBox(x1, y1, x2, y2, mode);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a cell array.
@@ -1247,18 +1189,6 @@ void TGWin32::DrawFillArea(int n, TPoint *xyt)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Fill area described by polygon in a specified window.
-/// n         : number of points
-/// xy(2,n)   : list of points
-
-void TGWin32::DrawFillAreaW(WinContext_t wctxt, int n, TPoint *xyt)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->DrawFillArea(n, xyt);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Draw a line.
 /// x1,y1        : begin of line
 /// x2,y2        : end of line
@@ -1268,17 +1198,6 @@ void TGWin32::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
    gCws->DrawLine(x1, y1, x2, y2);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Draw a line on specified window.
-/// x1,y1        : begin of line
-/// x2,y2        : end of line
-
-void TGWin32::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->DrawLine(x1, y1, x2, y2);
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw a line through all points.
@@ -1290,30 +1209,6 @@ void TGWin32::DrawPolyLine(int n, TPoint * xyt)
    gCws->DrawPolyLine(n, xyt);
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Draw a line through all points in specified window.
-/// n         : number of points
-/// xy        : list of points
-
-void TGWin32::DrawPolyLineW(WinContext_t wctxt, int n, TPoint * xyt)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->DrawPolyLine(n, xyt);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw N segments on specified window
-/// n         : number of segments
-/// xy        : list of points, 2*N size
-
-void TGWin32::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xyt)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->DrawLinesSegments(n, xyt);
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw n markers with the current attributes at position x, y.
@@ -1323,18 +1218,6 @@ void TGWin32::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xyt)
 void TGWin32::DrawPolyMarker(int n, TPoint *xyt)
 {
    gCws->DrawPolyMarker(n, xyt);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw n markers with the current attributes at position x, y in specified window.
-/// n    : number of markers to draw
-/// xy   : x,y coordinates of markers
-
-void TGWin32::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xyt)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->DrawPolyMarker(n, xyt);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2526,7 +2409,8 @@ void TGWin32::SetDoubleBufferON()
 
 void TGWin32::SetDrawMode(EDrawMode mode)
 {
-   SetDrawModeW((WinContext_t) gCws, mode);
+   if (gCws)
+      gCws->SetDrawMode(mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2538,10 +2422,11 @@ void TGWin32::SetFillColor(Color_t cindex)
 
    TAttFill::SetFillColor(cindex);
 
-   TAttFill arg(gCws->fAttFill);
-   arg.SetFillColor(cindex);
-
-   SetAttFill((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttFill arg(gCws->fAttFill);
+      arg.SetFillColor(cindex);
+      gCws->SetAttFill(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2563,10 +2448,11 @@ void TGWin32::SetFillStyle(Style_t fstyle)
 {
    TAttFill::SetFillStyle(fstyle);
 
-   TAttFill arg(gCws->fAttFill);
-   arg.SetFillStyle(fstyle);
-
-   SetAttFill((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttFill arg(gCws->fAttFill);
+      arg.SetFillStyle(fstyle);
+      gCws->SetAttFill(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2577,16 +2463,6 @@ Style_t TGWin32::GetFillStyle() const
    // TODO: remove in ROOT7, no longer used in ROOT
 
    return gCws ? gCws->fAttFill.GetFillStyle() : TAttFill::GetFillStyle();
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set fill attributes for specified window
-
-void TGWin32::SetAttFill(WinContext_t wctxt, const TAttFill &att)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetAttFill(att);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2606,10 +2482,11 @@ void TGWin32::SetLineColor(Color_t cindex)
 
    TAttLine::SetLineColor(cindex);
 
-   TAttLine arg(gCws->fAttLine);
-   arg.SetLineColor(cindex);
-
-   SetAttLine((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttLine arg(gCws->fAttLine);
+      arg.SetLineColor(cindex);
+      gCws->SetAttLine(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2634,10 +2511,11 @@ void TGWin32::SetLineStyle(Style_t lstyle)
 {
    TAttLine::SetLineStyle(lstyle);
 
-   TAttLine arg(gCws->fAttLine);
-   arg.SetLineStyle(lstyle);
-
-   SetAttLine((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttLine arg(gCws->fAttLine);
+      arg.SetLineStyle(lstyle);
+      gCws->SetAttLine(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2658,10 +2536,11 @@ void TGWin32::SetLineWidth(Width_t width)
 {
    TAttLine::SetLineWidth(width);
 
-   TAttLine arg(gCws->fAttLine);
-   arg.SetLineWidth(width);
-
-   SetAttLine((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttLine arg(gCws->fAttLine);
+      arg.SetLineWidth(width);
+      gCws->SetAttLine(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2675,16 +2554,6 @@ Width_t TGWin32::GetLineWidth() const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Set line attributes for specified window.
-
-void TGWin32::SetAttLine(WinContext_t wctxt, const TAttLine &att)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetAttLine(att);
-}
-
-////////////////////////////////////////////////////////////////////////////////
 /// Set color index for markers.
 
 void TGWin32::SetMarkerColor(Color_t cindex)
@@ -2693,10 +2562,11 @@ void TGWin32::SetMarkerColor(Color_t cindex)
 
    TAttMarker::SetMarkerColor(cindex);
 
-   TAttMarker arg(gCws->fAttMarker);
-   arg.SetMarkerColor(cindex);
-
-   SetAttMarker((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttMarker arg(gCws->fAttMarker);
+      arg.SetMarkerColor(cindex);
+      gCws->SetAttMarker(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2710,10 +2580,11 @@ void TGWin32::SetMarkerSize(Float_t msize)
 
    TAttMarker::SetMarkerSize(msize);
 
-   TAttMarker arg(gCws->fAttMarker);
-   arg.SetMarkerSize(msize);
-
-   SetAttMarker((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttMarker arg(gCws->fAttMarker);
+      arg.SetMarkerSize(msize);
+      gCws->SetAttMarker(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2726,32 +2597,12 @@ void TGWin32::SetMarkerStyle(Style_t markerstyle)
 
    TAttMarker::SetMarkerStyle(markerstyle);
 
-   TAttMarker arg(gCws->fAttMarker);
-   arg.SetMarkerStyle(markerstyle);
-
-   SetAttMarker((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttMarker arg(gCws->fAttMarker);
+      arg.SetMarkerStyle(markerstyle);
+      gCws->SetAttMarker(arg);
+   }
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set marker attributes for speicfied window
-
-void TGWin32::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetAttMarker(att);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set text attributes for speicfied window
-
-void TGWin32::SetAttText(WinContext_t wctxt, const TAttText &att)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetAttText(att);
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set opacity of a current window. This image manipulation routine works
@@ -2762,7 +2613,8 @@ void TGWin32::SetAttText(WinContext_t wctxt, const TAttText &att)
 
 void TGWin32::SetOpacity(Int_t percent)
 {
-   SetOpacityW((WinContext_t) gCws, percent);
+   if (gCws)
+      gCws->SetOpacity(percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2811,10 +2663,11 @@ void TGWin32::SetTextAlign(Short_t talign)
 {
    TAttText::SetTextAlign(talign);
 
-   TAttText arg(gCws->fAttText);
-   arg.SetTextAlign(talign);
-
-   SetAttText((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttText arg(gCws->fAttText);
+      arg.SetTextAlign(talign);
+      gCws->SetAttText(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2826,10 +2679,11 @@ void TGWin32::SetTextColor(Color_t cindex)
 
    TAttText::SetTextColor(cindex);
 
-   TAttText arg(gCws->fAttText);
-   arg.SetTextColor(cindex);
-
-   SetAttText((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttText arg(gCws->fAttText);
+      arg.SetTextColor(cindex);
+      gCws->SetAttText(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2849,50 +2703,8 @@ void TGWin32::Sync(int /* mode */)
 
 void TGWin32::UpdateWindow(int mode)
 {
-   gCws->UpdateWindow(mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Update current window
-/// mode : (1) update
-///        (0) sync
-///
-/// Synchronise client and server once (not permanent).
-/// Copy the pixmap ctxt->drawing on the window ctxt->window
-/// if the double buffer is on.
-
-void TGWin32::UpdateWindowW(WinContext_t wctxt, Int_t mode)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->UpdateWindow(mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set opacity of a specified window. This image manipulation routine works
-/// by adding to a percent amount of neutral to each pixels RGB.
-/// Since it requires quite some additional color map entries is it
-/// only supported on displays with more than > 8 color planes (> 256
-/// colors)
-
-void TGWin32::SetOpacityW(WinContext_t wctxt, Int_t percent)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetOpacity(percent);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy the pixmap wid at the position xpos, ypos in the specified window.
-
-void TGWin32::CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos)
-{
-   if (fWindows.count(wid) == 0)
-      return;
-
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->CopyPixmap(wid, xpos, ypos);
+   if (gCws)
+      gCws->UpdateWindow(mode);
 }
 
 
@@ -2945,15 +2757,6 @@ void TGWin32::WritePixmap(int wid, unsigned int w, unsigned int h,
 Int_t TGWin32::WriteGIF(char *name)
 {
    return gCws ? gCws->WriteGIF(name) : 0;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Writes the specified window into GIF file.
-
-Int_t TGWin32::WriteGIFW(WinContext_t wctxt, const char *name)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   return ctxt ? ctxt->WriteGIF(name) : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -6031,15 +5834,6 @@ std::shared_ptr<TVirtualX::XDrawable> TGWin32::GetDrawable(Int_t wid)
    return fWindows[wid];
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Returns window context for specified win id
-
-WinContext_t TGWin32::GetWindowContext(Int_t wid)
-{
-   if (fWindows.count(wid) == 0)
-      return (WinContext_t) nullptr;
-   return (WinContext_t) fWindows[wid].get();
-}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// The Nonrectangular Window Shape Extension adds nonrectangular
@@ -6331,24 +6125,3 @@ void TGWin32::SetUserThreadId(ULong_t id)
    }
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Set window draw mode
-
-void TGWin32::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
-{
-   // set TVirtualX member to support old interface
-   fDrawMode = mode;
-
-   auto ctxt = (Win32Drawable *) wctxt;
-   if (ctxt)
-      ctxt->SetDrawMode(mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns window draw mode
-
-TVirtualX::EDrawMode TGWin32::GetDrawModeW(WinContext_t wctxt)
-{
-   auto ctxt = (Win32Drawable *) wctxt;
-   return ctxt ? ctxt->drawMode : kCopy;
-}
