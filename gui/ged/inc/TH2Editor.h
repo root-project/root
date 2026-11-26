@@ -105,33 +105,12 @@ protected:
            void   CreateBinTab();       // Creates the Bin Tab (part of the SetGedEditor)
 
 private:
-   void    PaintBox3D(Float_t *p1, Float_t *p2,Float_t *p3, Float_t *p4);
    TString GetHistTypeLabel();
    TString GetHistCoordsLabel();
    TString GetHistContLabel();
    TString GetHistAdditiveLabel();
    TString GetCutOptionString();
 
-   Int_t     fPx1old,
-             fPy1old,
-             fPx2old,
-             fPy2old;
-   Float_t   fP1oldx[3],
-             fP2oldx[3],
-             fP3oldx[3],
-             fP4oldx[3],
-             fP5oldx[3],
-             fP6oldx[3],
-             fP7oldx[3],
-             fP8oldx[3];
-   Float_t   fP1oldy[3],
-             fP2oldy[3],
-             fP3oldy[3],
-             fP4oldy[3],
-             fP5oldy[3],
-             fP6oldy[3],
-             fP7oldy[3],
-             fP8oldy[3];
    TH2      *fBinHist;         // Cloned histogram for rebin
    Double_t  fOldXOffset;      // saves the old x offset of the histogram
    Double_t  fOldYOffset;      // saves the old y offset of the histogram
