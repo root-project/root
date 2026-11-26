@@ -1267,7 +1267,8 @@ void TFitEditor::Terminate()
 
 void TFitEditor::UpdateGUI()
 {
-   if (!fFitObject) return;
+   if (!fFitObject || fDrawingSelection)
+      return;
 
    DrawSelection(true);
 
@@ -2817,68 +2818,39 @@ void TFitEditor::DoSliderXMoved()
 
 void TFitEditor::DrawSelection(bool restore)
 {
-#ifndef R__HAS_COCOA
-   static Int_t  px1old, py1old, px2old, py2old; // to remember the square drawn.
-#endif
-
-   if ( !fParentPad ) return;
-
-   if (restore) {
-#ifndef R__HAS_COCOA
-      px1old = fParentPad->XtoAbsPixel(fParentPad->GetUxmin());
-      py1old = fParentPad->YtoAbsPixel(fParentPad->GetUymin());
-      px2old = fParentPad->XtoAbsPixel(fParentPad->GetUxmax());
-      py2old = fParentPad->YtoAbsPixel(fParentPad->GetUymax());
-#endif
+   // method does not work with 3D plots
+   if (!fParentPad || fParentPad->GetView())
       return;
+
+   // no longer need to restore previous values
+   if (restore)
+      return;
+
+   fDrawingSelection = kTRUE;
+
+   TVirtualPad::TContext ctxt(fParentPad, kTRUE);
+
+   Double_t xleft = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
+   Double_t xright = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
+
+   TAttLine{2, 1, 1}.ModifyOn(*fParentPad);
+
+   if (fDim == 1) {
+      Double_t xx1[2] = {xleft, xleft};
+      Double_t xx2[2] = {xright, xright};
+      Double_t yy[2] = { fParentPad->GetUymin(), fParentPad->GetUymax() };
+      Double_t yydummy[2] = { yy[0], yy[0] }; // used to trigger update without real paint
+      fParentPad->PaintPolyLine(2, xx1, fParentPad->GetUxmin() != xleft ? yy : yydummy, "ifitpanel1");
+      fParentPad->PaintPolyLine(2, xx2, fParentPad->GetUxmax() != xright ? yy : yydummy, "ifitpanel2");
+   } else if (fDim > 1) {
+      Double_t ymin = fYaxis->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));
+      Double_t ymax = fYaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));
+      fParentPad->PaintBox(xleft, ymin, xright, ymax, "ilfitpanel");
    }
 
-   Int_t px1,py1,px2,py2;
+   fParentPad->UpdateAsync();
 
-   TVirtualPad *save = 0;
-   save = gPad;
-   gPad = fParentPad;
-   gPad->cd();
-
-   Double_t xleft = 0;
-   Double_t xright = 0;
-   xleft  = fXaxis->GetBinLowEdge((Int_t)((fSliderX->GetMinPosition())+0.5));
-   xright = fXaxis->GetBinUpEdge((Int_t)((fSliderX->GetMaxPosition())+0.5));
-
-   Float_t ymin, ymax;
-   if ( fDim > 1 )
-   {
-      ymin = fYaxis->GetBinLowEdge((Int_t)((fSliderY->GetMinPosition())+0.5));//gPad->GetUymin();
-      ymax = fYaxis->GetBinUpEdge((Int_t)((fSliderY->GetMaxPosition())+0.5));//gPad->GetUymax();
-   }
-   else
-   {
-      ymin = gPad->GetUymin();
-      ymax = gPad->GetUymax();
-   }
-
-   px1 = gPad->XtoAbsPixel(xleft);
-   py1 = gPad->YtoAbsPixel(ymin);
-   px2 = gPad->XtoAbsPixel(xright);
-   py2 = gPad->YtoAbsPixel(ymax);
-
-   gPad->FeedbackMode(kTRUE);
-   gPad->SetLineWidth(1);
-   gPad->SetLineColor(2);
-#ifndef R__HAS_COCOA
-   // With Cocoa XOR is fake, so no need in erasing the old box, it's
-   // done by clearing the backing store and repainting inside a special
-   // window.
-   gVirtualX->DrawBox(px1old, py1old, px2old, py2old, TVirtualX::kHollow);
-
-   px1old = px1;
-   py1old = py1;
-   px2old = px2;
-   py2old = py2;
-#endif // R__HAS_COCOA
-   gVirtualX->DrawBox(px1, py1, px2, py2, TVirtualX::kHollow);
-
-   if(save) gPad = save;
+   fDrawingSelection = kFALSE;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
