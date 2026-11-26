@@ -69,26 +69,11 @@ TGQuartz::TGQuartz(const char *name, const char *title)
 }
 
 //______________________________________________________________________________
-void TGQuartz::DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->DrawBox(x1, y1, x2, y2, mode);
-}
-
-//______________________________________________________________________________
 void TGQuartz::DrawBox(Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
 {
    if (auto &ctxt = GetSelectedDrawable())
       ctxt->DrawBox(x1, y1, x2, y2, mode);
 }
-
-//______________________________________________________________________________
-void TGQuartz::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->DrawFillArea(n, xy);
-}
-
 
 //______________________________________________________________________________
 void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
@@ -97,19 +82,11 @@ void TGQuartz::DrawFillArea(Int_t n, TPoint *xy)
       ctxt->DrawFillArea(n, xy);
 }
 
-
 //______________________________________________________________________________
 void TGQuartz::DrawCellArray(Int_t /*x1*/, Int_t /*y1*/, Int_t /*x2*/, Int_t /*y2*/,
                              Int_t /*nx*/, Int_t /*ny*/, Int_t */*ic*/)
 {
    //Noop.
-}
-
-//______________________________________________________________________________
-void TGQuartz::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->DrawLine(x1, y1, x2, y2);
 }
 
 //______________________________________________________________________________
@@ -127,13 +104,6 @@ void TGQuartz::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 
 
 //______________________________________________________________________________
-void TGQuartz::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->DrawPolyLine(n, xy);
-}
-
-//______________________________________________________________________________
 void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
 {
    //Comment from TVirtualX:
@@ -146,20 +116,6 @@ void TGQuartz::DrawPolyLine(Int_t n, TPoint *xy)
 
    if (auto &ctxt = GetSelectedDrawable())
       ctxt->DrawPolyLine(n, xy);
-}
-
-//______________________________________________________________________________
-void TGQuartz::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->DrawLinesSegments(n, xy);
-}
-
-//______________________________________________________________________________
-void TGQuartz::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->DrawPolyMarker(n, xy);
 }
 
 //______________________________________________________________________________
@@ -177,34 +133,11 @@ void TGQuartz::DrawPolyMarker(Int_t n, TPoint *xy)
 
 
 //______________________________________________________________________________
-void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                         const char *text, ETextMode mode)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->DrawText(x, y, angle, mgn, text, mode);
-}
-
-//______________________________________________________________________________
 void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                         const char *text, ETextMode mode)
 {
    if (auto &ctxt = GetSelectedDrawable())
       ctxt->DrawText(x, y, angle, mgn, text, mode);
-}
-
-//______________________________________________________________________________
-void TGQuartz::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                         const wchar_t *text, ETextMode mode)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->DrawText(x, y, angle, mgn, text, mode);
-}
-
-//______________________________________________________________________________
-void TGQuartz::DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->DrawTTFglyphs(x1, y1, ttf, mode);
 }
 
 //______________________________________________________________________________
@@ -214,7 +147,6 @@ void TGQuartz::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
    if (auto &ctxt = GetSelectedDrawable())
       ctxt->DrawText(x, y, angle, mgn, text, mode);
 }
-
 
 //______________________________________________________________________________
 Float_t TGQuartz::GetTextMagnitude()
@@ -376,61 +308,6 @@ void TGQuartz::SetOpacity(Int_t /*percent*/)
    // colors).
 }
 
-//______________________________________________________________________________
-void TGQuartz::SetOpacityW(WinContext_t /* wctxt */, Int_t /* percent */)
-{
-}
-
-//______________________________________________________________________________
-void TGQuartz::SetAttFill(WinContext_t wctxt, const TAttFill &att)
-{
-   if (auto ctxt = (QuartzDrawable *)wctxt)
-      ctxt->SetAttFill(att);
-
-   // TODO: remove this after transition done
-   TAttFill::SetFillColor(att.GetFillColor());
-   TAttFill::SetFillStyle(att.GetFillStyle());
-}
-
-//______________________________________________________________________________
-void TGQuartz::SetAttLine(WinContext_t wctxt, const TAttLine &att)
-{
-   if (auto ctxt = (QuartzDrawable *)wctxt)
-      ctxt->SetAttLine(att);
-
-   // TODO: remove this after transition done
-   TAttLine::SetLineColor(att.GetLineColor());
-   TAttLine::SetLineStyle(att.GetLineStyle());
-   TAttLine::SetLineWidth(att.GetLineWidth());
-}
-
-//______________________________________________________________________________
-void TGQuartz::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
-{
-   if (auto ctxt = (QuartzDrawable *)wctxt)
-      ctxt->SetAttMarker(att);
-
-   // TODO: remove this after transition done
-   TAttMarker::SetMarkerColor(att.GetMarkerColor());
-   TAttMarker::SetMarkerSize(att.GetMarkerSize());
-   TAttMarker::SetMarkerStyle(att.GetMarkerStyle());
-}
-
-//______________________________________________________________________________
-void TGQuartz::SetAttText(WinContext_t wctxt, const TAttText &att)
-{
-   if (auto ctxt = (QuartzDrawable *)wctxt)
-      ctxt->SetAttText(att);
-
-   // TODO: remove this after transition done
-   TAttText::SetTextAlign(att.GetTextAlign());
-   TAttText::SetTextAngle(att.GetTextAngle());
-   TAttText::SetTextColor(att.GetTextColor());
-   TAttText::SetTextSize(att.GetTextSize());
-   TAttText::SetTextFont(att.GetTextFont());
-}
-
-//TTF related part.
 
 
 //Aux. functions.

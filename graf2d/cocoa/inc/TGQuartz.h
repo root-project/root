@@ -67,23 +67,6 @@ public:
 
    Float_t   GetTextMagnitude() override;
 
-   //---- Methods used for new graphics -----
-   void      SetOpacityW(WinContext_t wctxt, Int_t percent) override;
-   void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
-   void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
-   void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
-   void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
-
-   void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
-   void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
-   void      DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
-   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const wchar_t *text, ETextMode mode) override;
-   void      DrawTTFglyphsW(WinContext_t wctxt, Int_t x, Int_t y, TTFhandle &ttf, ETextMode mode) override;
-
 private:
 
    TGQuartz(const TGQuartz &rhs);

@@ -105,14 +105,7 @@ public:
    Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h) override; //-"Qt ROOT".
    void      RemoveWindow(ULong_t qwid) override; //-"Qt ROOT".
 
-   //---- Methods used for new graphics -----
    std::shared_ptr<XDrawable> GetDrawable(Int_t wid) override;
-   WinContext_t GetWindowContext(Int_t wid) override;
-   void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
-   EDrawMode GetDrawModeW(WinContext_t wctxt) override;
-   void      ClearWindowW(WinContext_t wctxt) override;
-   void      UpdateWindowW(WinContext_t wctxt, Int_t mode) override;
-   void      CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos) override;
 
    //-Functions used by GUI.
    Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,

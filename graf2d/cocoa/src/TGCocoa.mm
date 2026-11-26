@@ -709,13 +709,6 @@ std::shared_ptr<TVirtualX::XDrawable> TGCocoa::GetDrawable(Int_t wid)
 }
 
 //______________________________________________________________________________
-WinContext_t TGCocoa::GetWindowContext(Int_t wid)
-{
-   auto drawable = GetDrawable(wid);
-   return (WinContext_t) drawable.get();
-}
-
-//______________________________________________________________________________
 std::shared_ptr<QuartzDrawable> &TGCocoa::GetSelectedDrawable()
 {
    static std::shared_ptr<QuartzDrawable> dummy;
@@ -723,36 +716,6 @@ std::shared_ptr<QuartzDrawable> &TGCocoa::GetSelectedDrawable()
    if (iter == fWindows.end())
       return dummy;
    return iter->second;
-}
-
-//______________________________________________________________________________
-void TGCocoa::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->SetDrawMode(mode);
-}
-
-//______________________________________________________________________________
-TVirtualX::EDrawMode TGCocoa::GetDrawModeW(WinContext_t wctxt)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      return ctxt->GetDrawMode();
-
-   return fDrawMode;
-}
-
-//______________________________________________________________________________
-void TGCocoa::ClearWindowW(WinContext_t wctxt)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->ClearWindow();
-}
-
-//______________________________________________________________________________
-void TGCocoa::UpdateWindowW(WinContext_t wctxt, Int_t mode)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->UpdateWindow(mode);
 }
 
 //______________________________________________________________________________
@@ -2434,13 +2397,6 @@ void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
 
    if (auto &ctxt = GetSelectedDrawable())
       ctxt->CopyPixmap(pixmapID, x ,y);
-}
-
-//______________________________________________________________________________
-void TGCocoa::CopyPixmapW(WinContext_t wctxt, Int_t pixmapID, Int_t x, Int_t y)
-{
-   if (auto ctxt = (QuartzDrawable *) wctxt)
-      ctxt->CopyPixmap(pixmapID, x, y);
 }
 
 //______________________________________________________________________________
