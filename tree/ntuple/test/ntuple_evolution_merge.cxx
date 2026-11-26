@@ -10,9 +10,6 @@
 
 TEST(RNTupleMerger, MergeWithAttributesSchemaEvolve)
 {
-   ROOT::TestSupport::CheckDiagsRAII diagsRAII;
-   diagsRAII.requiredDiag(kWarning, "ROOT.NTuple", "RNTuple Attributes are experimental", false);
-
    // Write two test ntuples to be merged.
    // These files have 1 attribute set with the same name and they contain a custom class field.
    // The second class field has a newer version that has been schema evolved from the first.
