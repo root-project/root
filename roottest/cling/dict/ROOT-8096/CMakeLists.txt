@@ -6,6 +6,7 @@ add_custom_command(OUTPUT dict.cxx dict_rdict.pcm
 set_source_files_properties(dict.cxx PROPERTIES GENERATED TRUE)
 
 add_library(ROOT-8096 EXCLUDE_FROM_ALL SHARED dict.cxx)
+add_dependencies(roottest ROOT-8096)
 set_target_properties(ROOT-8096 PROPERTIES
   # The generator expression stops multi-config generators like Visual
   # Studio from appending a per-config subdirectory:
