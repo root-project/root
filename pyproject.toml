@@ -96,6 +96,14 @@ imt="ON"
 roofit="ON"
 mathmore="ON"
 
+# Make cling call plain g++ at runtime to find the C++ standard headers.
+# On the manylinux_2_34 x86_64 image g++ is a symlink to manylinux-gcc-wrapper,
+# but that program only exists in the build image
+# see https://github.com/pypa/manylinux/pull/1727
+[[tool.scikit-build.overrides]]
+if.platform-system = "linux"
+cmake.define.CLING_CXX_PATH = "g++" # setting it directly skips the symlink lookup, as suggested in https://github.com/root-project/root/issues/10556#issuecomment-1968689038
+
 # Expose the ROOT cli as an executable command via _rootcli wrapper 
 [project.scripts]
 root = "ROOT._rootcli:main"
