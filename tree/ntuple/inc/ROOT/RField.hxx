@@ -495,22 +495,22 @@ protected:
       *static_cast<CardinalityType *>(to) = size;
    }
 
-   std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final
+   std::size_t ReadBulkImplGlobalIndex(ROOT::NTupleSize_t globalIndex, void *values, std::size_t count)
    {
       RNTupleLocalIndex collectionStart;
       ROOT::NTupleSize_t collectionSize;
-      fPrincipalColumn->ForReading()->GetCollectionInfo(bulkSpec.fFirstIndex, &collectionStart, &collectionSize);
+      fPrincipalColumn->ForReading()->GetCollectionInfo(globalIndex, &collectionStart, &collectionSize);
 
-      auto typedValues = static_cast<CardinalityType *>(bulkSpec.fValues);
+      auto typedValues = static_cast<CardinalityType *>(values);
       typedValues[0] = collectionSize;
 
       auto lastOffset = collectionStart.GetIndexInCluster() + collectionSize;
-      ROOT::NTupleSize_t nRemainingEntries = bulkSpec.fCount - 1;
+      ROOT::NTupleSize_t nRemainingEntries = count - 1;
       std::size_t nEntries = 1;
       while (nRemainingEntries > 0) {
          ROOT::NTupleSize_t nItemsUntilPageEnd;
-         auto offsets = fPrincipalColumn->ForReading()->MapV<ROOT::Internal::RColumnIndex>(
-            bulkSpec.fFirstIndex + nEntries, nItemsUntilPageEnd);
+         auto offsets =
+            fPrincipalColumn->ForReading()->MapV<ROOT::Internal::RColumnIndex>(globalIndex, nItemsUntilPageEnd);
          std::size_t nBatch = std::min(nRemainingEntries, nItemsUntilPageEnd);
          for (std::size_t i = 0; i < nBatch; ++i) {
             typedValues[nEntries + i] = offsets[i] - lastOffset;
@@ -520,6 +520,45 @@ protected:
          nEntries += nBatch;
       }
       return RBulkSpec::kAllSet;
+   }
+
+   std::size_t ReadBulkImplLocalIndex(ROOT::RNTupleLocalIndex localIndex, void *values, std::size_t count)
+   {
+      RNTupleLocalIndex collectionStart;
+      ROOT::NTupleSize_t collectionSize;
+      fPrincipalColumn->ForReading()->GetCollectionInfo(localIndex, &collectionStart, &collectionSize);
+
+      auto typedValues = static_cast<CardinalityType *>(values);
+      typedValues[0] = collectionSize;
+
+      auto lastOffset = collectionStart.GetIndexInCluster() + collectionSize;
+      ROOT::NTupleSize_t nRemainingEntries = count - 1;
+      std::size_t nEntries = 1;
+      while (nRemainingEntries > 0) {
+         ROOT::NTupleSize_t nItemsUntilPageEnd;
+         auto offsets = fPrincipalColumn->ForReading()->MapV<ROOT::Internal::RColumnIndex>(localIndex + nEntries,
+                                                                                           nItemsUntilPageEnd);
+         std::size_t nBatch = std::min(nRemainingEntries, nItemsUntilPageEnd);
+         for (std::size_t i = 0; i < nBatch; ++i) {
+            typedValues[nEntries + i] = offsets[i] - lastOffset;
+            lastOffset = offsets[i];
+         }
+         nRemainingEntries -= nBatch;
+         nEntries += nBatch;
+      }
+      return RBulkSpec::kAllSet;
+   }
+
+   std::size_t ReadBulkImpl(const RBulkSpec &bulkSpec) final
+   {
+      if (const auto *localIndex = std::get_if<RNTupleLocalIndex>(&bulkSpec.fFirstIndex)) {
+         return ReadBulkImplLocalIndex(*localIndex, bulkSpec.fValues, bulkSpec.fCount);
+      } else if (const auto *globalIndex = std::get_if<ROOT::NTupleSize_t>(&bulkSpec.fFirstIndex)) {
+         return ReadBulkImplGlobalIndex(*globalIndex, bulkSpec.fValues, bulkSpec.fCount);
+      } else {
+         assert(false && "Unrecognized index type.");
+         return ROOT::kInvalidNTupleIndex;
+      }
    }
 
 public:
