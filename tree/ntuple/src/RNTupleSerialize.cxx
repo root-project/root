@@ -1884,10 +1884,6 @@ ROOT::RResult<std::uint32_t> ROOT::Internal::RNTupleSerializer::SerializeFooter(
    // Attributes
    frame = pos;
    const auto nAttributeSets = desc.GetNAttributeSets();
-   if (nAttributeSets > 0) {
-      R__LOG_WARNING(NTupleLog()) << "RNTuple Attributes are experimental. They are not guaranteed to be readable "
-                                     "back in the future (but your main data is)";
-   }
    pos += SerializeListFramePreamble(nAttributeSets, *where);
    for (const auto &attrSet : desc.GetAttrSetIterable()) {
       if (auto res = SerializeAttributeSet(attrSet, *where)) {
@@ -2093,10 +2089,6 @@ ROOT::RResult<void> ROOT::Internal::RNTupleSerializer::DeserializeFooter(const v
          bytes += res.Unwrap();
       } else {
          return R__FORWARD_ERROR(res);
-      }
-      if (nAttributeSets > 0) {
-         R__LOG_WARNING(NTupleLog()) << "RNTuple Attributes are experimental. They are not guaranteed to be readable "
-                                        "back in the future (but your main data is)";
       }
       for (std::uint32_t attrSetId = 0; attrSetId < nAttributeSets; ++attrSetId) {
          Internal::RNTupleAttrSetDescriptorBuilder attrSetDescBld;
