@@ -1,38 +1,75 @@
 #include <ROOT/RNTupleModel.hxx>
 #include <ROOT/RNTupleReader.hxx>
 #include "librntuplestltest/MySTLEvent.h"
-#include "gtest/gtest.h"
+
+#include <bitset>
+#include <cstddef>
+#include <cstdlib>
+#include <exception>
+#include <iostream>
+#include <string>
+#include <unordered_map>
+#include <unordered_set>
+#include <vector>
+
+namespace {
+
+int gNFailures = 0;
+
+void ReportFailure(const std::string &what, const std::string &details = "")
+{
+   ++gNFailures;
+   std::cerr << "FAILURE: " << what;
+   if (!details.empty())
+      std::cerr << ": " << details;
+   std::cerr << '\n';
+}
+
+std::string SizeMismatch(std::size_t got, std::size_t expected)
+{
+   return "got size " + std::to_string(got) + ", expected size " + std::to_string(expected);
+}
 
 void check_bitset(const std::bitset<16> &a, const std::bitset<16> &b)
 {
-   EXPECT_EQ(a, b);
+   if (a != b)
+      ReportFailure("bitset mismatch", "got " + a.to_string() + ", expected " + b.to_string());
 }
 
 void check_vector(const std::vector<int> &a, const std::vector<int> &b)
 {
-   EXPECT_EQ(a.size(), b.size());
+   if (a.size() != b.size()) {
+      ReportFailure("vector size mismatch", SizeMismatch(a.size(), b.size()));
+      return;
+   }
    for (std::size_t i = 0; i < a.size(); i++) {
-      EXPECT_EQ(a[i], b[i]);
+      if (a[i] != b[i]) {
+         ReportFailure("vector element mismatch", "index " + std::to_string(i) + ": got " + std::to_string(a[i]) +
+                                                     ", expected " + std::to_string(b[i]));
+      }
    }
 }
 
 void check_unordered_set(const std::unordered_set<double> &a, const std::unordered_set<double> &b)
 {
-   EXPECT_EQ(a, b);
+   if (a != b)
+      ReportFailure("unordered_set mismatch", SizeMismatch(a.size(), b.size()));
 }
 
 void check_unordered_map(const std::unordered_map<int, std::string> &a, const std::unordered_map<int, std::string> &b)
 {
-   EXPECT_EQ(a, b);
+   if (a != b)
+      ReportFailure("unordered_map mismatch", SizeMismatch(a.size(), b.size()));
 }
 
 void check_unordered_multimap(const std::unordered_multimap<std::string, std::vector<float>> &a,
                               const std::unordered_multimap<std::string, std::vector<float>> &b)
 {
-   EXPECT_EQ(a, b);
+   if (a != b)
+      ReportFailure("unordered_multimap mismatch", SizeMismatch(a.size(), b.size()));
 }
 
-TEST(RNTupleMakeProject, ReadBackRNTuple)
+void ReadBackRNTuple()
 {
    auto ntuple = ROOT::RNTupleReader::Open("events", "ntuple_makeproject_stl_example_rntuple.root");
 
@@ -66,8 +103,22 @@ TEST(RNTupleMakeProject, ReadBackRNTuple)
    check_unordered_multimap(event.strange, strange);
 }
 
-int main(int argc, char **argv)
+} // anonymous namespace
+
+int main()
 {
-   ::testing::InitGoogleTest(&argc, argv);
-   return RUN_ALL_TESTS();
+   try {
+      ReadBackRNTuple();
+   } catch (const std::exception &e) {
+      std::cerr << "FAILURE: unexpected exception: " << e.what() << '\n';
+      return EXIT_FAILURE;
+   }
+
+   if (gNFailures > 0) {
+      std::cerr << gNFailures << " check(s) failed\n";
+      return EXIT_FAILURE;
+   }
+
+   std::cout << "All checks passed\n";
+   return EXIT_SUCCESS;
 }

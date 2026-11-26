@@ -1947,9 +1947,14 @@ function(ROOT_ADD_TEST test)
          set(ARG_PROJECT ${ARG_BUILD})
        endif()
     endif()
+    if(CMAKE_GENERATOR_PLATFORM)
+      # e.g. Win32, which Visual Studio doesn't pick by default
+      set(_platform --build-generator-platform ${CMAKE_GENERATOR_PLATFORM})
+    endif()
     add_test(NAME ${test} COMMAND ${CMAKE_CTEST_COMMAND}
       --build-and-test  ${ARG_SOURCE_DIR} ${ARG_BINARY_DIR}
       --build-generator ${CMAKE_GENERATOR}
+      ${_platform}
       --build-makeprogram ${CMAKE_MAKE_PROGRAM}
       --build-target ${ARG_BUILD}
       --build-project ${ARG_PROJECT}
