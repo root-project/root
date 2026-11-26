@@ -3,15 +3,15 @@
 /// \notebook -nodraw
 /// This macro provides an example of using a trained model with PyTorch
 /// and make inference using SOFIE and RDataFrame
-/// This macro uses as input an ONNX model generated with the
-/// Python tutorial TMVA_SOFIE_PyTorch_HiggsModel.py
-/// You need to run that macro before to generate the trained PyTorch model
-/// and also the  corresponding header file with SOFIE which can then be used for inference
+/// This macro uses as input the header file with the code generated with SOFIE
+/// by the Python script _higgsmodel_generate_sofie.py, from the model trained
+/// with PyTorch. You need to run that script before this macro.
+/// The generated code only depends on the C++ standard library.
 ///
 /// Execute in this order:
 /// ```
-/// python3 TMVA_SOFIE_PyTorch_HiggsModel.py
-/// root TMVA_SOFIE_RDataFrame.C
+/// python3 _higgsmodel_generate_sofie.py
+/// root SOFIE_RDataFrame.C
 /// ```
 ///
 /// \macro_code
@@ -26,7 +26,8 @@ R__ADD_INCLUDE_PATH($PWD)
 #include <array>
 #include <vector>
 
-void TMVA_SOFIE_RDataFrame(int nthreads = 2){
+void SOFIE_RDataFrame(int nthreads = 2)
+{
 
    std::string inputFileName = "Higgs_data.root";
    std::string inputFile = std::string{gROOT->GetTutorialDir()} + "/machine_learning/data/" + inputFileName;
@@ -40,9 +41,8 @@ void TMVA_SOFIE_RDataFrame(int nthreads = 2){
    // A SOFIE Session holds the model weights and the intermediate buffers and is
    // not thread-safe: create one Session per RDataFrame processing slot and use
    // the slot number in the DefineSlot functor to dispatch to the right one.
-   // The Session default constructor reads the weights from the default weight
-   // file (HiggsModel.dat in this case).
-   std::vector<TMVA_SOFIE_HiggsModel::Session> sessions(nslots);
+   // The weights of the model are part of the generated code.
+   std::vector<SOFIE_HiggsModel::Session> sessions(nslots);
 
    // The functor assembles the model input tensor from the RDataFrame columns
    // and evaluates the model. The column order must match the ordering of the
@@ -70,5 +70,4 @@ void TMVA_SOFIE_RDataFrame(int nthreads = 2){
    h2->DrawClone();
    h1->DrawClone("SAME");
    c1->BuildLegend();
-
 }
