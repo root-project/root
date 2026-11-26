@@ -2048,3 +2048,5 @@ ROOT::RResult<void> RNTupleMerger::Merge(std::span<RPageSource *> sources, const
 
    return RResult<void>::Success();
 }
+
+RNTupleMerger::~RNTupleMerger() = default;
