@@ -556,6 +556,7 @@ jobs:
               "
 
       - name: Workflow dispatch
+        id: Workflow
         if:   ${{ github.event_name == 'workflow_dispatch' && !matrix.is_special }}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      ${{ inputs.buildtype }}
@@ -620,7 +621,7 @@ jobs:
 
       - name: Install
         id: install
-        if: ${{ steps.PR.outcome == 'success' || steps.Nightly.outcome == 'success' }}
+        if: ${{ steps.PR.outcome == 'success' || steps.Nightly.outcome == 'success' || steps.Workflow.outcome == 'success' }}
         run: cmake --install ${{ env.BUILD_DIR }} --prefix ${{ env.INSTALL_DIR }}
 
       - name: Check headers
