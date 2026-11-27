@@ -42,7 +42,7 @@ public:
    void SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void SetBorderMode(Short_t bordermode) override { fBorderMode = bordermode; }
    virtual void SetFraming(Bool_t f = kTRUE);
-   virtual Bool_t GetFraming() { return fFraming; };
+   Bool_t GetFraming() const override { return fFraming; };
    void SetGrid(Int_t = 1, Int_t = 1) override {}
    void SetLogx(Int_t = 1) override {}
    void SetLogy(Int_t = 1) override {}

@@ -3577,7 +3577,7 @@ void TPad::PaintBorder(Color_t color, Bool_t /* tops */)
 
    box.PaintBorderOn(this, fX1, fY1, fX2, fY2,
                      fBorderSize, fBorderMode,
-                     InheritsFrom(TButton::Class()) && fBorderMode == -1 && TestBit(kFraming));
+                     InheritsFrom(TButton::Class()) && fBorderMode == -1 && GetFraming());
 }
 
 ////////////////////////////////////////////////////////////////////////////////

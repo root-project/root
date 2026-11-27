@@ -324,6 +324,4 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 void TButton::SetFraming(Bool_t f)
 {
    fFraming = f;
-   if (f) SetBit(kFraming);
-   else   ResetBit(kFraming);
 }
