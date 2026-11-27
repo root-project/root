@@ -17,29 +17,35 @@
 #ifndef ROO_ABS_MINIMIZER_FCN
 #define ROO_ABS_MINIMIZER_FCN
 
-#include "Math/IFunction.h"
-
-#include "TMatrixDSym.h"
-
 #include "RooAbsReal.h"
 #include "RooArgList.h"
 #include "RooMinimizer.h"
 #include "RooRealVar.h"
 
-#include <Math/Minimizer.h>
+#include <Math/MinimizerOptions.h>
+#include <Minuit2/FCNBase.h>
+#include <TMatrixDSym.h>
 
 #include <iostream>
 #include <fstream>
 #include <string>
 #include <memory> // unique_ptr
 
-class RooAbsMinimizerFcn {
+/// Base class for the functions that RooMinimizer hands to Minuit. It
+/// implements the ROOT::Minuit2::FCNBase interface, so that RooMinimizer can
+/// drive Minuit2 directly. The function evaluation itself is implemented by
+/// the derived classes.
+class RooAbsMinimizerFcn : public ROOT::Minuit2::FCNBase {
 
 public:
    RooAbsMinimizerFcn(RooArgList paramList, RooMinimizer *context);
-   virtual ~RooAbsMinimizerFcn() = default;
+   ~RooAbsMinimizerFcn() override = default;
 
-   virtual void initMinimizer(ROOT::Math::Minimizer &, RooMinimizer *context) = 0;
+   /// \name ROOT::Minuit2::FCNBase interface
+   /// @{
+   double Up() const override { return _errorDef; }
+   void SetErrorDef(double up) override { _errorDef = up; }
+   /// @}
 
    /// Informs Minuit through its parameter_settings vector of RooFit parameter properties.
    bool synchronizeParameterSettings(std::vector<ROOT::Fit::ParameterSettings> &parameters);
@@ -83,6 +89,7 @@ public:
    virtual void setOffsetting(bool flag) = 0;
 
    RooMinimizer::Config const &cfg() const { return _context->_cfg; }
+   ROOT::Math::MinimizerOptions const &minimizerOptions() const { return _context->_config.MinimizerOptions(); }
 
    inline RooRealVar &floatableParam(std::size_t i) const
    {
@@ -122,6 +129,9 @@ protected:
    std::vector<std::size_t> _floatableParamIndices;
 
    std::ofstream *_logfile = nullptr;
+
+private:
+   double _errorDef = 1.; ///< Minuit error definition, see FCNBase::Up().
 };
 
 #endif

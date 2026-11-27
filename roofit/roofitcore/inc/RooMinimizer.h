@@ -49,7 +49,6 @@ public:
    struct FitResult {
 
       FitResult() = default;
-      FitResult(const ROOT::Fit::FitConfig &fconfig);
 
       double error(unsigned int i) const { return (i < fErrors.size()) ? fErrors[i] : 0; }
       double lowerError(unsigned int i) const;
@@ -58,6 +57,7 @@ public:
       double Edm() const { return fEdm; }
       bool IsValid() const { return fValid; }
       int Status() const { return fStatus; }
+      int CovMatrixStatus() const { return fCovStatus; }
       void GetCovarianceMatrix(TMatrixDSym &cov) const;
 
       bool isParameterFixed(unsigned int ipar) const;
@@ -120,6 +120,9 @@ public:
       }
 
       ROOT::Fit::FitConfig &Config() const { return *_config; }
+      /// The underlying ROOT::Math::Minimizer. Returns `nullptr` when the
+      /// minimizer type is Minuit2, because RooMinimizer then uses Minuit2
+      /// directly without going through the ROOT::Math::Minimizer interface.
       ROOT::Math::Minimizer *GetMinimizer() const { return _minimizer; }
       const FitResult &Result() const { return *_result; }
 
@@ -183,7 +186,8 @@ public:
    int evalCounter() const;
    void zeroEvalCount();
 
-   /// Return underlying ROOT fitter object
+   /// Return an object giving access to the fit configuration and the
+   /// internal fit result, for backwards compatibility.
    inline auto fitter() { return std::make_unique<FitterInterface>(&_config, _minimizer.get(), _result.get()); }
 
    int getNPar() const;
@@ -215,6 +219,7 @@ private:
    int exec(std::string const &algoName, std::string const &statusName);
 
    bool fitFCN();
+   bool runMinimizer();
 
    bool calculateHessErrors();
    bool calculateMinosErrors();
@@ -229,10 +234,25 @@ private:
    void fillCorrMatrix(RooFitResult &fitRes);
    void updateErrors();
 
+   // Direct interface to Minuit2 that bypasses ROOT::Math::Minimizer. It is
+   // used whenever the minimizer type is "Minuit2".
+   struct Minuit2State;
+   bool useMinuit2Directly() const { return _cfg.minimizerType == "Minuit2"; }
+   void initMinuit2();
+   bool minuit2Minimize();
+   bool minuit2Hesse();
+   bool minuit2Minos(unsigned int index, double &errLow, double &errUp);
+   int runMinuit2Minos(unsigned int index, double &errLow, double &errUp);
+   bool
+   minuit2Contour(unsigned int ipar, unsigned int jpar, unsigned int npoints, double errorDef, double *x, double *y);
+   void setMinuit2ErrorDef(double up);
+   void fillResultFromMinuit2(bool isValid);
+
    RooAbsReal &_function;
    ROOT::Fit::FitConfig _config;                      ///< fitter configuration (options and parameter settings)
    std::unique_ptr<FitResult> _result;                ///<! pointer to the object containing the result of the fit
-   std::unique_ptr<ROOT::Math::Minimizer> _minimizer; ///<! pointer to used minimizer
+   std::unique_ptr<ROOT::Math::Minimizer> _minimizer; ///<! minimizer, only for types other than Minuit2
+   std::unique_ptr<Minuit2State> _minuit2;            ///<! state of the direct Minuit2 interface
    int _status = -99;
    bool _profileStart = false;
    TStopwatch _timer;
