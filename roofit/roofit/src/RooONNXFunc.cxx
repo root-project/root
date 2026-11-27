@@ -193,6 +193,8 @@ struct RooONNXFunc::RuntimeCache {
    RooFit::Detail::AnyWithVoidPtr _session;
    RooFit::Detail::AnyWithVoidPtr _d_session;
    Func _func = nullptr;
+   std::size_t _nInputTensors = 0;
+   bool _codegenDeclared = false;
 };
 
 /**
@@ -293,6 +295,53 @@ std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::
 
    auto nInputTensors = static_cast<unsigned long>(
       gInterpreter->ProcessLine(("std::size(" + namespaceName + "::inputTensorDims);").c_str()));
+   _runtime->_nInputTensors = nInputTensors;
+
+   // Evaluation thunk with a uniform signature regardless of the input-tensor count:
+   // takes a flat float buffer and splits it into the per-tensor pointers expected by
+   // SOFIE's doInfer.
+   {
+      std::ostringstream ss;
+      ss << "namespace " << namespaceName << " {\n"
+         << "void roo_eval_thunk(void *session_void, float *out, float const *flat_input) {\n"
+         << "   auto *session = reinterpret_cast<Session *>(session_void);\n"
+         << "   doInfer(*session";
+      for (std::size_t i = 0; i < nInputTensors; ++i) {
+         ss << ", flat_input + (" << flatOffsetExpr(i) << ")";
+      }
+      ss << ", out);\n"
+         << "}\n"
+         << "} // namespace " << namespaceName << "\n";
+      gInterpreter->Declare(ss.str().c_str());
+   }
+
+   std::string sessionName = "::TMVA_SOFIE_" + _funcName + "::Session";
+
+   _runtime->_session.emplace(sessionName);
+
+   _runtime->_func = reinterpret_cast<RuntimeCache::Func>(gInterpreter->ProcessLine(
+      ("static_cast<void(*)(void *, float *, float const *)>(" + namespaceName + "::roo_eval_thunk);").c_str()));
+}
+
+/// Name of the function that RooFit codegen calls. Declares it on first use,
+/// so that only codegen users pay for the Clad differentiation.
+std::string RooONNXFunc::outerWrapperName() const
+{
+   declareCodegenFunctions();
+   return "TMVA_SOFIE_" + funcName() + "::roo_outer_wrapper";
+}
+
+void RooONNXFunc::declareCodegenFunctions() const
+{
+   if (_runtime->_codegenDeclared) {
+      return;
+   }
+   _runtime->_codegenDeclared = true;
+
+   const std::size_t nInputTensors = _runtime->_nInputTensors;
+   std::string namespaceName = "TMVA_SOFIE_" + _funcName;
+   std::string sessionName = "::" + namespaceName + "::Session";
+   auto ptrSession = toPtrString(_runtime->_session.ptr, sessionName);
 
    // Per-input-tensor parameter / argument lists used by the JIT'd code below.
    std::string innerParams;       // "float const *input0, float const *input1, ..."
@@ -328,32 +377,6 @@ std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::
          << "} // namespace " << namespaceName << "\n";
       gInterpreter->Declare(ss.str().c_str());
    }
-
-   // Evaluation thunk with a uniform signature regardless of the input-tensor count:
-   // takes a flat float buffer and splits it into the per-tensor pointers expected by
-   // SOFIE's doInfer.
-   {
-      std::ostringstream ss;
-      ss << "namespace " << namespaceName << " {\n"
-         << "void roo_eval_thunk(void *session_void, float *out, float const *flat_input) {\n"
-         << "   auto *session = reinterpret_cast<Session *>(session_void);\n"
-         << "   doInfer(*session";
-      for (std::size_t i = 0; i < nInputTensors; ++i) {
-         ss << ", flat_input + (" << flatOffsetExpr(i) << ")";
-      }
-      ss << ", out);\n"
-         << "}\n"
-         << "} // namespace " << namespaceName << "\n";
-      gInterpreter->Declare(ss.str().c_str());
-   }
-
-   std::string sessionName = "::TMVA_SOFIE_" + _funcName + "::Session";
-
-   _runtime->_session.emplace(sessionName);
-   auto ptrSession = toPtrString(_runtime->_session.ptr, sessionName);
-
-   _runtime->_func = reinterpret_cast<RuntimeCache::Func>(gInterpreter->ProcessLine(
-      ("static_cast<void(*)(void *, float *, float const *)>(" + namespaceName + "::roo_eval_thunk);").c_str()));
 
    // hardcode the gradient for now
    _runtime->_d_session.emplace(sessionName);
@@ -419,7 +442,9 @@ std::string _RooONNXFunc_onnxToCppWithSofie(std::uint8_t const *onnxBytes, std::
       ss << "}\n\n"
          << "} // namespace " << namespaceName << "\n"
          << "} // namespace clad::custom_derivatives\n";
-      gInterpreter->Declare(ss.str().c_str());
+      if (!gInterpreter->Declare(ss.str().c_str())) {
+         throw std::runtime_error("RooONNXFunc: failed to declare the code for RooFit codegen and Clad");
+      }
    }
 }
 

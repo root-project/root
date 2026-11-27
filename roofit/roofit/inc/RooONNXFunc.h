@@ -34,7 +34,7 @@ public:
    RooArgList const &inputTensorList(int iTensor) const { return *(_inputTensors[iTensor]); }
 
    std::string funcName() const { return _funcName; }
-   std::string outerWrapperName() const { return "TMVA_SOFIE_" + funcName() + "::roo_outer_wrapper"; }
+   std::string outerWrapperName() const;
 
 protected:
    double evaluate() const override;
@@ -42,6 +42,9 @@ protected:
 private:
    /// Build transient runtime backend on first use.
    void initialize();
+
+   /// Declare the code that RooFit codegen calls, and its Clad derivatives.
+   void declareCodegenFunctions() const;
 
    /// Gather current RooFit inputs into a contiguous feature buffer.
    void fillInputBuffer() const;
