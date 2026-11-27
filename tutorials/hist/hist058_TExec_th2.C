@@ -29,37 +29,34 @@ void hist058_TExec_th2()
       return;
    }
 
-   gPad->FeedbackMode(kTRUE);
-
-   int px = gPad->GetEventX();
-   int py = gPad->GetEventY();
-   TObject *select = gPad->GetSelected();
-   float uxmin = gPad->GetUxmin();
-   float uxmax = gPad->GetUxmax();
-   auto c2 = static_cast<TCanvas *>(gROOT->GetListOfCanvases()->FindObject("c2"));
-
-   TH2 *h = dynamic_cast<TH2 *>(select);
+   TH2 *h = dynamic_cast<TH2 *>(gPad->GetSelected());
    if (!h)
       return;
 
-   // misuse of pad uniqueid for last paint position
-   int pyold = gPad->GetUniqueID();
-   gPad->SetUniqueID(0);
+   Double_t py = gPad->AbsPixeltoY(gPad->GetEventY());
+   Double_t xmin = gPad->GetUxmin();
+   Double_t xmax = gPad->GetUxmax();
+   Double_t ymin = gPad->GetUymin();
+   Double_t ymax = gPad->GetUymax();
+   Int_t biny = h->GetYaxis()->FindBin(py);
 
-   if (pyold && c2) {
-      // erase line at old position
-      Float_t upyold = gPad->AbsPixeltoY(pyold);
-      gPad->PaintLine(uxmin, upyold, uxmax, upyold);
+   if ((py >= ymin) && (py <= ymax)) {
+      ymin = h->GetYaxis()->GetBinLowEdge(biny);
+      ymax = h->GetYaxis()->GetBinUpEdge(biny);
+   } else {
+      xmax = xmin; // paint dummy rect to remove previous one
+      ymax = ymin;
+      biny = -1;
    }
 
-   Float_t upy = gPad->AbsPixeltoY(py);
-   Float_t y = gPad->PadtoY(upy);
+   gPad->PaintBox(xmin, ymin, xmax, ymax, "ilhist058");
 
-   // paint a line at current position
-   gPad->PaintLine(uxmin, upy, uxmax, upy);
+   gPad->Update();
 
-   // remember last paint position, misuse of pad uniqueid
-   gPad->SetUniqueID(py);
+   if (biny < 0)
+      return;
+
+   auto c2 = static_cast<TCanvas *>(gROOT->GetListOfCanvases()->FindObject("c2"));
 
    // remember active pad and restore it when leave function
    TVirtualPad::TContext ctxt;
@@ -73,7 +70,6 @@ void hist058_TExec_th2()
    c2->cd();
 
    // draw slice corresponding to mouse position
-   Int_t biny = h->GetYaxis()->FindBin(y);
    TH1D *hp = h->ProjectionX("", biny, biny);
    hp->SetName("Projection");
    hp->SetTitle(TString::Format("Projection of biny=%d", biny));
