@@ -255,3 +255,24 @@ TEST_F(BulkApiTest, BulkInMem)
          break;
    }
 }
+
+TEST_F(BulkApiTest, BulkReadInterleavedWithGetEntry)
+{
+   auto f = std::make_unique<TFile>(fFileName.c_str());
+   auto *t = f->Get<TTree>("T");
+
+   TBufferFile branchbuf(TBuffer::kWrite, 32 * 1024);
+   auto *branch = t->GetBranch("myFloat");
+
+   auto count = branch->GetBulkRead().GetEntriesSerialized(0, branchbuf);
+   ASSERT_GE(count, 0);
+   // Calling GetEntry with an entry number outside of the basket boundaries of the last call to GetEntriesSerialized
+   // used to trigger an assert in GetEntriesSerialized, which expected all interactions with the branch to go through
+   // GetFreshBasket, which would have moved the memory associated with the data member fExtraBasket in the provided
+   // external buffer. The interaction between the bulk reading API and the classic GetEntry API may invalidate this
+   // pattern, so fExtraBasket can be kept around only if there are no interleaved GetEntry calls during a bulk reading
+   // workflow.
+   branch->GetEntry(count + 1);
+   auto count2 = branch->GetBulkRead().GetEntriesSerialized(count, branchbuf);
+   ASSERT_GE(count2, 0);
+}
