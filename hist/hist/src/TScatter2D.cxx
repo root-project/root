@@ -9,11 +9,13 @@
  * For the list of contributors see $ROOTSYS/README/CREDITS.             *
  *************************************************************************/
 
-
-#include "TROOT.h"
 #include "TScatter2D.h"
 #include "TH1.h"
+#include "TMath.h"
+#include "TROOT.h"
+#include "TString.h"
 #include "TVirtualGraphPainter.h"
+#include "TVirtualPad.h"
 
 #include <iostream>
 
@@ -126,10 +128,29 @@ TScatter2D::~TScatter2D()
 Int_t TScatter2D::DistancetoPrimitive(Int_t px, Int_t py)
 {
    Int_t distance = 9999;
-   if (fGraph) distance = fGraph->DistancetoPrimitive(px, py);
+   if (fGraph)
+      distance = fGraph->DistancetoPrimitive(px, py);
    return distance;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Get information on point of 2D/3D scatter plot at cursor position (px, py).
+/// Shows x and y pad coordinates.
+
+char *TScatter2D::GetObjectInfo(Int_t px, Int_t py) const
+{
+   if (!gPad) {
+      Error("GetObjectInfo", "Cannot be used without gPad");
+      return nullptr;
+   }
+
+   Double_t x = gPad->PadtoX(gPad->AbsPixeltoX(px));
+   Double_t y = gPad->PadtoY(gPad->AbsPixeltoY(py));
+
+   static TString info;
+   info = TString::Format("x=%g, y=%g", x, y);
+   return (char *)info.Data();
+}
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Execute action corresponding to one event.
