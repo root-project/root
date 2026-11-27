@@ -1711,6 +1711,14 @@ Int_t TBranch::GetEntry(Long64_t entry, Int_t getall)
    TBasket *basket; // will be initialized in the if/then clauses.
    Long64_t first;
 
+   if (R__unlikely(fExtraBasket)) {
+      // Probably an interleaved call with te experimental bulk API, which has left an orphaned extra basket. We remove
+      // it because we cannot create a local TBuffer to hold its data, and there is no immediate use for it.
+      assert(fExtraBasket->GetBufferRef() == nullptr);
+      delete fExtraBasket;
+      fExtraBasket = nullptr;
+   }
+
    Int_t result = GetBasketAndFirst(basket, first, nullptr);
    if (R__unlikely(result < 0)) { return result + 1; }
 
