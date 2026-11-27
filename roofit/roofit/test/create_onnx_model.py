@@ -1,19 +1,18 @@
 import numpy as np
 import torch
 import torch.nn as nn
-import torch.optim as optim
 
 
 class SmallMLP(nn.Module):
     """Single-input MLP regression model."""
 
-    def __init__(self, in_features=10, hidden=32, out_features=1):
+    def __init__(self, in_features=10, hidden=32, out_features=1, activation=nn.ReLU):
         super().__init__()
         self.net = nn.Sequential(
             nn.Linear(in_features, hidden),
-            nn.ReLU(),
+            activation(),
             nn.Linear(hidden, hidden),
-            nn.ReLU(),
+            activation(),
             nn.Linear(hidden, out_features),
         )
 
@@ -24,14 +23,14 @@ class SmallMLP(nn.Module):
 class TwoInputMLP(nn.Module):
     """Dual-input MLP: concatenates two input tensors then runs an MLP."""
 
-    def __init__(self, in_features_a=10, in_features_b=5, hidden=32, out_features=1):
+    def __init__(self, in_features_a=10, in_features_b=5, hidden=32, out_features=1, activation=nn.ReLU, bias=True):
         super().__init__()
         self.net = nn.Sequential(
-            nn.Linear(in_features_a + in_features_b, hidden),
-            nn.ReLU(),
-            nn.Linear(hidden, hidden),
-            nn.ReLU(),
-            nn.Linear(hidden, out_features),
+            nn.Linear(in_features_a + in_features_b, hidden, bias=bias),
+            activation(),
+            nn.Linear(hidden, hidden, bias=bias),
+            activation(),
+            nn.Linear(hidden, out_features, bias=bias),
         )
 
     def forward(self, x_a, x_b):
@@ -68,7 +67,7 @@ def export_model(
     return model
 
 
-def run_inference_and_save(model, example_inputs, name):
+def run_inference_and_save(model, example_inputs, name, with_hessian=False):
     """Run forward+backward with fixed inputs and save prediction + gradients."""
     model = model.cpu()
     inputs = [t.clone().detach().requires_grad_(True) for t in example_inputs]
@@ -82,6 +81,13 @@ def run_inference_and_save(model, example_inputs, name):
     np.savetxt(f"{name}_pred.txt", y.detach().numpy())
     for i, x in enumerate(inputs):
         np.savetxt(f"{name}_grad_{i}.txt", x.grad.detach().numpy())
+
+    if with_hessian:
+        # Hessian over the inputs, concatenated in the RooFit parameter order.
+        x = torch.cat(example_inputs, dim=-1)
+        sizes = [t.shape[-1] for t in example_inputs]
+        hess = torch.autograd.functional.hessian(lambda x: model(*x.split(sizes, dim=-1)), x)
+        np.savetxt(f"{name}_hessian.txt", hess.reshape(x.numel(), x.numel()).numpy())
 
 
 def main():
@@ -112,6 +118,39 @@ def main():
             torch.tensor([[0.2] * 5]),
         ],
         name="regression_mlp_two_input",
+    )
+
+    # ---- Models 3 and 4: tanh variants of models 1 and 2, for the Hessian tests ----
+    # A ReLU MLP is piecewise linear, so its input Hessian vanishes almost everywhere.
+    # Model 4 has no biases, which would give wrong Hessians with reused adjoint
+    # sessions (see roo_outer_wrapper_pushforward_pullback in RooONNXFunc.cxx).
+    model3 = SmallMLP(in_features=10, hidden=32, out_features=1, activation=nn.Tanh)
+    model3 = export_model(
+        model3,
+        input_shapes=[(10,)],
+        onnx_path="regression_mlp_tanh.onnx",
+    )
+    run_inference_and_save(
+        model3,
+        example_inputs=[torch.tensor([[0.1] * 10])],
+        name="regression_mlp_tanh",
+        with_hessian=True,
+    )
+
+    model4 = TwoInputMLP(in_features_a=10, in_features_b=5, hidden=32, out_features=1, activation=nn.Tanh, bias=False)
+    model4 = export_model(
+        model4,
+        input_shapes=[(10,), (5,)],
+        onnx_path="regression_mlp_two_input_tanh.onnx",
+    )
+    run_inference_and_save(
+        model4,
+        example_inputs=[
+            torch.tensor([[0.1] * 10]),
+            torch.tensor([[0.2] * 5]),
+        ],
+        name="regression_mlp_two_input_tanh",
+        with_hessian=True,
     )
 
 

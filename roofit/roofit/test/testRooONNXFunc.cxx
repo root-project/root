@@ -2,6 +2,7 @@
 // Authors: Jonas Rembser, CERN 2026
 
 #include <RooONNXFunc.h>
+#include <RooProduct.h>
 #include <RooRealVar.h>
 #include <RooDataSet.h>
 #include <RooEvaluatorWrapper.h>
@@ -12,6 +13,7 @@
 
 #include <gtest/gtest.h>
 
+#include <cmath>
 #include <fstream>
 
 namespace {
@@ -196,5 +198,115 @@ TEST(RooONNXFunc, Basic_CodegenAD_2Tensors)
    for (int i = 0; i < 5; ++i) {
       EXPECT_NEAR(output_vec[10 + i], refGrad1[i], 1e-5);
    }
+}
+
+namespace {
+
+/// Checks the value and the Clad Hessian of `func` with `n` parameters against
+/// the references, and the gradient too if `refGrad` is not empty.
+void checkCodegenHessian(RooAbsReal &func, std::size_t n, double refVal, std::vector<double> const &refHess,
+                         std::vector<double> const &refGrad = {})
+{
+   RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Fitting, true};
+
+   RooDataSet data("data", "data", {});
+   RooFit::Experimental::RooEvaluatorWrapper roo_final{func, &data, false, "", nullptr, false};
+
+   EXPECT_NEAR(roo_final.getVal(), refVal, 1e-5);
+
+   if (!refGrad.empty()) {
+      roo_final.generateGradient();
+      std::vector<double> grad(n);
+      roo_final.gradient(grad.data());
+      for (std::size_t i = 0; i < n; ++i) {
+         EXPECT_NEAR(grad[i], refGrad[i], 1e-5);
+      }
+   }
+
+   roo_final.generateHessian();
+   std::vector<double> hess(n * n);
+   roo_final.hessian(hess.data());
+   for (std::size_t i = 0; i < n * n; ++i) {
+      EXPECT_NEAR(hess[i], refHess[i], 1e-5);
+   }
+}
+
+} // namespace
+
+/// Validate the Clad Hessian of a RooONNXFunc against a PyTorch reference.
+TEST(RooONNXFunc, CodegenHessian)
+{
+   RooArgList args;
+   fillArgs(args, 10);
+
+   RooONNXFunc roo_func{"func", "", {args}, "regression_mlp_tanh.onnx"};
+
+   checkCodegenHessian(roo_func, 10, readDoublesFromFile("regression_mlp_tanh_pred.txt")[0],
+                       readDoublesFromFile("regression_mlp_tanh_hessian.txt"),
+                       readDoublesFromFile("regression_mlp_tanh_grad_0.txt"));
+}
+
+/// Clad Hessian with two input tensors, including the mixed blocks.
+TEST(RooONNXFunc, CodegenHessian_2Tensors)
+{
+   RooArgList args0;
+   fillArgs(args0, 10, 0.1, "a");
+   RooArgList args1;
+   fillArgs(args1, 5, 0.2, "b");
+
+   RooONNXFunc roo_func{"func", "", {args0, args1}, "regression_mlp_two_input_tanh.onnx"};
+
+   checkCodegenHessian(roo_func, 10 + 5, readDoublesFromFile("regression_mlp_two_input_tanh_pred.txt")[0],
+                       readDoublesFromFile("regression_mlp_two_input_tanh_hessian.txt"));
+}
+
+/// Clad Hessian of the square of a RooONNXFunc, which makes the pushforward pullback's
+/// primal-value adjoint d_y.value nonzero (it stays zero for a top-level RooONNXFunc).
+TEST(RooONNXFunc, CodegenHessianCompound)
+{
+   const std::size_t n = 10;
+   double f = readDoublesFromFile("regression_mlp_tanh_pred.txt")[0];
+   std::vector<double> g = readDoublesFromFile("regression_mlp_tanh_grad_0.txt");
+   std::vector<double> hess = readDoublesFromFile("regression_mlp_tanh_hessian.txt");
+   for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
+         hess[i * n + j] = 2. * (f * hess[i * n + j] + g[i] * g[j]);
+      }
+   }
+
+   RooArgList args;
+   fillArgs(args, n);
+
+   RooONNXFunc roo_func{"func", "", {args}, "regression_mlp_tanh.onnx"};
+   RooProduct square{"square", "", {roo_func, roo_func}};
+
+   checkCodegenHessian(square, n, f * f, hess);
+}
+
+/// Clad Hessian for inputs u = x^2, which makes the pushforward pullback's tangent
+/// adjoints d_out_d_input nonzero (they stay zero if the parameters are the inputs).
+TEST(RooONNXFunc, CodegenHessianNonlinearInputs)
+{
+   const std::size_t n = 10;
+   const double x = std::sqrt(0.1); // the reference inputs are u = 0.1
+   std::vector<double> g = readDoublesFromFile("regression_mlp_tanh_grad_0.txt");
+   std::vector<double> hess = readDoublesFromFile("regression_mlp_tanh_hessian.txt");
+   for (std::size_t i = 0; i < n; ++i) {
+      for (std::size_t j = 0; j < n; ++j) {
+         hess[i * n + j] = 4. * x * x * hess[i * n + j] + (i == j ? 2. * g[i] : 0.);
+      }
+   }
+
+   RooArgList xs;
+   fillArgs(xs, n, x);
+   RooArgList us;
+   for (std::size_t i = 0; i < n; ++i) {
+      auto &xi = xs[i];
+      us.addOwned(std::make_unique<RooProduct>(("u" + std::to_string(i)).c_str(), "", RooArgList{xi, xi}));
+   }
+
+   RooONNXFunc roo_func{"func", "", {us}, "regression_mlp_tanh.onnx"};
+
+   checkCodegenHessian(roo_func, n, readDoublesFromFile("regression_mlp_tanh_pred.txt")[0], hess);
 }
 #endif
