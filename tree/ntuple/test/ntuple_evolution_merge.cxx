@@ -117,3 +117,103 @@ struct MyClass {
       }
    }
 }
+
+TEST(RNTupleMerger, UnionMergeLateClassLayout)
+{
+   struct LayoutCase {
+      const char *fName;
+      const char *fMembers; // the class the merging process loads, nullptr for none
+      const char *fType;
+      bool fMatches;
+      bool fSkip = false;
+   };
+   const LayoutCase cases[] = {
+      {"matching", "int fA = 1; int fC = 3;", "LateClass", true},
+      {"version_changed", "int fA = 1; int fC = 3; ClassDefNV(LateClass, 2)", "LateClass", true},
+      {"no_dictionary", nullptr, "LateClass", true},
+      {"inserted", "int fA = 1; int fB = 2; int fC = 3;", "LateClass", false},
+      {"reordered", "int fC = 3; int fA = 1;", "LateClass", false},
+      {"type_changed", "float fA = 1; int fC = 3;", "LateClass", false},
+      {"nested_inserted", "int fA = 1; int fB = 2; int fC = 3;", "std::vector<LateClass>", false},
+      {"skip_inserted", "int fA = 1; int fB = 2; int fC = 3;", "LateClass", false, true},
+   };
+   for (const auto &testCase : cases) {
+      SCOPED_TRACE(testCase.fName);
+      const std::string type = testCase.fType;
+      ExecInFork(([&] {
+         FileRaii fileGuard1("test_ntuple_merge_late_layout_1.root");
+         FileRaii fileGuard2("test_ntuple_merge_late_layout_2.root");
+         ExecInFork([&] {
+            fileGuard1.PreserveFile();
+            fileGuard2.PreserveFile();
+            ASSERT_TRUE(gInterpreter->Declare("struct LateClass { int fA = 1; int fC = 3; };"));
+            {
+               auto model = RNTupleModel::Create();
+               *model->MakeField<int>("e") = 1;
+               auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard1.GetPath());
+               writer->Fill();
+            }
+            auto model = RNTupleModel::Create();
+            *model->MakeField<int>("e") = 2;
+            model->AddField(RFieldBase::Create("late", type).Unwrap());
+            auto writer = RNTupleWriter::Recreate(std::move(model), "ntuple", fileGuard2.GetPath());
+            DeclarePointer(type, "pLate", writer->GetModel().GetDefaultEntry().GetPtr<void>("late").get());
+            if (type == "LateClass")
+               ProcessLine("pLate->fA = 11; pLate->fC = 33;");
+            else
+               ProcessLine("pLate->emplace_back(); pLate->back().fA = 11; pLate->back().fC = 33;");
+            writer->Fill();
+         });
+
+         if (testCase.fMembers) {
+            ASSERT_TRUE(
+               gInterpreter->Declare((std::string("struct LateClass { ") + testCase.fMembers + " };").c_str()));
+         }
+         std::vector<std::unique_ptr<RPageSource>> sources;
+         sources.push_back(RPageSource::Create("ntuple", fileGuard1.GetPath(), RNTupleReadOptions()));
+         sources.push_back(RPageSource::Create("ntuple", fileGuard2.GetPath(), RNTupleReadOptions()));
+         std::vector<RPageSource *> sourcePtrs{sources[0].get(), sources[1].get()};
+
+         FileRaii fileGuardOut("test_ntuple_merge_late_layout_out.root");
+         auto res = [&] {
+            ROOT::TestSupport::CheckDiagsRAII diagsRAII;
+            if (!testCase.fMembers)
+               diagsRAII.optionalDiag(kWarning, "TClass::Init", "no dictionary for class LateClass is available");
+            if (testCase.fSkip) {
+               diagsRAII.requiredDiag(kWarning, "ROOT.NTuple.Merge",
+                                      "Skipping RNTuple due to: Source RNTuple has an incompatible schema", false);
+            }
+            auto destination = std::make_unique<RPageSinkFile>("ntuple", fileGuardOut.GetPath(), RNTupleWriteOptions());
+            RNTupleMerger merger{std::move(destination)};
+            RNTupleMergeOptions opts;
+            opts.fMergingMode = ENTupleMergingMode::kUnion;
+            if (testCase.fSkip)
+               opts.fErrBehavior = ROOT::Internal::ENTupleMergeErrBehavior::kSkip;
+            return merger.Merge(sourcePtrs, opts);
+         }();
+
+         if (!testCase.fMatches && !testCase.fSkip) {
+            ASSERT_FALSE(bool(res));
+            ASSERT_THAT(res.GetError()->GetReport(), testing::HasSubstr("has a different layout in memory"));
+            return;
+         }
+         ASSERT_TRUE(bool(res)) << res.GetError()->GetReport();
+         auto reader = RNTupleReader::Open("ntuple", fileGuardOut.GetPath());
+         if (testCase.fSkip) {
+            ASSERT_EQ(1u, reader->GetNEntries());
+            ASSERT_EQ(ROOT::kInvalidDescriptorId, reader->GetDescriptor().FindFieldId("late"));
+            return;
+         }
+         ASSERT_EQ(2u, reader->GetNEntries());
+         auto e = reader->GetView<int>("e");
+         auto a = reader->GetView<int>("late.fA");
+         auto c = reader->GetView<int>("late.fC");
+         ASSERT_EQ(1, e(0));
+         ASSERT_EQ(2, e(1));
+         ASSERT_EQ(0, a(0));
+         ASSERT_EQ(0, c(0));
+         ASSERT_EQ(11, a(1));
+         ASSERT_EQ(33, c(1));
+      }));
+   }
+}
