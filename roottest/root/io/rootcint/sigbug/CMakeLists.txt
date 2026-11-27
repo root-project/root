@@ -12,4 +12,7 @@ ROOT_GENERATE_DICTIONARY(${dictname}
 
 # Custom target to trigger the dictionary generation test at build time, which is easier
 # and more robust than the previous add_test(.. COMMAND ${CMAKE_COMMAND} --build ..) pattern.
-add_custom_target(${dictname}Target ALL DEPENDS ${CMAKE_CURRENT_BINARY_DIR}/Midad.cxx)
+add_custom_target(${dictname}Target ALL)
+add_dependencies(${dictname}Target ${dictname})
+# With MSVC, roottest dictionaries don't depend on rootcling (see ROOT_GENERATE_DICTIONARY and 5d86d90d487)
+add_dependencies(${dictname} rootcling)

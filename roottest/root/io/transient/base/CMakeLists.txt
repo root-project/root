@@ -4,6 +4,9 @@ set(CMAKE_ROOTTEST_NOROOTMAP OFF)
 ROOT_GENERATE_DICTIONARY(base_cling ${CMAKE_CURRENT_SOURCE_DIR}/base.h MODULE base LINKDEF baseLinkDef.h)
 ROOT_LINKER_LIBRARY(base NOINSTALL base_cling.cxx testobject.cpp testobjectderived.cpp LIBRARIES ROOT::Core ROOT::RIO)
 ROOT_SET_OUTPUT_DIRECTORIES(base)
+# With MSVC, roottest dictionaries don't depend on rootcling (see ROOT_GENERATE_DICTIONARY and 5d86d90d487)
+add_dependencies(base_cling rootcling)
+add_dependencies(base base_cling)
 
 ROOTTEST_ADD_TEST(WriteFile
                   COPY_TO_BUILDDIR testobject.h testobjectderived.h
