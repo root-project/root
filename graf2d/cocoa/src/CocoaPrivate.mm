@@ -88,6 +88,12 @@ Drawable_t CocoaPrivate::RegisterDrawable(NSObject *nsObj)
 }
 
 //______________________________________________________________________________
+bool CocoaPrivate::HasDrawable(Drawable_t drawableID)const
+{
+   return fDrawables.find(drawableID) != fDrawables.end();
+}
+
+//______________________________________________________________________________
 NSObject<X11Drawable> *CocoaPrivate::GetDrawable(Drawable_t drawableID)const
 {
    const_drawable_iterator drawableIter = fDrawables.find(drawableID);
