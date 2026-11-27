@@ -102,7 +102,7 @@ TAttMarkerEditor::~TAttMarkerEditor()
 void TAttMarkerEditor::ConnectSignals2Slots()
 {
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttMarkerEditor", this, "DoMarkerColor(Pixel_t)");
-   fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttMarkerEditor", this, "DoMarkerAlphaColor(ULong_t)");
+   fColorSelect->Connect("AlphaColorSelected(ULongptr_t)", "TAttMarkerEditor", this, "DoMarkerAlphaColor(ULongptr_t)");
    fMarkerType->Connect("MarkerSelected(Style_t)", "TAttMarkerEditor", this, "DoMarkerStyle(Style_t)");
    fMarkerSize->Connect("ValueSet(Long_t)", "TAttMarkerEditor", this, "DoMarkerSize()");
    (fMarkerSize->GetNumberEntry())->Connect("ReturnPressed()", "TAttMarkerEditor", this, "DoMarkerSize()");

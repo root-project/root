@@ -126,7 +126,7 @@ public:
    Bool_t  ProcessMessage(Longptr_t msg, Longptr_t parm1, Longptr_t parm2) override;
 
    void    SetColor(Pixel_t color, Bool_t emit = kTRUE);
-   void    SetAlphaColor(ULong_t color, Bool_t emit = kTRUE);
+   void    SetAlphaColor(ULongptr_t color, Bool_t emit = kTRUE);
    Pixel_t GetColor() const { return fColor; }
    void    Enable(Bool_t on = kTRUE);  //*TOGGLE* *GETTER=IsEnabled
    void    Disable();
@@ -141,8 +141,8 @@ public:
 
    virtual void ColorSelected(Pixel_t color = 0)
             { Emit("ColorSelected(Pixel_t)", color ? color : GetColor()); }  //*SIGNAL*
-   virtual void AlphaColorSelected(ULong_t colptr = 0)
-            { Emit("AlphaColorSelected(ULong_t)", colptr); }  //*SIGNAL*
+   virtual void AlphaColorSelected(ULongptr_t colptr = 0)
+            { Emit("AlphaColorSelected(ULongptr_t)", colptr); }  //*SIGNAL*
 
    ClassDefOverride(TGColorSelect,0)  // Color selection checkbutton
 };
