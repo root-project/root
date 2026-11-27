@@ -87,6 +87,57 @@ using Hist_t = ::TH1D;
 template <typename T>
 using Results = std::conditional_t<std::is_same<T, bool>::value, std::deque<T>, std::vector<T>>;
 
+/// Per-slot scalar partial results that are updated for every entry (counts, sums, minima, ...): each slot's value
+/// is on its own cache line, otherwise the threads keep invalidating each other's cache line (false sharing) and
+/// the event loop does not scale with the number of threads. Behaves as a container of the nSlots values.
+template <typename T>
+class R__CLING_PTRCHECK(off) RPerSlotResults {
+   static constexpr std::size_t kStep = CacheLineStep<T>();
+   Results<T> fValues;
+
+   template <typename Container, typename Value>
+   class RIterator {
+      Container *fContainer;
+      std::size_t fIndex;
+
+   public:
+      using iterator_category = std::forward_iterator_tag;
+      using value_type = std::remove_const_t<Value>;
+      using difference_type = std::ptrdiff_t;
+      using pointer = Value *;
+      using reference = Value &;
+      RIterator(Container *c, std::size_t i) : fContainer(c), fIndex(i) {}
+      reference operator*() const { return (*fContainer)[fIndex * kStep]; }
+      pointer operator->() const { return &(*fContainer)[fIndex * kStep]; }
+      RIterator &operator++()
+      {
+         ++fIndex;
+         return *this;
+      }
+      RIterator operator++(int)
+      {
+         auto old = *this;
+         ++fIndex;
+         return old;
+      }
+      bool operator==(const RIterator &o) const { return fIndex == o.fIndex; }
+      bool operator!=(const RIterator &o) const { return fIndex != o.fIndex; }
+   };
+
+public:
+   using iterator = RIterator<Results<T>, T>;
+   using const_iterator = RIterator<const Results<T>, const T>;
+
+   RPerSlotResults(std::size_t nSlots, const T &value = T{}) : fValues(nSlots * kStep, value) {}
+   T &operator[](std::size_t slot) { return fValues[slot * kStep]; }
+   const T &operator[](std::size_t slot) const { return fValues[slot * kStep]; }
+   std::size_t size() const { return fValues.size() / kStep; }
+   iterator begin() { return {&fValues, 0}; }
+   iterator end() { return {&fValues, size()}; }
+   const_iterator begin() const { return {&fValues, 0}; }
+   const_iterator end() const { return {&fValues, size()}; }
+};
+
 template <typename F>
 class R__CLING_PTRCHECK(off) ForeachSlotHelper : public RActionImpl<ForeachSlotHelper<F>> {
    F fCallable;
@@ -116,7 +167,7 @@ public:
 
 class R__CLING_PTRCHECK(off) CountHelper : public RActionImpl<CountHelper> {
    std::shared_ptr<ULong64_t> fResultCount;
-   Results<ULong64_t> fCounts;
+   RPerSlotResults<ULong64_t> fCounts;
 
 public:
    using ColumnTypes_t = TypeList<>;
@@ -1295,7 +1346,7 @@ extern template class TakeHelper<double, double, std::vector<double>>;
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) MinHelper : public RActionImpl<MinHelper<ResultType>> {
    std::shared_ptr<ResultType> fResultMin;
-   Results<ResultType> fMins;
+   RPerSlotResults<ResultType> fMins;
 
 public:
    MinHelper(MinHelper &&) = default;
@@ -1344,7 +1395,7 @@ public:
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) MaxHelper : public RActionImpl<MaxHelper<ResultType>> {
    std::shared_ptr<ResultType> fResultMax;
-   Results<ResultType> fMaxs;
+   RPerSlotResults<ResultType> fMaxs;
 
 public:
    MaxHelper(MaxHelper &&) = default;
@@ -1394,8 +1445,8 @@ public:
 template <typename ResultType>
 class R__CLING_PTRCHECK(off) SumHelper : public RActionImpl<SumHelper<ResultType>> {
    std::shared_ptr<ResultType> fResultSum;
-   Results<ResultType> fSums;
-   Results<ResultType> fCompensations;
+   RPerSlotResults<ResultType> fSums;
+   RPerSlotResults<ResultType> fCompensations;
 
    /// Evaluate neutral element for this type and the sum operation.
    /// This is assumed to be any_value - any_value if operator- is defined
@@ -1477,10 +1528,10 @@ public:
 
 class R__CLING_PTRCHECK(off) MeanHelper : public RActionImpl<MeanHelper> {
    std::shared_ptr<double> fResultMean;
-   std::vector<ULong64_t> fCounts;
-   std::vector<double> fSums;
+   RPerSlotResults<ULong64_t> fCounts;
+   RPerSlotResults<double> fSums;
    std::vector<double> fPartialMeans;
-   std::vector<double> fCompensations;
+   RPerSlotResults<double> fCompensations;
 
 public:
    MeanHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
@@ -1530,11 +1581,11 @@ class R__CLING_PTRCHECK(off) StdDevHelper : public RActionImpl<StdDevHelper> {
    unsigned int fNSlots;
    std::shared_ptr<double> fResultStdDev;
    // Number of element for each slot
-   std::vector<ULong64_t> fCounts;
+   RPerSlotResults<ULong64_t> fCounts;
    // Mean of each slot
-   std::vector<double> fMeans;
+   RPerSlotResults<double> fMeans;
    // Squared distance from the mean
-   std::vector<double> fDistancesfromMean;
+   RPerSlotResults<double> fDistancesfromMean;
 
 public:
    StdDevHelper(const std::shared_ptr<double> &meanVPtr, const unsigned int nSlots);
