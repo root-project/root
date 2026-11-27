@@ -1,3 +1,4 @@
+CMAKE_GENERATOR=Ninja
 all=OFF
 arrow=OFF
 asan=OFF
