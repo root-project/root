@@ -138,6 +138,7 @@ protected:
    void          PaintOperations(Bool_t withXor = kFALSE);
    void          SavePrimitive(std::ostream &out, Option_t *option = "") override;
    void          SetBatch(Bool_t batch=kTRUE) override;
+   virtual Bool_t GetFraming() const { return kFALSE; }
 
    TInteractive *Interactive(TObject *obj = nullptr, TInteractive *init = nullptr) override;
 
@@ -159,7 +160,7 @@ private:
 public:
    // TPad status bits
    enum {
-      kFraming      = BIT(6),  ///< Frame is requested
+      kFraming R__DEPRECATED(7,00, "Use TButton::SetFraming() instead")  = BIT(6),  ///< Frame is requested, DO NOT USE!!
       kHori         = BIT(9),  ///< Pad is horizontal
       kClipFrame    = BIT(10), ///< Clip on frame
       kPrintingPS   = BIT(11), ///< PS Printing

@@ -42,43 +42,43 @@ By default a TCanvas is editable.
 By default a TDialogCanvas is not editable.
 TButtons are in general placed in a TDialogCanvas.
 
-A TButton being a TPad, one can draw graphics primitives in it
-when the TCanvas/TDialogCanvas is editable.
+A TButton being a TPad, one can add graphics primitives to it.
 
 Example of a macro creating a dialog canvas with buttons:
 ~~~ {.cpp}
 void but() {
-//   example of a dialog canvas with a few buttons
+   //   example of a dialog canvas with a few buttons
+   auto dialog = new TDialogCanvas("dialog","",200,300);
 
-   TDialogCanvas *dialog = new TDialogCanvas("dialog","",200,300);
+   // Create first button. Clicking on this button will execute 34+56
+   auto but1 = new TButton("Evaluate","34+56",.05,.8,.45,.88);
+   dialog->Add(but1);
 
-// Create first button. Clicking on this button will execute 34+56
-   TButton *but1 = new TButton("button1","34+56",.05,.8,.45,.88);
-   but1->Draw();
+   // Create second button. Clicking on this button will create a new canvas
+   auto but2 = new TButton("Canvas","new TCanvas(\"c2\")",.55,.8,.95,.88);
+   dialog->Add(but2);
 
-// Create second button. Clicking on this button will create a new canvas
-   TButton *but2 = new TButton("canvas","c2 = new TCanvas(\"c2\")",.55,.8,.95,.88);
-   but2->Draw();
-
-// Create third button. Clicking on this button will invoke the browser
-   but3 = new TButton("Browser","br = new TBrowser(\"br\")",0.25,0.54,0.75,0.64);
+   // Create third button. Clicking on this button will invoke the browser
+   auto but3 = new TButton("Browser","new TBrowser()",.05,.6,0.45,0.68);
    but3->SetFillColor(42);
-   but3->Draw();
+   dialog->Add(but3);
 
-// Create last button with no name. Instead a graph is draw inside the button
-// Clicking on this button will invoke the macro gr001_simple.C
-   button = new TButton("",".x tutorials/visualisation/graphs/gr001_simple.C",0.15,0.15,0.85,0.38);
+   // Create forth button. Clicking on this will close dialog
+   auto but4 = new TButton("Close","dialog->Close()",.55,.6,0.95,0.68);
+   dialog->Add(but4);
+
+   // Create last button with no name. Instead a graph is draw inside the button
+   // Clicking on this button will invoke the macro gr001_simple.C
+   auto button = new TButton("",".x tutorials/visualisation/graphs/gr001_simple.C",0.15,0.12,0.85,0.48);
    button->SetFillColor(42);
-   button->Draw();
-   button->SetEditable(kTRUE);
-   button->cd();
+   dialog->Add(button);
 
    Double_t x[8] = {0.08,0.21,0.34,0.48,0.61,0.7,0.81,0.92};
    Double_t y[8] = {0.2,0.65,0.4,0.34,0.24,0.43,0.75,0.52};
-   TGraph *graph = new TGraph(8,x,y);
+   auto graph = new TGraph(8,x,y);
    graph->SetMarkerColor(4);
    graph->SetMarkerStyle(21);
-   graph->Draw("lp");
+   button->Add(graph, "lp");
 
    dialog->cd();
 }
@@ -324,6 +324,4 @@ void TButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 void TButton::SetFraming(Bool_t f)
 {
    fFraming = f;
-   if (f) SetBit(kFraming);
-   else   ResetBit(kFraming);
 }
