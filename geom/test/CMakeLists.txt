@@ -24,6 +24,16 @@ ROOT_ADD_GTEST(tessellated
   test_tessellated.cxx
   LIBRARIES Geom)
 
+if(vecgeom)
+  # A client of libConverterVG without the VecGeom include directories
+  ROOT_ADD_GTEST(vecgeom_client_types
+    test_vecgeom_client_types.cxx
+    LIBRARIES Geom ConverterVG)
+  if(VecGeom_VERSION VERSION_GREATER_EQUAL 2.3)
+    target_compile_definitions(vecgeom_client_types PRIVATE ROOT_TEST_VECGEOM_2_3=1)
+  endif()
+endif()
+
 ROOT_ADD_GTEST(shape_safety
   test_shape_safety.cxx
   LIBRARIES Geom)

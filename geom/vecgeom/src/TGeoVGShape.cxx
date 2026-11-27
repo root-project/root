@@ -34,6 +34,7 @@ Bridge class for using a VecGeom solid as TGeoShape.
 #include "VecGeom/volumes/UnplacedScaledShape.h"
 #include "VecGeom/volumes/UnplacedGenTrap.h"
 #include "VecGeom/volumes/UnplacedSExtruVolume.h"
+
 #include "VecGeom/volumes/UnplacedTessellated.h"
 #include "VecGeom/volumes/UnplacedEllipticalTube.h"
 #include "VecGeom/volumes/UnplacedHype.h"
@@ -64,6 +65,15 @@ Bridge class for using a VecGeom solid as TGeoShape.
 #include "TGeoTessellated.h"
 #include "TGeoHype.h"
 #include "TGeoShapeAssembly.h"
+
+#include <type_traits>
+
+// TGeoVGShape.h declares the VecGeom types without VecGeom headers: they must be VecGeom's
+static_assert(std::is_same_v<TGeoVGPlacedVolume_t, vecgeom::VPlacedVolume>, "TGeoVGShape.h: VecGeom placed volume");
+static_assert(std::is_same_v<TGeoVGUnplacedVolume_t, vecgeom::VUnplacedVolume>,
+              "TGeoVGShape.h: VecGeom unplaced volume");
+static_assert(std::is_same_v<TGeoVGTransformation_t, vecgeom::Transformation3D>,
+              "TGeoVGShape.h: VecGeom transformation");
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Default constructor
