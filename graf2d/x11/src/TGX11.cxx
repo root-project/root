@@ -43,15 +43,8 @@ by Olivier Couet (package X11INT).
 #include "TString.h"
 #include "TObjString.h"
 #include "TObjArray.h"
-#include "RStipples.h"
 #include "strlcpy.h"
 
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/cursorfont.h>
-#include <X11/keysym.h>
-#include <X11/xpm.h>
 
 #include <cstdio>
 #include <cstring>
@@ -59,79 +52,10 @@ by Olivier Couet (package X11INT).
 #include <cctype>
 #include <unistd.h>
 
-#include "gifencode.h"
+#include "X11Drawable.h"
+
 #include "gifdecode.h"
 #include "rotated.h"
-
-
-//
-// Primitives Graphic Contexts global for all windows
-//
-const int kMAXGC = 7,
-          kGCline = 0, kGCmark = 1, kGCfill = 2,
-          kGCtext = 3, kGCinvt = 4, kGCdash = 5, kGCpxmp = 6;
-
-static GC gGCecho;                 // Input echo
-
-const int kAlignNone = 0,
-          kTLeft = 1,
-          kTCenter = 2,
-          kTRight = 3,
-          kMLeft = 4,
-          kMCenter = 5,
-          kMRight = 6,
-          kBLeft = 7,
-          kBCenter = 8,
-          kBRight = 9;
-
-
-/// Description of a X11 window.
-struct XWindow_t {
-   Int_t    fOpen = 0;                ///< 1 if the window is open, 0 if not
-   Int_t    fDoubleBuffer = 0;        ///< 1 if the double buffer is on, 0 if not
-   Int_t    fIsPixmap = 0;            ///< 1 if pixmap, 0 if not
-   Drawable fDrawing = 0;             ///< drawing area, equal to window or buffer
-   Drawable fWindow = 0;              ///< X11 window
-   Drawable fBuffer = 0;              ///< pixmap used for double buffer
-   UInt_t   fWidth = 0;               ///< width of the window
-   UInt_t   fHeight = 0;              ///< height of the window
-   Int_t    fClip = 0;                ///< 1 if the clipping is on
-   Int_t    fXclip = 0;               ///< x coordinate of the clipping rectangle
-   Int_t    fYclip = 0;               ///< y coordinate of the clipping rectangle
-   UInt_t   fWclip = 0;               ///< width of the clipping rectangle
-   UInt_t   fHclip = 0;               ///< height of the clipping rectangle
-   std::vector<ULong_t> fNewColors;   ///< extra image colors created for transparency (after processing)
-   Bool_t   fShared = 0;              ///< notify when window is shared
-   GC       fGClist[kMAXGC];          ///< list of GC object, individual for each window
-   TVirtualX::EDrawMode drawMode = TVirtualX::kCopy;    ///< current draw mode
-   TAttLine  fAttLine = {-1, -1, -1};  ///< current line attributes
-   Int_t     lineWidth = 0;           ///< X11 line width
-   Int_t     lineStyle = LineSolid;   ///< X11 line style
-   std::vector<char> dashList;        ///< X11 array for dashes
-   Int_t     dashLength = 0;          ///< total length of dashes
-   Int_t     dashOffset = 0;          ///< current dash offset
-   TAttFill  fAttFill = {-1, -1};     ///< current fill attributes
-   Int_t     fillHollow = 0;          ///< X11 fill method
-   Int_t     fillFasi = 0;            ///< selected fasi pattern
-   Pixmap    fillPattern = 0;         ///< current initialized fill pattern
-   TAttMarker fAttMarker = { -1, -1, -1 }; ///< current marker attribute
-   TAttMarker::EMarkerShape markerType = TAttMarker::kShapeDot; ///< 5 differen kinds of marker
-   Int_t     markerSize = 0;          ///< size of simple markers
-   std::vector<TPoint> markerShape;   ///< marker shape points
-   Int_t markerLineWidth = 0;         ///< line width used for marker
-   TAttText fAttText;                 ///< current text attribute
-   Int_t textAlign = kAlignNone;      ///< selected text align
-   XFontStruct *textFont = nullptr;   ///< selected text font
-};
-
-
-//---- globals
-
-static XWindow_t *gCws;      // gCws: pointer to the current window
-static XWindow_t *gTws;      // gTws: temporary pointer
-
-const Int_t kBIGGEST_RGB_VALUE = 65535;
-
 
 //
 // Text management
@@ -142,18 +66,17 @@ static struct {
    char         name[80];                    // Font name
 } gFont[kMAXFONT];                          // List of fonts loaded
 
-static XFontStruct *gTextFont;              // Current font
+static XFontStruct *gTextFont = nullptr;    // Current font
 static Int_t        gCurrentFontNumber = 0; // Current font number in gFont[]
 
-static int  gMarkerLineStyle = LineSolid;
-static int  gMarkerCapStyle  = CapRound;
-static int  gMarkerJoinStyle = JoinRound;
+const Int_t kBIGGEST_RGB_VALUE = 65535;
 
-//
-// Keep style values for line GC
-//
-static int  gCapStyle  = CapButt;
-static int  gJoinStyle = JoinMiter;
+//---- globals
+
+static X11Drawable *gCws;      // gCws: pointer to the current window
+static X11Drawable *gTws;      // gTws: temporary pointer
+
+static GC gGCecho;                 // Input echo
 
 //
 // Event masks
@@ -379,28 +302,8 @@ void TGX11::QueryColors(Colormap cmap, RXColor *color, Int_t ncolors)
 
 void TGX11::ClearWindow()
 {
-   ClearWindowW((WinContext_t) gCws);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Clear specified window.
-
-void TGX11::ClearWindowW(WinContext_t wctxt)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   if (!ctxt)
-      return;
-
-   if (!ctxt->fIsPixmap && !ctxt->fDoubleBuffer) {
-      XSetWindowBackground((Display*)fDisplay, ctxt->fDrawing, GetColor(0).fPixel);
-      XClearWindow((Display*)fDisplay, ctxt->fDrawing);
-      XFlush((Display*)fDisplay);
-   } else {
-      SetColor(ctxt, &ctxt->fGClist[kGCpxmp], 0);
-      XFillRectangle((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCpxmp],
-                     0, 0, ctxt->fWidth, ctxt->fHeight);
-      SetColor(ctxt, &ctxt->fGClist[kGCpxmp], 1);
-   }
+   if (gCws)
+      gCws->ClearWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -416,50 +319,7 @@ void TGX11::ClosePixmap()
 
 void TGX11::CloseWindow()
 {
-   if (gCws->fBuffer)
-      XFreePixmap((Display*)fDisplay, gCws->fBuffer);
-
-   if (!gCws->fNewColors.empty()) {
-      if (fRedDiv == -1)
-         XFreeColors((Display*)fDisplay, fColormap, gCws->fNewColors.data(), gCws->fNewColors.size(), 0);
-      gCws->fNewColors.clear();
-   }
-
-   if (!gCws->fShared) { // if not QT window
-      if (gCws->fIsPixmap)
-         XFreePixmap((Display*)fDisplay, gCws->fWindow);
-      else
-         XDestroyWindow((Display*)fDisplay, gCws->fWindow);
-
-      XFlush((Display*)fDisplay);
-   }
-
-   for (int i = 0; i < kMAXGC; ++i)
-      XFreeGC((Display*)fDisplay, gCws->fGClist[i]);
-
-   if (gCws->fillPattern != 0) {
-      XFreePixmap((Display*)fDisplay, gCws->fillPattern);
-      gCws->fillPattern = 0;
-   }
-
-   gCws->fOpen = 0;
-
-   for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
-      if (iter->second.get() == gCws) {
-         fWindows.erase(iter);
-         gCws = nullptr;
-         break;
-      }
-
-   if (gCws)
-      Fatal("CloseWindow", "Not found gCws in list of windows");
-
-   // select first from active windows
-   for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
-      if (iter->second && iter->second->fOpen) {
-         gCws = iter->second.get();
-         return;
-      }
+   gCws->CloseWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -467,7 +327,10 @@ void TGX11::CloseWindow()
 
 void TGX11::CopyPixmap(int wid, int xpos, int ypos)
 {
-   CopyPixmapW((WinContext_t) gCws, wid, xpos, ypos);
+   gCws->CopyPixmap(wid, xpos, ypos);
+
+   // TODO: maybe remove in ROOT7
+   gTws = fWindows[wid].get();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -478,37 +341,7 @@ void TGX11::CopyPixmap(int wid, int xpos, int ypos)
 
 void TGX11::DrawBox(int x1, int y1, int x2, int y2, EBoxMode mode)
 {
-   DrawBoxW((WinContext_t) gCws, x1, y1, x2, y2, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw a box on specified window
-///
-///  - mode=0 hollow  (kHollow)
-///  - mode=1 solid   (kSolid)
-
-void TGX11::DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-
-   Int_t x = TMath::Min(x1, x2);
-   Int_t y = TMath::Min(y1, y2);
-   Int_t w = TMath::Abs(x2 - x1);
-   Int_t h = TMath::Abs(y2 - y1);
-
-   switch (mode) {
-
-      case kHollow:
-         XDrawRectangle((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCline], x, y, w, h);
-         break;
-
-      case kFilled:
-         XFillRectangle((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCfill], x, y, w, h);
-         break;
-
-      default:
-         break;
-   }
+   gCws->DrawBox(x1, y1, x2, y2, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -555,27 +388,7 @@ void TGX11::DrawCellArray(int x1, int y1, int x2, int y2, int nx, int ny, int *i
 
 void TGX11::DrawFillArea(int n, TPoint *xy)
 {
-   DrawFillAreaW((WinContext_t) gCws, n, xy);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Fill area described by polygon on specified window
-///
-///  \param [in] n     number of points
-///  \param [in] xy   list of points
-
-void TGX11::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   XPoint *xyp = (XPoint *)xy;
-
-   if (ctxt->fillHollow)
-      XDrawLines((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCfill], xyp, n, CoordModeOrigin);
-
-   else {
-      XFillPolygon((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCfill],
-                   xyp, n, Nonconvex, CoordModeOrigin);
-   }
+   gCws->DrawFillArea(n, xy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -586,25 +399,7 @@ void TGX11::DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy)
 
 void TGX11::DrawLine(Int_t x1, Int_t y1, Int_t x2, Int_t y2)
 {
-   DrawLineW((WinContext_t) gCws, x1, y1, x2, y2);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw a line on specified window.
-///
-///  \param [in] x1,y1        : begin of line
-///  \param [in] x2,y2        : end of line
-
-void TGX11::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-
-   if (ctxt->lineStyle == LineSolid)
-      XDrawLine((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCline], x1, y1, x2, y2);
-   else {
-      XSetDashes((Display*)fDisplay, ctxt->fGClist[kGCdash], ctxt->dashOffset, ctxt->dashList.data(), ctxt->dashList.size());
-      XDrawLine((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCdash], x1, y1, x2, y2);
-   }
+   gCws->DrawLine(x1, y1, x2, y2);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -615,57 +410,7 @@ void TGX11::DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2
 
 void TGX11::DrawPolyLine(int n, TPoint *xy)
 {
-   DrawPolyLineW((WinContext_t) gCws, n, xy);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw a line through all points on specified window.
-///
-///  \param [in] n     number of points
-///  \param [in] xy   list of points
-
-void TGX11::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   XPoint *xyp = (XPoint*)xy;
-
-   const Int_t kMaxPoints = 1000001;
-
-   if (n > kMaxPoints) {
-      int ibeg = 0;
-      int iend = kMaxPoints - 1;
-      while (iend < n) {
-         DrawPolyLineW(wctxt, kMaxPoints, &xy[ibeg]);
-         ibeg = iend;
-         iend += kMaxPoints - 1;
-      }
-      if (ibeg < n) {
-         int npt = n - ibeg;
-         DrawPolyLineW(wctxt, npt, &xy[ibeg]);
-      }
-   } else if (n > 1) {
-      if (ctxt->lineStyle == LineSolid)
-         XDrawLines((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCline], xyp, n, CoordModeOrigin);
-      else {
-         XSetDashes((Display*)fDisplay, ctxt->fGClist[kGCdash], ctxt->dashOffset, ctxt->dashList.data(), ctxt->dashList.size());
-         XDrawLines((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCdash], xyp, n, CoordModeOrigin);
-
-         // calculate length of line to update dash offset
-         for (int i = 1; i < n; i++) {
-            int dx = xyp[i].x - xyp[i-1].x;
-            int dy = xyp[i].y - xyp[i-1].y;
-            if (dx < 0) dx = - dx;
-            if (dy < 0) dy = - dy;
-            ctxt->dashOffset += dx > dy ? dx : dy;
-         }
-         ctxt->dashOffset %= ctxt->dashLength;
-      }
-   } else {
-      int px = xyp[0].x;
-      int py = xyp[0].y;
-      XDrawPoint((Display*)fDisplay, ctxt->fDrawing,
-                 ctxt->lineStyle == LineSolid ? ctxt->fGClist[kGCline] : ctxt->fGClist[kGCdash], px, py);
-   }
+   gCws->DrawPolyLine(n, xy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -676,38 +421,8 @@ void TGX11::DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy)
 
 void TGX11::DrawLinesSegments(Int_t n, TPoint *xy)
 {
-   DrawLinesSegmentsW((WinContext_t) gCws, n, xy);
+   gCws->DrawLinesSegments(n, xy);
 }
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draws N segments between provided points on specified windows
-///
-/// \param [in] n    number of segements
-/// \param [in] xy   list of points, size 2*n
-
-void TGX11::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-
-   const Int_t kMaxSegments = 500000;
-   if (n > kMaxSegments) {
-      Int_t ibeg = 0;
-      Int_t iend = kMaxSegments;
-      while (ibeg < n) {
-         DrawLinesSegmentsW(wctxt, iend - ibeg, &xy[ibeg*2]);
-         ibeg = iend;
-         iend = TMath::Min(n, iend + kMaxSegments);
-      }
-   } else if (n > 0) {
-      if (ctxt->lineStyle == LineSolid)
-         XDrawSegments((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCline], (XSegment *) xy, n);
-      else {
-         XSetDashes((Display*)fDisplay, ctxt->fGClist[kGCdash], ctxt->dashOffset, ctxt->dashList.data(), ctxt->dashList.size());
-         XDrawSegments((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCdash], (XSegment *) xy, n);
-      }
-   }
-}
-
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Draw n markers with the current attributes at position x, y.
@@ -717,83 +432,7 @@ void TGX11::DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy)
 
 void TGX11::DrawPolyMarker(int n, TPoint *xy)
 {
-   DrawPolyMarkerW((WinContext_t) gCws, n, xy);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw n markers with the current attributes at position x, y on specified window.
-///
-///  \param [in] n     number of markers to draw
-///  \param [in] xy   x,y coordinates of markers
-
-void TGX11::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   XPoint *xyp = (XPoint *) xy;
-
-   if (ctxt->markerType == TAttMarker::kShapeDot) {
-      const int kNMAX = 1000000;
-      int nt = n/kNMAX;
-      for (int it = 0; it <= nt; it++) {
-         if (it < nt) {
-            XDrawPoints((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark], &xyp[it*kNMAX], kNMAX, CoordModeOrigin);
-         } else {
-            XDrawPoints((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark], &xyp[it*kNMAX], n-it*kNMAX, CoordModeOrigin);
-         }
-      }
-   } else {
-      int r = ctxt->markerSize / 2;
-      auto &shape = ctxt->markerShape;
-
-      for (int m = 0; m < n; m++) {
-         for (auto &pnt : shape) {
-            pnt.fX += xyp[m].x;
-            pnt.fY += xyp[m].y;
-         }
-         switch(ctxt->markerType) {
-            case TAttMarker::kShapeDot:
-               // dot - handled before
-               break;
-            case TAttMarker::kShapeCircle:
-               // hollow circle
-               XDrawArc((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
-                         xyp[m].x - r, xyp[m].y - r, ctxt->markerSize, ctxt->markerSize, 0, 360*64);
-               break;
-            case TAttMarker::kShapeFilledCircle:
-               // filled circle
-               XFillArc((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
-                        xyp[m].x - r, xyp[m].y - r, ctxt->markerSize, ctxt->markerSize, 0, 360*64);
-               break;
-            case TAttMarker::kShapePolyLine:
-               // hollow polygon
-               XDrawLines((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
-                          (XPoint *) shape.data(), shape.size(), CoordModeOrigin);
-               break;
-            case TAttMarker::kShapeFilledArea:
-               // filled polygon
-               XFillPolygon((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
-                            (XPoint *) shape.data(), shape.size(), Nonconvex, CoordModeOrigin);
-               break;
-            case TAttMarker::kShapeSegments:
-               // segmented line
-               XDrawSegments((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
-                             (XSegment *) shape.data(), shape.size()/2);
-               break;
-            case TAttMarker::kShapeTriangles:
-               // filled triangles
-               for (std::size_t t = 0; t < shape.size(); t += 3) {
-                  XFillPolygon((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCmark],
-                               (XPoint *) shape.data() + t, 3, Nonconvex, CoordModeOrigin);
-               }
-               break;
-         }
-         for (auto &pnt : shape) {
-            pnt.fX -= xyp[m].x;
-            pnt.fY -= xyp[m].y;
-         }
-
-      }
-   }
+   gCws->DrawPolyMarker(n, xy);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -810,7 +449,7 @@ void TGX11::DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy)
 void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                      const char *text, ETextMode mode)
 {
-   DrawTextW((WinContext_t) gCws, x, y, angle, mgn, text, mode);
+   gCws->DrawText(x, y, angle, mgn, text, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -827,45 +466,7 @@ void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
 void TGX11::DrawText(Int_t x, Int_t y, Float_t angle, Float_t mgn,
                      const wchar_t *text, ETextMode mode)
 {
-   DrawTextW((WinContext_t) gCws, x, y, angle, mgn, text, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Draw a text string using current font on specified window.
-///
-///  \param [in] mode       : drawing mode
-///              - mode=0     : the background is not drawn (kClear)
-///              - mode=1     : the background is drawn (kOpaque)
-///  \param [in] x,y        : text position
-///  \param [in] angle      : text angle
-///  \param [in] mgn        : magnification factor
-///  \param [in] text       : text string
-
-void TGX11::DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                      const char *text, ETextMode mode)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-
-   if (!text || !ctxt->textFont || ctxt->fAttText.GetTextSize() < 0)
-      return;
-
-   XRotSetMagnification(mgn);
-
-   switch (mode) {
-
-      case kClear:
-         XRotDrawAlignedString((Display*)fDisplay, ctxt->textFont, angle,
-                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, ctxt->textAlign);
-         break;
-
-      case kOpaque:
-         XRotDrawAlignedImageString((Display*)fDisplay, ctxt->textFont, angle,
-                      ctxt->fDrawing, ctxt->fGClist[kGCtext], x, y, (char*)text, ctxt->textAlign);
-         break;
-
-      default:
-         break;
-   }
+   gCws->DrawText(x, y, angle, mgn, text, mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1040,45 +641,6 @@ void *TGX11::GetGC(Int_t which) const
       return nullptr;
    }
    return &gCws->fGClist[which];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return X11 window for specified window context.
-/// Protected method used by TGX11TTF.
-
-Window_t TGX11::GetWindow(WinContext_t wctxt) const
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   return (Window_t) (ctxt ? ctxt->fDrawing : 0);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return X11 Graphics Context for specified window context.
-/// Protected method used by TGX11TTF.
-
-void *TGX11::GetGCW(WinContext_t wctxt, Int_t which) const
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   if (!ctxt) {
-      Error("GetGC", "No window context specified");
-      return nullptr;
-   }
-
-   if (which >= kMAXGC || which < 0) {
-      Error("GetGC", "trying to get illegal GC (which = %d)", which);
-      return nullptr;
-   }
-   return &ctxt->fGClist[which];
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Return text attributes for specified window context.
-/// Protected method used by TGX11TTF.
-
-const TAttText& TGX11::GetTextAttW(WinContext_t wctxt) const
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   return ctxt->fAttText;
 }
 
 
@@ -1392,6 +954,15 @@ Int_t TGX11::OpenDisplay(void *disp)
    return 0;
 }
 
+////////////////////////////////////////////////////////////////////////////////
+/// Creates new window handle with specified id
+/// Only for private usage
+
+void TGX11::CreateWindowHandle(Int_t id)
+{
+   fWindows.emplace(id, std::make_shared<X11Drawable>(id, *this));
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Add new window handle
@@ -1401,10 +972,6 @@ Int_t TGX11::AddWindowHandle()
 {
    Int_t maxid = 0;
    for (auto & pair : fWindows) {
-      if (pair.second && !pair.second->fOpen) {
-         pair.second->fOpen = 1;
-         return pair.first;
-      }
       if (pair.first > maxid)
          maxid = pair.first;
    }
@@ -1420,7 +987,7 @@ Int_t TGX11::AddWindowHandle()
          }
       }
 
-   fWindows.emplace(maxid, std::make_unique<XWindow_t>());
+   CreateWindowHandle(maxid);
 
    auto ctxt = fWindows[maxid].get();
    ctxt->fOpen = 1;
@@ -2173,9 +1740,36 @@ void TGX11::SetClipRegion(int wid, int x, int y, unsigned int w, unsigned int h)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Set current window
+
+void TGX11::RemoveWindowHandle(X11Drawable *ctxt)
+{
+   if (gCws == ctxt)
+      gCws = nullptr;
+
+   for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
+      if (iter->second.get() == ctxt) {
+         fWindows.erase(iter);
+         ctxt = nullptr;
+         break;
+      }
+
+   if (ctxt)
+      ::Fatal("RemoveWindow", "Not found window handle in list of windows");
+
+   // select first from active windows
+   for (auto iter = fWindows.begin(); iter != fWindows.end(); ++iter)
+      if (iter->second && iter->second->fOpen) {
+         gCws = iter->second.get();
+         return;
+      }
+}
+
+
+////////////////////////////////////////////////////////////////////////////////
 /// Set the foreground color in GC.
 
-void TGX11::SetColor(XWindow_t *ctxt, void *gci, int ci)
+void TGX11::SetColor(X11Drawable *ctxt, void *gci, int ci)
 {
    GC gc = *(GC *)gci;
 
@@ -2204,6 +1798,22 @@ void TGX11::SetColor(XWindow_t *ctxt, void *gci, int ci)
          XSetBackground((Display*)fDisplay, gc, GetColor(!ci).fPixel);
    }
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Set first active fonr for specified context
+
+void TGX11::SetCurrentFont(X11Drawable *ctxt)
+{
+   // use first existing font
+   for (int i = 0; i < kMAXFONT; i++)
+      if (gFont[i].id) {
+         ctxt->textFont = gFont[i].id;
+         XSetFont((Display*)fDisplay, ctxt->fGClist[kGCtext], ctxt->textFont->fid);
+         XSetFont((Display*)fDisplay, ctxt->fGClist[kGCinvt], ctxt->textFont->fid);
+         break;
+      }
+}
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /// Set the cursor.
@@ -2296,7 +1906,8 @@ void TGX11::SetDoubleBufferON()
 
 void TGX11::SetDrawMode(EDrawMode mode)
 {
-   SetDrawModeW((WinContext_t) gCws, mode);
+   if (gCws)
+      gCws->SetDrawMode(mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2308,10 +1919,11 @@ void TGX11::SetFillColor(Color_t cindex)
 
    TAttFill::SetFillColor(cindex);
 
-   TAttFill arg(gCws->fAttFill);
-   arg.SetFillColor(cindex);
-
-   SetAttFill((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttFill arg(gCws->fAttFill);
+      arg.SetFillColor(cindex);
+      gCws->SetAttFill(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2335,10 +1947,11 @@ void TGX11::SetFillStyle(Style_t fstyle)
 {
    TAttFill::SetFillStyle(fstyle);
 
-   TAttFill arg(gCws->fAttFill);
-   arg.SetFillStyle(fstyle);
-
-   SetAttFill((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttFill arg(gCws->fAttFill);
+      arg.SetFillStyle(fstyle);
+      gCws->SetAttFill(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2379,10 +1992,11 @@ void TGX11::SetLineColor(Color_t cindex)
 
    TAttLine::SetLineColor(cindex);
 
-   TAttLine arg(gCws->fAttLine);
-   arg.SetLineColor(cindex);
-
-   SetAttLine((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttLine arg(gCws->fAttLine);
+      arg.SetLineColor(cindex);
+      gCws->SetAttLine(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2408,10 +2022,11 @@ void TGX11::SetLineStyle(Style_t lstyle)
 {
    TAttLine::SetLineStyle(lstyle);
 
-   TAttLine arg(gCws->fAttLine);
-   arg.SetLineStyle(lstyle);
-
-   SetAttLine((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttLine arg(gCws->fAttLine);
+      arg.SetLineStyle(lstyle);
+      gCws->SetAttLine(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2433,10 +2048,11 @@ void TGX11::SetLineWidth(Width_t width)
 {
    TAttLine::SetLineWidth(width);
 
-   TAttLine arg(gCws->fAttLine);
-   arg.SetLineWidth(width);
-
-   SetAttLine((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttLine arg(gCws->fAttLine);
+      arg.SetLineWidth(width);
+      gCws->SetAttLine(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2458,10 +2074,11 @@ void TGX11::SetMarkerColor(Color_t cindex)
 
    TAttMarker::SetMarkerColor(cindex);
 
-   TAttMarker arg(gCws->fAttMarker);
-   arg.SetMarkerColor(cindex);
-
-   SetAttMarker((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttMarker arg(gCws->fAttMarker);
+      arg.SetMarkerColor(cindex);
+      gCws->SetAttMarker(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2473,10 +2090,11 @@ void TGX11::SetMarkerSize(Float_t msize)
 {
    TAttMarker::SetMarkerSize(msize);
 
-   TAttMarker arg(gCws->fAttMarker);
-   arg.SetMarkerSize(msize);
-
-   SetAttMarker((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttMarker arg(gCws->fAttMarker);
+      arg.SetMarkerSize(msize);
+      gCws->SetAttMarker(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2486,10 +2104,11 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
 {
    TAttMarker::SetMarkerStyle(markerstyle);
 
-   TAttMarker arg(gCws->fAttMarker);
-   arg.SetMarkerStyle(markerstyle);
-
-   SetAttMarker((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttMarker arg(gCws->fAttMarker);
+      arg.SetMarkerStyle(markerstyle);
+      gCws->SetAttMarker(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2501,7 +2120,8 @@ void TGX11::SetMarkerStyle(Style_t markerstyle)
 
 void TGX11::SetOpacity(Int_t percent)
 {
-   SetOpacityW((WinContext_t) gCws, percent);
+   if (gCws)
+      gCws->SetOpacity(percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2547,10 +2167,11 @@ void TGX11::SetTextAlign(Short_t talign)
 {
    TAttText::SetTextAlign(talign);
 
-   TAttText arg(gCws->fAttText);
-   arg.SetTextAlign(talign);
-
-   SetAttText((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttText arg(gCws->fAttText);
+      arg.SetTextAlign(talign);
+      gCws->SetAttText(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2562,10 +2183,11 @@ void TGX11::SetTextColor(Color_t cindex)
 
    TAttText::SetTextColor(cindex);
 
-   TAttText arg(gCws->fAttText);
-   arg.SetTextColor(cindex);
-
-   SetAttText((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttText arg(gCws->fAttText);
+      arg.SetTextColor(cindex);
+      gCws->SetAttText(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2624,10 +2246,11 @@ void TGX11::SetTextFont(Font_t fontnumber)
 {
    TAttText::SetTextFont(fontnumber);
 
-   TAttText arg(gCws->fAttText);
-   arg.SetTextFont(fontnumber);
-
-   SetAttText((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttText arg(gCws->fAttText);
+      arg.SetTextFont(fontnumber);
+      gCws->SetAttText(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2637,10 +2260,11 @@ void TGX11::SetTextSize(Float_t textsize)
 {
    TAttText::SetTextSize(textsize);
 
-   TAttText arg(gCws->fAttText);
-   arg.SetTextSize(textsize);
-
-   SetAttText((WinContext_t) gCws, arg);
+   if (gCws) {
+      TAttText arg(gCws->fAttText);
+      arg.SetTextSize(textsize);
+      gCws->SetAttText(arg);
+   }
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2675,134 +2299,8 @@ void TGX11::Sync(int mode)
 
 void TGX11::UpdateWindow(int mode)
 {
-   UpdateWindowW((WinContext_t) gCws, mode);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Update display for specified window.
-///
-///  \param [in] mode : (1) update (0) sync
-///
-/// Synchronise client and server once (not permanent).
-/// Copy the pixmap gCws->fDrawing on the window gCws->fWindow
-/// if the double buffer is on.
-
-void TGX11::UpdateWindowW(WinContext_t wctxt, Int_t mode)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   if (!ctxt)
-      return;
-
-   if (ctxt->fDoubleBuffer) {
-      XCopyArea((Display*)fDisplay, ctxt->fDrawing, ctxt->fWindow,
-                ctxt->fGClist[kGCpxmp], 0, 0, ctxt->fWidth, ctxt->fHeight, 0, 0);
-   }
-   if (mode == 1) {
-      XFlush((Display*)fDisplay);
-   } else {
-      XSync((Display*)fDisplay, False);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set opacity of a specified window. This image manipulation routine works
-/// by adding to a percent amount of neutral to each pixels RGB.
-/// Since it requires quite some additional color map entries is it
-/// only supported on displays with more than > 8 color planes (> 256
-/// colors).
-
-void TGX11::SetOpacityW(WinContext_t wctxt, Int_t percent)
-{
-   if ((fDepth <= 8) || (percent <= 0)) return;
-   if (percent > 100) percent = 100;
-
-   auto ctxt = (XWindow_t *) wctxt;
-
-   // get pixmap from server as image
-   XImage *image = XGetImage((Display*)fDisplay, ctxt->fDrawing, 0, 0, ctxt->fWidth,
-                             ctxt->fHeight, AllPlanes, ZPixmap);
-   if (!image) return;
-
-   // collect different image colors
-   std::vector<ULong_t> orgcolors;
-   for (UInt_t y = 0; y < ctxt->fHeight; y++) {
-      for (UInt_t x = 0; x < ctxt->fWidth; x++) {
-         ULong_t pixel = XGetPixel(image, x, y);
-         if (std::find(orgcolors.begin(), orgcolors.end(), pixel) == orgcolors.end())
-            orgcolors.emplace_back(pixel);
-      }
-   }
-   if (orgcolors.empty()) {
-      XDestroyImage(image);
-      return;
-   }
-
-   // clean up old colors
-   if (!ctxt->fNewColors.empty()) {
-      if (fRedDiv == -1)
-         XFreeColors((Display*)fDisplay, fColormap, ctxt->fNewColors.data(), ctxt->fNewColors.size(), 0);
-      ctxt->fNewColors.clear();
-   }
-
-   std::vector<RXColor> xcol(orgcolors.size());
-
-   for (std::size_t i = 0; i < orgcolors.size(); i++) {
-      xcol[i].pixel = orgcolors[i];
-      xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
-      xcol[i].flags = DoRed | DoGreen | DoBlue;
-   }
-   QueryColors(fColormap, xcol.data(), orgcolors.size());
-
-   // create new colors mixing:  "100-percent" of old color and "percent" of new background color
-   XColor_t &bkgr = GetColor(ctxt->fAttFill.GetFillColor());
-
-   for (std::size_t i = 0; i < orgcolors.size(); i++) {
-      xcol[i].red   = (UShort_t) TMath::Min((Int_t) xcol[i].red * (100 - percent) / 100  + bkgr.fRed * percent / 100, kBIGGEST_RGB_VALUE);
-      xcol[i].green = (UShort_t) TMath::Min((Int_t) xcol[i].green * (100 - percent) / 100  + bkgr.fGreen * percent / 100, kBIGGEST_RGB_VALUE);
-      xcol[i].blue  = (UShort_t) TMath::Min((Int_t) xcol[i].blue * (100 - percent) / 100  + bkgr.fBlue * percent / 100, kBIGGEST_RGB_VALUE);
-      if (!AllocColor(fColormap, &xcol[i]))
-         Warning("SetOpacityW", "failed to allocate color %hd, %hd, %hd",
-                 xcol[i].red, xcol[i].green, xcol[i].blue);
-      // assumes that in case of failure xcol[i].pixel is not changed
-   }
-
-   ctxt->fNewColors.resize(orgcolors.size());
-
-   for (std::size_t i = 0; i < orgcolors.size(); i++)
-      ctxt->fNewColors[i] = xcol[i].pixel;
-
-   // put opaque colors in image
-   for (UInt_t y = 0; y < ctxt->fHeight; y++) {
-      for (UInt_t x = 0; x < ctxt->fWidth; x++) {
-         ULong_t pixel = XGetPixel(image, x, y);
-         auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
-         if (iter != orgcolors.end()) {
-            auto idx = iter - orgcolors.begin();
-            XPutPixel(image, x, y, ctxt->fNewColors[idx]);
-         }
-      }
-   }
-
-   // put image back in pixmap on server
-   XPutImage((Display*)fDisplay, ctxt->fDrawing, ctxt->fGClist[kGCpxmp], image, 0, 0, 0, 0,
-             ctxt->fWidth, ctxt->fHeight);
-   XFlush((Display*)fDisplay);
-
-   XDestroyImage(image);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Copy the pixmap wid at the position xpos, ypos in the specified window.
-
-void TGX11::CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-
-   gTws = fWindows[wid].get();
-
-   XCopyArea((Display*)fDisplay, gTws->fDrawing, ctxt->fDrawing, gTws->fGClist[kGCpxmp], 0, 0, gTws->fWidth,
-             gTws->fHeight, xpos, ypos);
-   XFlush((Display*)fDisplay);
+   if (gCws)
+      gCws->UpdateWindow(mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -2843,128 +2341,12 @@ void TGX11::WritePixmap(int wid, unsigned int w, unsigned int h, char *pxname)
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Helper class to extract pixel information from XImage for store in the GIF
-
-class TX11GifEncode : public TGifEncode {
-   private:
-      XImage *fXimage = nullptr;
-   protected:
-      void get_scline(int y, int width, unsigned char *buf) override
-      {
-         for (int x = 0; x < width; x++) {
-            ULong_t pixel = XGetPixel(fXimage, x, y);
-            buf[x] = 0;
-
-            auto iter = std::find(orgcolors.begin(), orgcolors.end(), pixel);
-            if (iter != orgcolors.end()) {
-               auto idx = iter - orgcolors.begin();
-               if (idx < 256)
-                  buf[x] = (unsigned char) idx;
-            }
-         }
-      }
-   public:
-      std::vector<ULong_t> orgcolors; // all unique pixels
-
-      TX11GifEncode(XImage *image) : fXimage(image) {}
-};
-
-
-////////////////////////////////////////////////////////////////////////////////
 /// Writes the current window into GIF file. Returns 1 in case of success,
 /// 0 otherwise.
 
 Int_t TGX11::WriteGIF(char *name)
 {
-   return WriteGIFW((WinContext_t) gCws, name);
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Writes the specified window into GIF file. Returns 1 in case of success,
-/// 0 otherwise.
-
-Int_t TGX11::WriteGIFW(WinContext_t wctxt, const char *name)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-
-   XImage *image = XGetImage((Display*)fDisplay, ctxt->fDrawing, 0, 0,
-                             ctxt->fWidth, ctxt->fHeight,
-                             AllPlanes, ZPixmap);
-
-   if (!image) {
-      Error("WriteGIFW", "Cannot create image for writing GIF. Try in batch mode.");
-      return 0;
-   }
-
-   /// Collect R G B colors of the palette used by the image.
-   /// The image pixels are changed to index values in these R G B arrays.
-   /// This produces a colormap with only the used colors (so even on displays
-   /// with more than 8 planes we will be able to create GIF's when the image
-   /// contains no more than 256 different colors). If it does contain more
-   /// colors we will have to use GIFquantize to reduce the number of colors.
-
-   TX11GifEncode gif(image);
-
-   // collect different image colors
-   for (UInt_t x = 0; x < ctxt->fWidth; x++) {
-      for (UInt_t y = 0; y < ctxt->fHeight; y++) {
-         ULong_t pixel = XGetPixel(image, x, y);
-         if (std::find(gif.orgcolors.begin(), gif.orgcolors.end(), pixel) == gif.orgcolors.end())
-            gif.orgcolors.emplace_back(pixel);
-      }
-   }
-
-   auto ncolors = gif.orgcolors.size();
-
-   if (ncolors > 256) {
-      Error("WriteGIFW", "Cannot create GIF of image containing more than 256 colors. Try in batch mode.");
-      XDestroyImage(image);
-      return 0;
-   }
-
-   // get RGB values belonging to pixels
-   std::vector<RXColor> xcol(ncolors);
-
-   for (std::size_t i = 0; i < ncolors; i++) {
-      xcol[i].pixel = gif.orgcolors[i];
-      xcol[i].red   = xcol[i].green = xcol[i].blue = 0;
-      xcol[i].flags = DoRed | DoGreen | DoBlue;
-   }
-
-   QueryColors(fColormap, xcol.data(), ncolors);
-
-   UShort_t maxcol = 0;
-   for (std::size_t i = 0; i < ncolors; i++) {
-      maxcol = TMath::Max(maxcol, xcol[i].red);
-      maxcol = TMath::Max(maxcol, xcol[i].green);
-      maxcol = TMath::Max(maxcol, xcol[i].blue);
-   }
-   if (maxcol == 0)
-      maxcol = 255;
-
-   std::vector<unsigned char> r(ncolors), b(ncolors), g(ncolors);
-
-   for (std::size_t i = 0; i < ncolors; i++) {
-      r[i] = (unsigned char) (xcol[i].red * 255 / maxcol);
-      g[i] = (unsigned char) (xcol[i].green * 255 / maxcol);
-      b[i] = (unsigned char) (xcol[i].blue * 255 / maxcol);
-   }
-
-   Int_t ret = 0;
-
-   if (gif.OpenFile(name)) {
-      auto len = gif.GIFencode(ctxt->fWidth, ctxt->fHeight, ncolors, r.data(), g.data(), b.data());
-      if (len > 0)
-         ret = 1;
-      gif.CloseFile();
-   } else {
-      Error("WriteGIFW", "cannot write file: %s", name);
-   }
-
-   // cleanup image at the end
-   XDestroyImage(image);
-
-   return ret;
+   return gCws ? gCws->WriteGIF(name) : 0;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -3211,271 +2593,13 @@ Int_t TGX11::SupportsExtension(const char *ext) const
 }
 
 ////////////////////////////////////////////////////////////////////////////////
-/// Returns window context for specified window id
-/// Window context is valid until window not closed or destroyed
-/// Provided methods to work with window context like DrawLineW allows to
-/// perform actions independently on different windows
+/// Returns shared ptr on XDrawable with specified id
 
-WinContext_t TGX11::GetWindowContext(Int_t wid)
+std::shared_ptr<TVirtualX::XDrawable> TGX11::GetDrawable(Int_t wid)
 {
    if ((wid < 0) || (fWindows.count(wid) == 0))
-      return (WinContext_t) nullptr;
+      return nullptr;
 
-   return (WinContext_t) fWindows[wid].get();
+   return fWindows[wid];
 }
 
-////////////////////////////////////////////////////////////////////////////////
-/// Set fill attributes for specified window
-
-void TGX11::SetAttFill(WinContext_t wctxt, const TAttFill &att)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   if (!ctxt)
-      return;
-
-   Int_t cindex = att.GetFillColor();
-   if (!gStyle->GetFillColor() && cindex > 1)
-      cindex = 0;
-   if (cindex >= 0)
-      SetColor(ctxt, &ctxt->fGClist[kGCfill], Int_t(cindex));
-   ctxt->fAttFill.SetFillColor(cindex);
-
-   Int_t style = att.GetFillStyle() / 1000;
-   Int_t fasi  = att.GetFillStyle() % 1000;
-   Int_t stn = (fasi >= 1 && fasi <=25) ? fasi : 2;
-   ctxt->fAttFill.SetFillStyle(style * 1000 + fasi);
-
-   switch (style) {
-      case 1:         // solid
-         ctxt->fillHollow = 0;
-         XSetFillStyle((Display*)fDisplay, ctxt->fGClist[kGCfill], FillSolid);
-         break;
-
-      case 2:         // pattern
-         ctxt->fillHollow = 1;
-         break;
-
-      case 3:         // hatch
-         ctxt->fillHollow = 0;
-         XSetFillStyle((Display*)fDisplay, ctxt->fGClist[kGCfill], FillStippled);
-
-         if (stn != ctxt->fillFasi) {
-            if (ctxt->fillPattern != 0)
-               XFreePixmap((Display*)fDisplay, ctxt->fillPattern);
-
-            ctxt->fillPattern = XCreateBitmapFromData((Display*)fDisplay, fRootWin,
-                                                      (const char*)gStipples[stn], 16, 16);
-
-            XSetStipple((Display*)fDisplay, ctxt->fGClist[kGCfill], ctxt->fillPattern);
-            ctxt->fillFasi = stn;
-         }
-         break;
-
-      default:
-         ctxt->fillHollow = 1;
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set line attributes for specified window
-
-void TGX11::SetAttLine(WinContext_t wctxt, const TAttLine &att)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   if (!ctxt)
-      return;
-
-   if (ctxt->fAttLine.GetLineStyle() != att.GetLineStyle()) { //set style index only if different
-      if (att.GetLineStyle() <= 1)
-         ctxt->dashList.clear();
-      else if (att.GetLineStyle() == 2)
-         ctxt->dashList = { 3, 3 };
-      else if (att.GetLineStyle() == 3)
-         ctxt->dashList = { 1, 2 };
-      else if (att.GetLineStyle() == 4) {
-         ctxt->dashList = { 3, 4, 1, 4} ;
-      } else {
-         TString st = (TString)gStyle->GetLineStyleString(att.GetLineStyle());
-         auto tokens = st.Tokenize(" ");
-         Int_t nt = tokens->GetEntries();
-         ctxt->dashList.resize(nt);
-         for (Int_t j = 0; j < nt; ++j) {
-            Int_t it;
-            sscanf(tokens->At(j)->GetName(), "%d", &it);
-            ctxt->dashList[j] = (Int_t) (it/4);
-         }
-         delete tokens;
-      }
-      ctxt->dashLength = 0;
-      for (auto elem : ctxt->dashList)
-         ctxt->dashLength += elem;
-      ctxt->dashOffset = 0;
-      ctxt->lineStyle = ctxt->dashList.size() == 0 ? LineSolid : LineOnOffDash;
-   }
-
-   ctxt->lineWidth = att.GetLineWidth();
-   if (ctxt->lineStyle == LineSolid) {
-      if (ctxt->lineWidth == 1)
-         ctxt->lineWidth = 0;
-   } else {
-      if (ctxt->lineWidth == 0)
-         ctxt->lineWidth = 1;
-   }
-
-  if (ctxt->lineWidth >= 0) {
-      XSetLineAttributes((Display*)fDisplay, ctxt->fGClist[kGCline], ctxt->lineWidth,
-                          ctxt->lineStyle, gCapStyle, gJoinStyle);
-      if (ctxt->lineStyle == LineOnOffDash)
-         XSetLineAttributes((Display*)fDisplay, ctxt->fGClist[kGCdash], ctxt->lineWidth,
-                             ctxt->lineStyle, gCapStyle, gJoinStyle);
-   }
-
-   if (att.GetLineColor() >= 0) {
-      SetColor(ctxt, &ctxt->fGClist[kGCline], (Int_t) att.GetLineColor());
-      SetColor(ctxt, &ctxt->fGClist[kGCdash], (Int_t) att.GetLineColor());
-   }
-
-   ctxt->fAttLine = att;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set marker attributes for specified window
-
-void TGX11::SetAttMarker(WinContext_t wctxt, const TAttMarker &att)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   if (!ctxt)
-      return;
-
-   SetColor(ctxt, &ctxt->fGClist[kGCmark], att.GetMarkerColor());
-
-   Bool_t changed = (att.GetMarkerSize() != ctxt->fAttMarker.GetMarkerSize()) ||
-                    (att.GetMarkerStyle() != ctxt->fAttMarker.GetMarkerStyle());
-
-   ctxt->fAttMarker = att;
-
-   if (!changed)
-      return;
-
-   ctxt->markerLineWidth = TAttMarker::GetMarkerLineWidth(att.GetMarkerStyle());
-   ctxt->markerType = att.GetMarkerShape(ctxt->markerSize, ctxt->markerShape, 1., TAttMarker::kDotAsLines);
-
-   // The fast dots and simple lines do not  need join properties
-   if (ctxt->markerType == TAttMarker::kShapeSegments) {
-       XSetLineAttributes((Display*)fDisplay, ctxt->fGClist[kGCmark], ctxt->markerLineWidth, LineSolid, CapButt, JoinMiter);
-   } else {
-       XSetLineAttributes((Display*)fDisplay, ctxt->fGClist[kGCmark], ctxt->markerLineWidth,
-                          gMarkerLineStyle, gMarkerCapStyle, gMarkerJoinStyle);
-   }
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set text attributes for specified window
-
-void TGX11::SetAttText(WinContext_t wctxt, const TAttText &att)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   if (!ctxt)
-      return;
-
-   Int_t txalh = att.GetTextAlign() / 10;
-   Int_t txalv = att.GetTextAlign() % 10;
-
-   ctxt->textAlign = kAlignNone;
-
-   switch (txalh) {
-      case 0 :
-      case 1 :
-         switch (txalv) {  //left
-            case 1 :
-               ctxt->textAlign = kBLeft;   //bottom
-               break;
-            case 2 :
-               ctxt->textAlign = kMLeft;   //middle
-               break;
-            case 3 :
-               ctxt->textAlign = kTLeft;   //top
-               break;
-         }
-         break;
-      case 2 :
-         switch (txalv) { //center
-            case 1 :
-               ctxt->textAlign = kBCenter;   //bottom
-               break;
-            case 2 :
-               ctxt->textAlign = kMCenter;   //middle
-               break;
-            case 3 :
-               ctxt->textAlign = kTCenter;   //top
-               break;
-         }
-         break;
-      case 3 :
-         switch (txalv) {  //right
-            case 1 :
-               ctxt->textAlign = kBRight;   //bottom
-               break;
-            case 2 :
-               ctxt->textAlign = kMRight;   //center
-               break;
-            case 3 :
-               ctxt->textAlign = kTRight;   //top
-               break;
-         }
-         break;
-   }
-
-   SetColor(ctxt, &ctxt->fGClist[kGCtext], att.GetTextColor());
-
-   XGCValues values;
-   if (XGetGCValues((Display*)fDisplay, ctxt->fGClist[kGCtext], GCForeground | GCBackground, &values)) {
-      XSetForeground( (Display*)fDisplay, ctxt->fGClist[kGCinvt], values.background );
-      XSetBackground( (Display*)fDisplay, ctxt->fGClist[kGCinvt], values.foreground );
-   } else {
-      Error("SetAttText", "cannot get GC values");
-   }
-   XSetBackground((Display*)fDisplay, ctxt->fGClist[kGCtext], GetColor(0).fPixel);
-
-   // use first existing font
-   for (int i = 0; i < kMAXFONT; i++)
-      if (gFont[i].id) {
-         ctxt->textFont = gFont[i].id;
-         XSetFont((Display*)fDisplay, ctxt->fGClist[kGCtext], ctxt->textFont->fid);
-         XSetFont((Display*)fDisplay, ctxt->fGClist[kGCinvt], ctxt->textFont->fid);
-         break;
-      }
-
-   ctxt->fAttText = att;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Set window draw mode
-
-void TGX11::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
-{
-   fDrawMode = mode;
-
-   auto ctxt = (XWindow_t *) wctxt;
-   if (!ctxt || !fDisplay)
-      return;
-
-   auto gxmode = GXcopy;
-   if (mode == kXor)
-      gxmode = GXxor;
-   else if (mode == kInvert)
-      gxmode = GXinvert;
-   for (int i = 0; i < kMAXGC; i++)
-      XSetFunction((Display*)fDisplay, ctxt->fGClist[i], gxmode);
-
-   ctxt->drawMode = mode;
-}
-
-////////////////////////////////////////////////////////////////////////////////
-/// Returns window draw mode
-
-TVirtualX::EDrawMode TGX11::GetDrawModeW(WinContext_t wctxt)
-{
-   auto ctxt = (XWindow_t *) wctxt;
-   return ctxt ? ctxt->drawMode : kCopy;
-}

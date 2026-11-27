@@ -17,6 +17,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GX11
     ../gifencode/gifdecode.cxx
     ../gifencode/gifencode.cxx
     src/GX11Gui.cxx
+    src/X11Drawable.cxx
     src/TGX11.cxx
   DICTIONARY_OPTIONS
     -writeEmptyRootPCM
@@ -39,11 +40,12 @@ target_sources(GX11
 PRIVATE
   FILE_SET private_header_files
   TYPE HEADERS
-  BASE_DIRS inc/ ../gifencode
+  BASE_DIRS inc/ src/ ../gifencode
   FILES
     ${RELATIVE_INC_HEADERS}
     ../gifencode/gifencode.h
     ../gifencode/gifdecode.h
+    src/X11Drawable.h
     inc/LinkDef.h
 )
 

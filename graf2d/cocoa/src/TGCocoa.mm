@@ -37,6 +37,8 @@
 #include "TROOT.h"
 #include "TEnv.h"
 #include "TVirtualMutex.h"
+#include "QuartzDrawable.h"
+
 
 #include <ApplicationServices/ApplicationServices.h>
 #include <OpenGL/OpenGL.h>
@@ -687,89 +689,34 @@ void TGCocoa::SelectWindow(Int_t windowID)
 }
 
 //______________________________________________________________________________
-WinContext_t TGCocoa::GetWindowContext(Int_t wid)
+std::shared_ptr<TVirtualX::XDrawable> TGCocoa::GetDrawable(Int_t wid)
 {
    if (wid <= 0)
-      return (WinContext_t) 0;
-   auto drawable = fPimpl->GetDrawable(wid);
-   return (WinContext_t) drawable;
-}
+      return nullptr;
 
-//______________________________________________________________________________
-WinContext_t TGCocoa::GetSelectedContext()
-{
-   return GetWindowContext(fSelectedDrawable);
-}
+   auto iter = fWindows.find(wid);
+   if (iter == fWindows.end())
+      return nullptr;
 
-//______________________________________________________________________________
-void TGCocoa::SetDrawModeW(WinContext_t wctxt, EDrawMode mode)
-{
-   auto drawable = (NSObject<X11Drawable> *) wctxt;
-
-   // here XOR window and XOR operations can be removed if necessary
-   [drawable setDrawMode : mode];
-}
-
-//______________________________________________________________________________
-TVirtualX::EDrawMode TGCocoa::GetDrawModeW(WinContext_t wctxt)
-{
-   auto drawable = (NSObject<X11Drawable> *) wctxt;
-
-   return [drawable getDrawMode];
-}
-
-//______________________________________________________________________________
-void TGCocoa::ClearWindowW(WinContext_t wctxt)
-{
-   auto drawable = (NSObject<X11Drawable> * const) wctxt;
-
-   if (drawable.fIsPixmap) {
-      //Pixmaps are white by default.
-      //This is bad - we can not have transparent sub-pads (in TCanvas)
-      //because of this. But there is no way how gVirtualX can
-      //obtain real pad's color and check for its transparency.
-      CGContextRef pixmapCtx = drawable.fContext;
-      assert(pixmapCtx != 0 && "ClearWindow, pixmap's context is null");
-      //const Quartz::CGStateGuard ctxGuard(pixmapCtx);
-      //CGContextSetRGBFillColor(pixmapCtx, 1., 1., 1., 1.);
-      //CGContextFillRect(pixmapCtx, CGRectMake(0, 0, drawable.fWidth, drawable.fHeight));
-      //Now we really clear!
-      CGContextClearRect(pixmapCtx, CGRectMake(0, 0, drawable.fWidth, drawable.fHeight));
-   } else {
-      //For a window ClearArea with w == 0 and h == 0 means the whole window.
-      ClearArea(drawable.fID, 0, 0, 0, 0);
+   // add extra check if real drawable instance exists
+   if (!fPimpl->HasDrawable(wid)) {
+      iter->second->ClearDrawable();
+      fWindows.erase(iter);
+      return nullptr;
    }
+
+   return iter->second;
 }
 
 //______________________________________________________________________________
-void TGCocoa::UpdateWindowW(WinContext_t wctxt, Int_t /* mode */)
+std::shared_ptr<QuartzDrawable> &TGCocoa::GetSelectedDrawable()
 {
-   auto window = (NSObject<X11Window> * const) wctxt;
-
-   //Have no idea, why this can happen with ROOT - done by TGDNDManager :(
-   if (window.fIsPixmap == YES)
-      return;
-
-   if (QuartzPixmap * const pixmap = window.fBackBuffer) {
-      assert([window.fContentView isKindOfClass : [QuartzView class]] && "UpdateWindow, content view is not a QuartzView");
-      QuartzView *dstView = (QuartzView *)window.fContentView;
-
-      if (dstView.fIsOverlapped)
-         return;
-
-      if (dstView.fContext) {
-         //We can draw directly.
-         const X11::Rectangle copyArea(0, 0, pixmap.fWidth, pixmap.fHeight);
-         [dstView copy : pixmap area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : X11::Point()];
-      } else {
-         //Have to wait.
-         fPimpl->fX11CommandBuffer.AddUpdateWindow(dstView);
-         Update(1);
-      }
-   }
+   static std::shared_ptr<QuartzDrawable> dummy;
+   auto iter = fWindows.find(fSelectedDrawable);
+   if (iter == fWindows.end())
+      return dummy;
+   return iter->second;
 }
-
-
 
 //______________________________________________________________________________
 void TGCocoa::ClearWindow()
@@ -778,7 +725,8 @@ void TGCocoa::ClearWindow()
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() &&
           "ClearWindow, fSelectedDrawable is invalid");
 
-   ClearWindowW((WinContext_t)fPimpl->GetDrawable(fSelectedDrawable));
+   if (auto &ctxt = GetSelectedDrawable())
+      ctxt->ClearWindow();
 }
 
 //______________________________________________________________________________
@@ -882,11 +830,8 @@ void TGCocoa::UpdateWindow(Int_t mode)
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() &&
           "UpdateWindow, fSelectedDrawable is not a valid window id");
 
-   //Have no idea, why this can happen with ROOT - done by TGDNDManager :(
-   if (fPimpl->GetDrawable(fSelectedDrawable).fIsPixmap == YES)
-      return;
-
-   UpdateWindowW((WinContext_t) fPimpl->GetWindow(fSelectedDrawable), mode);
+   if (auto &ctxt = GetSelectedDrawable())
+      ctxt->UpdateWindow(mode);
 }
 
 //______________________________________________________________________________
@@ -952,6 +897,8 @@ Window_t TGCocoa::CreateWindow(Window_t parentID, Int_t x, Int_t y, UInt_t w, UI
                                                            x, y, w, h, border, depth, clss, visual, attr, wtype);
       const Util::NSScopeGuard<QuartzView> viewGuard(childView);
       const Window_t result = fPimpl->RegisterDrawable(childView);//Can throw.
+      // only child window can be used for drawing
+      fWindows.emplace(result, std::make_shared<QuartzDrawable>(result, *this, childView));
       childView.fID = result;
       [parentWin addChild : childView];
 
@@ -984,6 +931,12 @@ void TGCocoa::DestroyWindow(Window_t wid)
       return;
 
    BOOL needFocusChange = NO;
+
+   auto iter = fWindows.find(wid);
+   if (iter != fWindows.end()) {
+      iter->second->ClearDrawable();
+      fWindows.erase(iter);
+   }
 
    {//Block to force autoreleasepool to drain.
    const Util::AutoreleasePool pool;
@@ -2398,8 +2351,10 @@ Int_t TGCocoa::OpenPixmap(UInt_t w, UInt_t h)
    Util::NSScopeGuard<QuartzPixmap> pixmap([[QuartzPixmap alloc] initWithW : w H : h
                                            scaleFactor : [[NSScreen mainScreen] backingScaleFactor]]);
    if (pixmap.Get()) {
-      pixmap.Get().fID = fPimpl->RegisterDrawable(pixmap.Get());//Can throw.
-      return (Int_t)pixmap.Get().fID;
+      auto id = fPimpl->RegisterDrawable(pixmap.Get());//Can throw.
+      fWindows.emplace(id, std::make_shared<QuartzDrawable>(id, *this, pixmap.Get()));
+      pixmap.Get().fID = id;
+      return (Int_t)id;
    } else {
       //Detailed error message was issued by QuartzPixmap by this point:
       Error("OpenPixmap", "QuartzPixmap initialization failed");
@@ -2440,40 +2395,8 @@ void TGCocoa::CopyPixmap(Int_t pixmapID, Int_t x, Int_t y)
    assert(fSelectedDrawable > fPimpl->GetRootWindowID() &&
           "CopyPixmap, fSelectedDrawable is not a valid window id");
 
-   CopyPixmapW((WinContext_t) fPimpl->GetDrawable(fSelectedDrawable), pixmapID, x, y);
-}
-
-//______________________________________________________________________________
-void TGCocoa::CopyPixmapW(WinContext_t wctxt, Int_t pixmapID, Int_t x, Int_t y)
-{
-   assert(pixmapID > (Int_t)fPimpl->GetRootWindowID() &&
-          "CopyPixmapW, parameter 'pixmapID' is not a valid id");
-
-   NSObject<X11Drawable> * const source = fPimpl->GetDrawable(pixmapID);
-   assert([source isKindOfClass : [QuartzPixmap class]] &&
-          "CopyPixmap, source is not a pixmap");
-   QuartzPixmap * const pixmap = (QuartzPixmap *)source;
-
-   auto drawable = (NSObject<X11Drawable> * const) wctxt;
-   NSObject<X11Drawable> * destination = nil;
-
-   if (drawable.fIsPixmap) {
-      destination = drawable;
-   } else {
-      NSObject<X11Window> * const window = (NSObject<X11Window> * const) drawable;
-      if (window.fBackBuffer) {
-         destination = window.fBackBuffer;
-      } else {
-         Warning("CopyPixmapW", "Operation skipped, since destination"
-                               " window is not double buffered");
-         return;
-      }
-   }
-
-   const X11::Rectangle copyArea(0, 0, pixmap.fWidth, pixmap.fHeight);
-   const X11::Point dstPoint(x, y);
-
-   [destination copy : pixmap area : copyArea withMask : nil clipOrigin : X11::Point() toPoint : dstPoint];
+   if (auto &ctxt = GetSelectedDrawable())
+      ctxt->CopyPixmap(pixmapID, x ,y);
 }
 
 //______________________________________________________________________________
@@ -2601,6 +2524,12 @@ Pixmap_t TGCocoa::CreateBitmap(Drawable_t /*wid*/, const char *bitmap, UInt_t wi
 //______________________________________________________________________________
 void TGCocoa::DeletePixmapAux(Pixmap_t pixmapID)
 {
+   auto iter = fWindows.find(pixmapID);
+   if (iter != fWindows.end()) {
+      iter->second->ClearDrawable();
+      fWindows.erase(iter);
+   }
+
    fPimpl->DeleteDrawable(pixmapID);
 }
 
@@ -2609,6 +2538,13 @@ void TGCocoa::DeletePixmap(Pixmap_t pixmapID)
 {
    // Explicitely deletes the pixmap resource "pmap".
    assert(fPimpl->GetDrawable(pixmapID).fIsPixmap == YES && "DeletePixmap, object is not a pixmap");
+
+   auto iter = fWindows.find(pixmapID);
+   if (iter != fWindows.end()) {
+      iter->second->ClearDrawable();
+      fWindows.erase(iter);
+   }
+
    fPimpl->fX11CommandBuffer.AddDeletePixmap(pixmapID);
 }
 

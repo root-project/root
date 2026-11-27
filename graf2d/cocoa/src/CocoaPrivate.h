@@ -32,8 +32,10 @@
 
 @class QuartzWindow;
 
+
 class TGQuartz;
 class TGCocoa;
+class QuartzDrawable;
 
 ///////////////////////////////////////////////
 //                                           //
@@ -47,6 +49,7 @@ namespace MacOSX {
 namespace Details {
 
 class CocoaPrivate {
+   friend class ::QuartzDrawable;
    friend class ::TGCocoa;
    friend class ::TGQuartz;
    friend class X11::CommandBuffer;

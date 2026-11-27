@@ -12,7 +12,6 @@
 #include "TPadPainterBase.h"
 #include "TColor.h"
 
-#include "TVirtualX.h"
 #include "TVirtualPad.h"
 #include "TMathBase.h"
 #include "TError.h"
@@ -185,8 +184,8 @@ void TPadPainterBase::DrawText(Double_t x, Double_t y, const char *text, ETextMo
       ttf.LayoutGlyphs();
       if (ttf.ApplyAlignRotate(px, py, att.GetTextAlign(), fPad->GetPadWidth(), fPad->GetPadHeight()))
          DrawTTFglyphs(px, py, ttf, mode);
-   } else if (fWinContext && gVirtualX) {
-      gVirtualX->DrawTextW(fWinContext, px, py, att.GetTextAngle(), GetTextMagnitude(), text,
+   } else if (fDrawable) {
+      fDrawable->DrawText(px, py, att.GetTextAngle(), GetTextMagnitude(), text,
                            (TVirtualX::ETextMode)mode);
    }
 }
@@ -209,9 +208,9 @@ void TPadPainterBase::DrawText(Double_t x, Double_t y, const wchar_t *text, ETex
       ttf.LayoutGlyphs();
       if (ttf.ApplyAlignRotate(px, py, att.GetTextAlign(), fPad->GetPadWidth(), fPad->GetPadHeight()))
          DrawTTFglyphs(px, py, ttf, mode);
-   } else if (fWinContext && gVirtualX) {
-      gVirtualX->DrawTextW(fWinContext, px, py, att.GetTextAngle(), GetTextMagnitude(), text,
-                           (TVirtualX::ETextMode)mode);
+   } else if (fDrawable) {
+      fDrawable->DrawText(px, py, att.GetTextAngle(), GetTextMagnitude(), text,
+                          (TVirtualX::ETextMode)mode);
    }
 }
 
@@ -233,8 +232,8 @@ void TPadPainterBase::DrawTextNDC(Double_t u, Double_t v, const char *text, ETex
       ttf.LayoutGlyphs();
       if (ttf.ApplyAlignRotate(px, py, att.GetTextAlign(), fPad->GetPadWidth(), fPad->GetPadHeight()))
          DrawTTFglyphs(px, py, ttf, mode);
-   } else if (fWinContext && gVirtualX) {
-      gVirtualX->DrawTextW(fWinContext, px, py, att.GetTextAngle(), GetTextMagnitude(), text,
+   } else if (fDrawable) {
+      fDrawable->DrawText(px, py, att.GetTextAngle(), GetTextMagnitude(), text,
                            (TVirtualX::ETextMode)mode);
    }
 }
@@ -257,8 +256,8 @@ void TPadPainterBase::DrawTextNDC(Double_t u, Double_t v, const wchar_t *text, E
       ttf.LayoutGlyphs();
       if (ttf.ApplyAlignRotate(px, py, att.GetTextAlign(), fPad->GetPadWidth(), fPad->GetPadHeight()))
          DrawTTFglyphs(px, py, ttf, mode);
-   } else if (fWinContext && gVirtualX) {
-      gVirtualX->DrawTextW(fWinContext, px, py, att.GetTextAngle(), GetTextMagnitude(), text,
+   } else if (fDrawable) {
+      fDrawable->DrawText(px, py, att.GetTextAngle(), GetTextMagnitude(), text,
                            (TVirtualX::ETextMode)mode);
    }
 }

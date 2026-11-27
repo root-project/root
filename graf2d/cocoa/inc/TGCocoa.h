@@ -54,7 +54,10 @@ class CocoaPrivate;
 }
 }
 
+class QuartzDrawable;
+
 class TGCocoa : public TVirtualX {
+friend class QuartzDrawable;
 public:
    TGCocoa();
    TGCocoa(const char *name, const char *title);
@@ -102,14 +105,7 @@ public:
    Int_t     AddWindow(ULong_t qwid, UInt_t w, UInt_t h) override; //-"Qt ROOT".
    void      RemoveWindow(ULong_t qwid) override; //-"Qt ROOT".
 
-   //---- Methods used for new graphics -----
-   WinContext_t GetWindowContext(Int_t wid) override;
-   WinContext_t GetSelectedContext();
-   void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
-   EDrawMode GetDrawModeW(WinContext_t wctxt) override;
-   void      ClearWindowW(WinContext_t wctxt) override;
-   void      UpdateWindowW(WinContext_t wctxt, Int_t mode) override;
-   void      CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos) override;
+   std::shared_ptr<XDrawable> GetDrawable(Int_t wid) override;
 
    //-Functions used by GUI.
    Window_t  CreateWindow(Window_t parent, Int_t x, Int_t y,
@@ -449,10 +445,22 @@ protected:
    Drawable_t fSelectedDrawable;
 
    std::unique_ptr<ROOT::MacOSX::Details::CocoaPrivate> fPimpl; ///<!
+   std::unordered_map<Int_t,std::shared_ptr<QuartzDrawable>> fWindows; ///<! map of windows, parallel to fPimpl
+   std::shared_ptr<QuartzDrawable> &GetSelectedDrawable();
+
    Int_t fCocoaDraw;
 
    EDrawMode fDrawMode;
    bool fDirectDraw;//Primitive in canvas tries to draw into window directly.
+
+   //Lines with AA can be quite different
+   //from what we always had with X11.
+   //Now this is a switch in our configuration file (system.rootrc),
+   //so it can be disabled. This flag affects _only_ pad's graphics,
+   //GUI graphics is special and different. AA for fill area has a special
+   // switch because it is better to have it off by default.
+   bool fUseAA = true;
+   bool fUseFAAA = false;
 
 private:
    bool MakeProcessForeground();

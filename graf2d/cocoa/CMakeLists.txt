@@ -30,6 +30,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(GCocoa
     src/MenuLoader.mm
     src/QuartzPixmap.mm
     src/QuartzWindow.mm
+    src/QuartzDrawable.mm
     src/ROOTApplicationDelegate.mm
     src/ROOTOpenGLView.mm
     src/TGCocoa.mm
@@ -72,6 +73,7 @@ PRIVATE
     inc/XLFDParser.h
     inc/LinkDef.h
     src/CocoaPrivate.h
+    src/QuartzDrawable.h
 )
 
 target_include_directories(GCocoa PRIVATE ${CMAKE_SOURCE_DIR}/graf3d/gl/inc)

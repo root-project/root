@@ -2216,30 +2216,6 @@ void print_mask_info(ULong_t mask)
 }
 
 //______________________________________________________________________________
-- (TAttLine *) attLine
-{
-   return &fAttLine;
-}
-
-//______________________________________________________________________________
-- (TAttFill *) attFill
-{
-   return &fAttFill;
-}
-
-//______________________________________________________________________________
-- (TAttMarker *) attMarker
-{
-   return &fAttMarker;
-}
-
-//______________________________________________________________________________
-- (TAttText *) attText
-{
-   return &fAttText;
-}
-
-//______________________________________________________________________________
 - (void) setDrawMode : (TVirtualX::EDrawMode) newMode
 {
    [self.fQuartzWindow setDrawMode:newMode];

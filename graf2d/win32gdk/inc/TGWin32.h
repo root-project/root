@@ -52,7 +52,7 @@ typedef struct _GdkRectangle   GdkRectangle;
 
 typedef unsigned long KeySym;
 
-struct XWindow_t;
+class Win32Drawable;
 
 struct XColor_t {
    GdkColor color;
@@ -63,24 +63,20 @@ struct XColor_t {
 class TExMap;
 
 class TGWin32 : public TVirtualX {
+friend class Win32Drawable;
 
 private:
-   GdkImage *GetBackground(WinContext_t wctxt, Int_t x, Int_t y, UInt_t w, UInt_t h);
-
-   template<typename CharType>
-   void      DrawTextHelper(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle,
-                            const CharType *text, ETextMode mode);
-
-   std::unordered_map<Int_t,std::unique_ptr<XWindow_t>> fWindows; // map of windows
+   std::unordered_map<Int_t,std::shared_ptr<Win32Drawable>> fWindows; // map of windows
    TExMap          *fColors;                ///< Hash list of colors
    GdkCursor       *fCursors[kNumCursors];  ///< List of cursors
 
    Int_t AddWindowHandle();
+   void  RemoveWindowHandle(Win32Drawable *ctxt);
    void  PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                   Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                   UChar_t *image, Drawable_t id);
    void  RemovePixmap(GdkDrawable *pix);
-   void  SetColor(XWindow_t *ctxt, GdkGC *gc, Int_t ci);
+   void  SetColor(Win32Drawable *ctxt, GdkGC *gc, Int_t ci);
    void  SetInput(Int_t inp);
 
    //---- Private methods used for GUI ----
@@ -201,32 +197,7 @@ public:
    void      GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess) override;
 
    //---- Methods used for new graphics -----
-   WinContext_t GetWindowContext(Int_t wid) override;
-   void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
-   void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
-   void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
-   void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
-   void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
-   EDrawMode GetDrawModeW(WinContext_t wctxt) override;
-   void      ClearWindowW(WinContext_t wctxt) override;
-   void      UpdateWindowW(WinContext_t wctxt, Int_t mode) override;
-   void      SetOpacityW(WinContext_t wctxt, Int_t percent) override;
-   void      CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos) override;
-   Int_t     WriteGIFW(WinContext_t wctxt, const char *name) override;
-
-   void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
-   void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
-   void      DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                       const char *text, ETextMode mode) override;
-   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn,
-                       const wchar_t *text, ETextMode mode) override;
-   void      DrawTTFglyphsW(WinContext_t wctxt, Int_t x1, Int_t y1, TTFhandle &ttf, ETextMode mode) override;
-
-
+   std::shared_ptr<XDrawable> GetDrawable(Int_t wid) override;
 
    //---- Methods used for GUI -----
    void         GetWindowAttributes(Window_t id, WindowAttributes_t &attr) override;

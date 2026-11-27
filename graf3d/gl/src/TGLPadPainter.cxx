@@ -64,7 +64,6 @@ TGLPadPainter::TGLPadPainter()
                     fLocked(kTRUE)
 {
    fVp[0] = fVp[1] = fVp[2] = fVp[3] = 0;
-   fWinContext = 0;
 }
 
 
@@ -74,7 +73,8 @@ TGLPadPainter::TGLPadPainter()
 void TGLPadPainter::SetOpacity(Int_t percent)
 {
    // does not work this way
-   gVirtualX->SetOpacityW(fWinContext, percent);
+   if (fDrawable)
+      fDrawable->SetOpacity(percent);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -92,8 +92,8 @@ void TGLPadPainter::OnPad(TVirtualPad *pad)
 {
    // GL painter does not use proper id for sub-pads (see CreateDrawable)
       // so one always use canvas ID to execute TVirtualX-specific commands
-   if (!fWinContext)
-      fWinContext = gVirtualX->GetWindowContext(pad->GetCanvasID());
+   if (!fDrawable)
+      fDrawable = gVirtualX->GetDrawable(pad->GetCanvasID());
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -106,8 +106,8 @@ void TGLPadPainter::SetAttFill(const TAttFill &att)
    fGlFillAtt = GetAttFillInternal(kTRUE);
 
    // TODO: dismiss in the future, gVirtualX attributes not needed in GL
-   if (fWinContext && gVirtualX)
-      gVirtualX->SetAttFill(fWinContext, att);
+   if (fDrawable)
+      fDrawable->SetAttFill(att);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -118,8 +118,8 @@ void TGLPadPainter::SetAttLine(const TAttLine &att)
    TPadPainterBase::SetAttLine(att);
 
    // TODO: dismiss in the future, gVirtualX attributes not needed in GL
-   if (fWinContext && gVirtualX)
-      gVirtualX->SetAttLine(fWinContext, att);
+   if (fDrawable)
+      fDrawable->SetAttLine(att);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -130,8 +130,8 @@ void TGLPadPainter::SetAttMarker(const TAttMarker &att)
    TPadPainterBase::SetAttMarker(att);
 
    // TODO: dismiss in the future, gVirtualX attributes not needed in GL
-   if (fWinContext && gVirtualX)
-      gVirtualX->SetAttMarker(fWinContext, att);
+   if (fDrawable)
+      fDrawable->SetAttMarker(att);
 }
 
 /*
@@ -167,9 +167,9 @@ void TGLPadPainter::ClearDrawable()
 
 void TGLPadPainter::ClearWindow(Int_t device)
 {
-   auto ctxt = gVirtualX->GetWindowContext(device);
-   if (ctxt)
-      gVirtualX->ClearWindowW(ctxt);
+   auto drawable = gVirtualX->GetDrawable(device);
+   if (drawable)
+      drawable->ClearWindow();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -193,7 +193,7 @@ Bool_t TGLPadPainter::IsCocoa() const
 
 void TGLPadPainter::CopyDrawable(Int_t /* device */, Int_t /* px */, Int_t /* py */)
 {
-   // gVirtualX->CopyPixmapW(fWinContext, device, px, py);
+   // fDrawable->CopyPixmap(device, px, py);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -203,7 +203,7 @@ void TGLPadPainter::DestroyDrawable(Int_t /* device */)
 {
    // gVirtualX->SelectWindow(device);
    // gVirtualX->ClosePixmap();
-   fWinContext = 0;
+   fDrawable = nullptr;
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -215,8 +215,8 @@ void TGLPadPainter::DestroyDrawable(Int_t /* device */)
 void TGLPadPainter::SelectDrawable(Int_t /* device */)
 {
    auto pad = dynamic_cast<TPad *>(gPad);
-   if (!fWinContext && pad)
-      fWinContext = gVirtualX->GetWindowContext(pad->GetCanvasID());
+   if (!fDrawable && pad)
+      fDrawable = gVirtualX->GetDrawable(pad->GetCanvasID());
 
    if (fLocked)
       return;
@@ -256,8 +256,8 @@ void TGLPadPainter::SelectDrawable(Int_t /* device */)
 
 void TGLPadPainter::UpdateDrawable(Int_t mode)
 {
-   if (fWinContext)
-      gVirtualX->UpdateWindowW(fWinContext, mode);
+   if (fDrawable)
+      fDrawable->UpdateWindow(mode);
 }
 
 
@@ -266,11 +266,11 @@ void TGLPadPainter::UpdateDrawable(Int_t mode)
 
 void TGLPadPainter::SetDrawMode(Int_t device, Int_t mode)
 {
-   auto ctxt = fWinContext;
+   auto drawable = fDrawable;
    if (device)
-      ctxt = gVirtualX->GetWindowContext(device);
-   if (ctxt)
-      gVirtualX->SetDrawModeW(ctxt, (TVirtualX::EDrawMode) mode);
+      drawable = gVirtualX->GetDrawable(device);
+   if (drawable)
+      drawable->SetDrawMode((TVirtualX::EDrawMode) mode);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -366,8 +366,7 @@ void TGLPadPainter::DrawLine(Double_t x1, Double_t y1, Double_t x2, Double_t y2)
       //gVirtualX.
       // TODO: only here set line attributes to virtual x
       if (IsInvertMode())
-         gVirtualX->DrawLineW(fWinContext,
-                             gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
+         fDrawable->DrawLine(gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
                              gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2));
 
       return;
@@ -406,9 +405,8 @@ void TGLPadPainter::DrawLineNDC(Double_t u1, Double_t v1, Double_t u2, Double_t 
    if (fLocked) {
       // this code used when crosshair cursor is drawn or interactive objects move
       if (IsInvertMode())
-         gVirtualX->DrawLineW(fWinContext,
-                              gPad->UtoAbsPixel(u1), gPad->VtoAbsPixel(v1),
-                              gPad->UtoAbsPixel(u2), gPad->VtoAbsPixel(v2));
+         fDrawable->DrawLine(gPad->UtoAbsPixel(u1), gPad->VtoAbsPixel(v1),
+                             gPad->UtoAbsPixel(u2), gPad->VtoAbsPixel(v2));
       return;
    }
 
@@ -435,10 +433,9 @@ void TGLPadPainter::DrawBox(Double_t x1, Double_t y1, Double_t x2, Double_t y2, 
       //gVirtualX.
       // TODO: only here set line attributes to virtual x
       if (IsInvertMode())
-         gVirtualX->DrawBoxW(fWinContext,
-                             gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
-                             gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2),
-                             (TVirtualX::EBoxMode) mode);
+         fDrawable->DrawBox(gPad->XtoAbsPixel(x1), gPad->YtoAbsPixel(y1),
+                            gPad->XtoAbsPixel(x2), gPad->YtoAbsPixel(y2),
+                            (TVirtualX::EBoxMode) mode);
       return;
    }
 
@@ -538,7 +535,7 @@ void TGLPadPainter::DrawPolyLineHelper(Int_t n, const ValueType *x, const ValueT
             xy[i].fX = (SCoord_t) gPad->XtoAbsPixel(x[i]);
             xy[i].fY = (SCoord_t) gPad->YtoAbsPixel(y[i]);
          }
-         gVirtualX->DrawPolyLineW(fWinContext, xy.size(), xy.data());
+         fDrawable->DrawPolyLine(xy.size(), xy.data());
       }
       return;
    }
@@ -615,7 +612,7 @@ void TGLPadPainter::DrawPolyLineNDC(Int_t n, const Double_t *u, const Double_t *
 
 Bool_t TGLPadPainter::IsInvertMode()
 {
-   return fWinContext && (gVirtualX->GetDrawModeW(fWinContext) == TVirtualX::kInvert);
+   return fDrawable && (fDrawable->GetDrawMode() == TVirtualX::kInvert);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -632,7 +629,7 @@ void TGLPadPainter::DrawPolyMarkerHelper(Int_t n, const ValueType *x, const Valu
             poly[i].fX = gPad->XtoAbsPixel(x[i]);
             poly[i].fY = gPad->YtoAbsPixel(y[i]);
          }
-         gVirtualX->DrawPolyMarkerW(fWinContext, poly.size(), poly.data());
+         fDrawable->DrawPolyMarker(poly.size(), poly.data());
       }
       return;
    }

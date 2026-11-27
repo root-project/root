@@ -42,11 +42,6 @@
 
    CGFloat       fScaleFactor;
 
-   TAttLine   fAttLine;   ///< current line attributes
-   TAttFill   fAttFill;   ///< current fill attributes
-   TAttMarker fAttMarker; ///< current marker attribute
-   TAttText   fAttText;   ///< current text attribute
-
    BOOL fDirectDraw;
 }
 
@@ -70,11 +65,6 @@
 - (unsigned) fHeight;
 
 //Graphical attributes
-@property (nonatomic, readonly) TAttLine *attLine;
-@property (nonatomic, readonly) TAttFill *attFill;
-@property (nonatomic, readonly) TAttMarker *attMarker;
-@property (nonatomic, readonly) TAttText *attText;
-
 - (void) setDirectDraw : (BOOL) mode;
 - (BOOL) isDirectDraw;
 

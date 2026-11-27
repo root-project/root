@@ -58,15 +58,16 @@ struct XColor_t {
 
 class TExMap;
 
-struct XWindow_t;
+class X11Drawable;
+class X11DrawableTTF;
 
 
 class TGX11 : public TVirtualX {
 
-friend struct XWindow_t;
+friend class X11Drawable;
+friend class X11DrawableTTF;
 
 private:
-   std::unordered_map<Int_t,std::unique_ptr<XWindow_t>> fWindows; // map of windows
    TExMap    *fColors;                ///< Hash list of colors
    Cursor     fCursors[kNumCursors];  ///< List of cursors
    void      *fXEvent;                ///< Current native (X11) event
@@ -77,7 +78,10 @@ private:
    void   PutImage(Int_t offset, Int_t itran, Int_t x0, Int_t y0, Int_t nx,
                    Int_t ny, Int_t xmin, Int_t ymin, Int_t xmax, Int_t ymax,
                    UChar_t *image, Drawable_t id);
-   void   SetColor(XWindow_t *ctxt, void *gc, Int_t ci);
+
+   void   SetColor(X11Drawable *ctxt, void *gc, Int_t ci);
+   void   SetCurrentFont(X11Drawable *ctxt);
+   void   RemoveWindowHandle(X11Drawable *ctxt);
    void   SetInput(Int_t inp);
 
    //---- Private methods used for GUI ----
@@ -97,6 +101,7 @@ private:
    void MapKeySym(UInt_t &keysym, UInt_t &xkeysym, Bool_t tox = kTRUE);
 
 protected:
+   std::unordered_map<Int_t,std::shared_ptr<X11Drawable>> fWindows; // map of windows
    void      *fDisplay;            ///< Pointer to display
    RVisual   *fVisual;             ///< Pointer to visual used by all windows
    Drawable   fRootWin;            ///< Root window used as parent of all windows
@@ -120,15 +125,13 @@ protected:
 
    Bool_t     AllocColor(Colormap cmap, RXColor *color);
    void       QueryColors(Colormap cmap, RXColor *colors, Int_t ncolors);
-   Window_t  GetWindow(WinContext_t wctxt) const;
-   void      *GetGCW(WinContext_t wctxt, Int_t which) const;
-   const TAttText& GetTextAttW(WinContext_t wctxt) const;
 
    XColor_t  &GetColor(Int_t cid);
 
    //---- Methods used for old graphics -----
    void      *GetGC(Int_t which) const;
 
+   virtual void CreateWindowHandle(Int_t id);
 
    TGX11(TGX11 &&org);
    TGX11(const TGX11 &org) = delete;
@@ -220,27 +223,7 @@ public:
    void      GetTextExtent(UInt_t &w, UInt_t &h, wchar_t *mess) override;
 
    //---- Methods used for new graphics -----
-   WinContext_t GetWindowContext(Int_t wid) override;
-   void      SetAttFill(WinContext_t wctxt, const TAttFill &att) override;
-   void      SetAttLine(WinContext_t wctxt, const TAttLine &att) override;
-   void      SetAttMarker(WinContext_t wctxt, const TAttMarker &att) override;
-   void      SetAttText(WinContext_t wctxt, const TAttText &att) override;
-   void      SetDrawModeW(WinContext_t wctxt, EDrawMode mode) override;
-   EDrawMode GetDrawModeW(WinContext_t wctxt) override;
-   void      ClearWindowW(WinContext_t wctxt) override;
-   void      UpdateWindowW(WinContext_t wctxt, Int_t mode) override;
-   void      SetOpacityW(WinContext_t wctxt, Int_t percent) override;
-   void      CopyPixmapW(WinContext_t wctxt, Int_t wid, Int_t xpos, Int_t ypos) override;
-   Int_t     WriteGIFW(WinContext_t wctxt, const char *name) override;
-
-   void      DrawBoxW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2, EBoxMode mode) override;
-   void      DrawFillAreaW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawLineW(WinContext_t wctxt, Int_t x1, Int_t y1, Int_t x2, Int_t y2) override;
-   void      DrawPolyLineW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawLinesSegmentsW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawPolyMarkerW(WinContext_t wctxt, Int_t n, TPoint *xy) override;
-   void      DrawTextW(WinContext_t wctxt, Int_t x, Int_t y, Float_t angle, Float_t mgn, const char *text, ETextMode mode) override;
-   void      DrawTextW(WinContext_t, Int_t, Int_t, Float_t, Float_t, const wchar_t *, ETextMode) override {}
+   std::shared_ptr<XDrawable> GetDrawable(Int_t wid) override;
 
    Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const char *mess) override;
    Bool_t    GetTextExtentA(Font_t font, Double_t size, UInt_t &w, UInt_t &h, const wchar_t *mess) override;

@@ -213,11 +213,6 @@ class Command;
    unsigned long fBackgroundPixel;
    BOOL fOverrideRedirect;
 
-   TAttLine   fAttLine;   ///< current line attributes
-   TAttFill   fAttFill;   ///< current fill attributes
-   TAttMarker fAttMarker; ///< current marker attribute
-   TAttText   fAttText;   ///< current text attribute
-
    BOOL fDirectDraw;
 
    BOOL fHasFocus;
@@ -256,11 +251,6 @@ class Command;
 - (CGFloat) fScaleFactor;
 
 //Graphical attributes
-@property (nonatomic, readonly) TAttLine *attLine;
-@property (nonatomic, readonly) TAttFill *attFill;
-@property (nonatomic, readonly) TAttMarker *attMarker;
-@property (nonatomic, readonly) TAttText *attText;
-
 - (void) setDrawMode : (TVirtualX::EDrawMode) newMode;
 - (TVirtualX::EDrawMode) getDrawMode;
 

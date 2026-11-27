@@ -42,3 +42,4 @@ PRIVATE
 )
 
 target_include_directories(GX11TTF PRIVATE ${X11_INCLUDE_DIR})
+target_include_directories(GX11TTF PRIVATE ${CMAKE_SOURCE_DIR}/graf2d/x11/src)
