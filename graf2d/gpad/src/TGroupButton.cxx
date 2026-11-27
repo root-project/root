@@ -53,7 +53,7 @@ TGroupButton::TGroupButton(): TButton()
 TGroupButton::TGroupButton(const char *groupname, const char *title, const char *method, Double_t x1, Double_t y1,Double_t x2, Double_t  y2)
            :TButton(title,method,x1,y1,x2,y2)
 {
-   SetName((char*)groupname);
+   SetName(groupname);
    SetFraming();
 }
 
@@ -150,22 +150,17 @@ void TGroupButton::ExecuteAction()
 
 void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 {
-   if (fMother->IsEditable()) {
+   if (ROOT::Detail::HasBeenDeleted(this))
+      return;
+
+   if (IsEditable()) {
       TPad::ExecuteEvent(event,px,py);
       return;
    }
 
-   TCanvas *c = gPad->GetCanvas();
-   if (!c) return;
-   TIter next(c->GetListOfPrimitives());
-   TObject *obj;
-   TGroupButton *button;
-   TPad *pad;
-   TDialogCanvas *canvas;
+   Bool_t is_apply = !strcasecmp(GetName(),"APPLY");
 
    switch (event) {
-
-   case kButton1Down:
 
    case kMouseMotion:
 
@@ -175,42 +170,46 @@ void TGroupButton::ExecuteEvent(Int_t event, Int_t px, Int_t py)
 
       break;
 
-   case kButton1Up:
-      //Clicked on APPLY button?
-      if (!strcasecmp(GetName(),"APPLY")) {
-         canvas = (TDialogCanvas*)GetMother();
+   case kButton1Down:
+      if (is_apply) {
+         SetBorderMode(-1);
+         Modified();
+         Update();
+      }
+      break;
+
+   case kButton1Up: {
+      if (is_apply) {
          if (!strcasecmp(GetTitle(),"CLOSE")) {
-            canvas->Close();
+            GetCanvas()->Close();
             return;
          }
-         pad = canvas->GetRefPad();
-         if (pad) pad->FeedbackMode(kFALSE);
+         auto canvas = static_cast<TDialogCanvas *>(GetCanvas());
          canvas->Apply(GetTitle());   //just in case the apply button executes some code
-         if (pad) {
+         if (auto pad = canvas->GetRefPad()) {
             pad->Modified(kTRUE);
             pad->Update();
          }
+         SetBorderMode(1);
+         Modified();
+         Update();
          break;
       }
-      //Unset other buttons with same name
-      while ((obj = next())) {
-         if (obj == this) continue;
-         if (obj->InheritsFrom(TGroupButton::Class())) {
-            button = (TGroupButton*)obj;
-            if (!strcmp(button->GetName(),GetName())) {
-               if (button->GetBorderMode() < 0) {
-                  button->SetBorderMode(1);
-                  button->Modified();
-               }
+
+      TIter next(GetCanvas()->GetListOfPrimitives());
+      //Set only this button on
+      while (auto obj = next()) {
+         if (auto btn = dynamic_cast<TGroupButton *>(obj)) {
+            if (!strcmp(btn->GetName(), GetName())) {
+               btn->SetBorderMode(btn == this ? -1 : 1);
+               btn->Modified();
             }
          }
       }
-      //Set button on
-      SetBorderMode(-1);
-      Modified();
-      c->Modified();
-      gPad->Update();
+      GetCanvas()->Modified();
+      GetCanvas()->Update();
       break;
+   }
    }
 }
 
@@ -237,6 +236,12 @@ void TGroupButton::SavePrimitive(std::ostream &out, Option_t * /*= ""*/)
 
    if (GetBorderMode() != 1)
       out << "   grbutton->SetBorderMode(" << GetBorderMode() << ");\n";
+
+   if (GetFraming())
+      out << "   grbutton->SetFraming();\n";
+   if (IsEditable())
+      out << "   grbutton->SetEditable(kTRUE);\n";
+
 
    out << "   grbutton->Draw();\n";
 

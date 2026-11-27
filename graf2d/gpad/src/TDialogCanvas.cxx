@@ -64,25 +64,25 @@ TDialogCanvas::~TDialogCanvas()
 
 void TDialogCanvas::Apply(const char *action)
 {
-   if (!fRefPad) return;
+   if (!fRefPad)
+      return;
    SetCursor(kWatch);
 
    TIter next(fPrimitives);
    TObject *refobj = fRefObject;
-   TObject *obj;
-   TGroupButton *button;
-   if (!strcmp(action,"gStyle")) fRefObject = gStyle;
+   if (!strcmp(action,"gStyle"))
+      fRefObject = gStyle;
 
-   while ((obj = next())) {
-      if (obj->InheritsFrom(TGroupButton::Class())) {
-         button = (TGroupButton*)obj;
-         if (button->GetBorderMode() < 0) button->ExecuteAction();
-      }
+   while (auto obj = next()) {
+      if (auto button = dynamic_cast<TGroupButton *>(obj))
+         if (button->GetBorderMode() < 0)
+            button->ExecuteAction();
    }
    fRefObject = refobj;
-   if (!gROOT->GetSelectedPad()) return;
-   gROOT->GetSelectedPad()->Modified();
-   gROOT->GetSelectedPad()->Update();
+   if (gROOT->GetSelectedPad()) {
+      gROOT->GetSelectedPad()->Modified();
+      gROOT->GetSelectedPad()->Update();
+   }
 }
 
 
@@ -91,23 +91,23 @@ void TDialogCanvas::Apply(const char *action)
 
 void TDialogCanvas::BuildStandardButtons()
 {
-   TGroupButton *apply = new TGroupButton("APPLY","Apply","",.05,.01,.3,.09);
-   apply->SetTextSize(0.55);
-   apply->SetBorderSize(3);
-   apply->SetFillColor(44);
-   apply->Draw();
+   auto btn1 = new TGroupButton("APPLY","Apply","",.05,.01,.3,.09);
+   btn1->SetTextSize(0.55);
+   btn1->SetBorderSize(3);
+   btn1->SetFillColor(44);
+   Add(btn1);
 
-   apply = new TGroupButton("APPLY","gStyle","",.375,.01,.625,.09);
-   apply->SetTextSize(0.55);
-   apply->SetBorderSize(3);
-   apply->SetFillColor(44);
-   apply->Draw();
+   auto btn2 = new TGroupButton("APPLY","gStyle","",.375,.01,.625,.09);
+   btn2->SetTextSize(0.55);
+   btn2->SetBorderSize(3);
+   btn2->SetFillColor(44);
+   Add(btn2);
 
-   apply = new TGroupButton("APPLY","Close","",.70,.01,.95,.09);
-   apply->SetTextSize(0.55);
-   apply->SetBorderSize(3);
-   apply->SetFillColor(44);
-   apply->Draw();
+   auto btn3 = new TGroupButton("APPLY","Close","",.70,.01,.95,.09);
+   btn3->SetTextSize(0.55);
+   btn3->SetBorderSize(3);
+   btn3->SetFillColor(44);
+   Add(btn3);
 }
 
 
