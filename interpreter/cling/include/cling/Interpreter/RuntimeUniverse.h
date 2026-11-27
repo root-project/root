@@ -192,7 +192,33 @@ extern "C" {
   void* cling_runtime_internal_throwIfInvalidPointer(void* Sema,
                                                     void* Expr,
                                                     const void* Arg);
+
+  // clang-format off
+  ///\brief Pages recently found valid by
+  /// cling_runtime_internal_throwIfInvalidPointer: a direct-mapped table of
+  /// page base addresses, indexed by the page number. Empty slots hold an
+  /// address that is not page aligned and never matches.
+  CLING_LIB_EXPORT
+  extern const void* cling_runtime_internal_validPages[64];
 }
+
+#ifndef _MSC_VER
+///\brief Inline fast path of the pointer check that cling injects before
+/// dereferences (see NullDerefProtectionTransformer). A pointer into a page
+/// from the table is valid; everything else, null included, takes the full
+/// check, which validates the page and records it. Pages are taken as 4 KiB,
+/// the smallest page size, so this is correct for any page size.
+inline __attribute__((always_inline)) void*
+cling_runtime_internal_checkPointer(void* Sema, void* Expr, const void* Arg) {
+  const __UINTPTR_TYPE__ Page = (__UINTPTR_TYPE__)Arg & ~(__UINTPTR_TYPE__)4095;
+  const void* Slot = __atomic_load_n(
+      &cling_runtime_internal_validPages[(Page >> 12) & 63], __ATOMIC_RELAXED);
+  if (__builtin_expect((__UINTPTR_TYPE__)Slot == Page, 1))
+    return const_cast<void*>(Arg);
+  return cling_runtime_internal_throwIfInvalidPointer(Sema, Expr, Arg);
+}
+#endif
+  // clang-format on
 #endif // __cplusplus
 
 #endif // CLING_RUNTIME_UNIVERSE_H

@@ -213,14 +213,23 @@ class PointerCheckInjector : public RecursiveASTVisitor<PointerCheckInjector> {
     void FindAndCacheRuntimeLookupResult() {
       assert(!m_clingthrowIfInvalidPointerCache && "Called multiple times!?");
 
-      DeclarationName Name
-        = &m_Context.Idents.get("cling_runtime_internal_throwIfInvalidPointer");
-      SourceLocation noLoc;
-      m_clingthrowIfInvalidPointerCache = new LookupResult(m_Sema, Name, noLoc,
-                                        Sema::LookupOrdinaryName,
-                                        RedeclarationKind::ForVisibleRedeclaration);
-      m_Sema.LookupQualifiedName(*m_clingthrowIfInvalidPointerCache,
-                                 m_Context.getTranslationUnitDecl());
+      // Prefer the inline fast path from RuntimeUniverse.h; fall back to the
+      // full check if it is not declared (Windows, or a Cling_Runtime module
+      // built from an older RuntimeUniverse.h, which ROOT does not revalidate).
+      for (const char* FName :
+           {"cling_runtime_internal_checkPointer",
+            "cling_runtime_internal_throwIfInvalidPointer"}) {
+        delete m_clingthrowIfInvalidPointerCache;
+        DeclarationName Name = &m_Context.Idents.get(FName);
+        SourceLocation noLoc;
+        m_clingthrowIfInvalidPointerCache =
+            new LookupResult(m_Sema, Name, noLoc, Sema::LookupOrdinaryName,
+                             RedeclarationKind::ForVisibleRedeclaration);
+        m_Sema.LookupQualifiedName(*m_clingthrowIfInvalidPointerCache,
+                                   m_Context.getTranslationUnitDecl());
+        if (!m_clingthrowIfInvalidPointerCache->empty())
+          break;
+      }
       assert(!m_clingthrowIfInvalidPointerCache->empty() &&
               "Lookup of cling_runtime_internal_throwIfInvalidPointer failed!");
     }
