@@ -198,7 +198,7 @@ ROOT_ADD_TEST(test-stresshistogram-interpreted COMMAND ${root_exe} -b -q ${CMAKE
 
 #--stressGUI---------------------------------------------------------------------------------------
 if(asimage)
-  ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageUtils ASImageGui)
+  ROOT_EXECUTABLE(stressGUI stressGUI.cxx LIBRARIES Gui Recorder GuiHtml ASImageUtils ASImageGui Gpad Hist)
 
   find_program(XVFB_RUN_EXECUTABLE NAMES xvfb-run)
 
