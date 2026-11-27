@@ -20,15 +20,15 @@ class TestTH1Plotting:
         assert isinstance(hist_setup, PlottableHistogram)
 
     def test_histogram_values(self, hist_setup):
-        values = np.array(
-            [hist_setup.GetBinContent(*bin_indices) for bin_indices in _iterate_bins(hist_setup)]
-        ).reshape(_shape(hist_setup, flow=False))
+        values = np.array([
+            hist_setup.GetBinContent(*bin_indices) for bin_indices in _iterate_bins(hist_setup)
+        ]).reshape(_shape(hist_setup, flow=False))
         assert np.array_equal(hist_setup.values(), values)
 
     def test_histogram_values_flow(self, hist_setup):
-        values_flow = np.array(
-            [hist_setup.GetBinContent(*bin_indices) for bin_indices in _iterate_bins(hist_setup, flow=True)]
-        ).reshape(_shape(hist_setup, flow=True))
+        values_flow = np.array([
+            hist_setup.GetBinContent(*bin_indices) for bin_indices in _iterate_bins(hist_setup, flow=True)
+        ]).reshape(_shape(hist_setup, flow=True))
         assert np.array_equal(hist_setup.values(flow=True), values_flow)
 
     def test_histogram_values_writable(self, hist_setup):
