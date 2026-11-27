@@ -195,6 +195,49 @@ ROOT::Detail::TBranchProxy::TBranchProxy(TBranchProxyDirector *boss, const char 
 }
 
 ////////////////////////////////////////////////////////////////////////////////
+/// Copy the branch proxy with an independent collection proxy and notification link.
+
+ROOT::Detail::TBranchProxy::TBranchProxy(const TBranchProxy &other)
+   : fDirector(other.fDirector),
+     fInitialized(other.fInitialized),
+     fIsMember(other.fIsMember),
+     fIsClone(other.fIsClone),
+     fIsaPointer(other.fIsaPointer),
+     fHasLeafCount(other.fHasLeafCount),
+     fSuppressMissingBranchError(other.fSuppressMissingBranchError),
+     fBranchName(other.fBranchName),
+     fParent(other.fParent),
+     fDataMember(other.fDataMember),
+     fClassName(other.fClassName),
+     fClass(other.fClass),
+     fElement(other.fElement),
+     fMemberOffset(other.fMemberOffset),
+     fOffset(other.fOffset),
+     fArrayLength(other.fArrayLength),
+     fBranch(other.fBranch),
+     fBranchCount(nullptr),
+     fNotify(this),
+     fRead(-1),
+     fWhere(other.fWhere),
+     fCollection(other.fCollection ? other.fCollection->Generate() : nullptr),
+     fValueSize(other.fValueSize)
+{
+   if (fHasLeafCount)
+      fLeafCount = other.fLeafCount;
+   else
+      fBranchCount = other.fBranchCount;
+
+   // Generate() does not copy the bound collection. Invalidate fRead so that
+   // the first read binds the new proxy, even when reading the same entry.
+   if (fDirector) {
+      fDirector->Attach(this);
+      if (fInitialized && fDirector->GetTree())
+         fNotify.PrependLink(*fDirector->GetTree());
+   }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
 /// Typical Destructor
 
 ROOT::Detail::TBranchProxy::~TBranchProxy()
@@ -220,8 +263,7 @@ void ROOT::Detail::TBranchProxy::Reset()
    fIsClone = false;
    fInitialized = false;
    fHasLeafCount = false;
-   delete fCollection;
-   fCollection = nullptr;
+   fCollection.reset();
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -277,8 +319,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
       } else if (pcl->GetCollectionProxy()) {
          // We always skip the collections.
 
-         if (fCollection) delete fCollection;
-         fCollection = pcl->GetCollectionProxy()->Generate();
+         fCollection.reset(pcl->GetCollectionProxy()->Generate());
          pcl = fCollection->GetValueClass();
          if (pcl == nullptr) {
             // coverity[dereference] fparent is checked jus a bit earlier and can not be null here
@@ -414,8 +455,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
                   if (!fIsMember) fIsClone = true;
                   fClass = clones->GetClass();
                } else if (fClass && fClass->GetCollectionProxy()) {
-                  delete fCollection;
-                  fCollection = fClass->GetCollectionProxy()->Generate();
+                  fCollection.reset(fClass->GetCollectionProxy()->Generate());
                   fClass = fCollection->GetValueClass();
                }
 
@@ -437,7 +477,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
          } else if (be->GetType()==4) {
             // top level TClonesArray
 
-            fCollection = be->GetCollectionProxy()->Generate();
+            fCollection.reset(be->GetCollectionProxy()->Generate());
             fIsaPointer = false;
             fWhere = be->GetObject();
 
@@ -449,7 +489,7 @@ bool ROOT::Detail::TBranchProxy::Setup()
 
          } else if (be->GetType()==41) {
 
-            fCollection = be->GetCollectionProxy()->Generate();
+            fCollection.reset(be->GetCollectionProxy()->Generate());
             fWhere   = be->GetObject();
             fOffset += be->GetOffset();
 
