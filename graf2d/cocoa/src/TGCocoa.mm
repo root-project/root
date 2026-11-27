@@ -693,9 +693,18 @@ std::shared_ptr<TVirtualX::XDrawable> TGCocoa::GetDrawable(Int_t wid)
 {
    if (wid <= 0)
       return nullptr;
+
    auto iter = fWindows.find(wid);
    if (iter == fWindows.end())
       return nullptr;
+
+   // add extra check if real drawable instance exists
+   if (!fPimpl->HasDrawable(wid)) {
+      iter->second->ClearDrawable();
+      fWindows.erase(iter);
+      return nullptr;
+   }
+
    return iter->second;
 }
 
