@@ -600,6 +600,9 @@ jobs:
                     --overrides       ${GLOBAL_OVERRIDES} ${OVERRIDES}
               "
 
+      - name: sccache stats
+        run: sccache --show-stats || true
+
       - name: Upload test results
         if:   ${{ !cancelled() }}
         uses: actions/upload-artifact@v6
