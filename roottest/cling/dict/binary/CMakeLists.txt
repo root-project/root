@@ -7,16 +7,13 @@ ROOTTEST_GENERATE_EXECUTABLE(clingDictInBinary
                              ${CMAKE_CURRENT_BINARY_DIR}/libsubdir/bindict_dict.cxx
                              LIBRARIES Core
                              FIXTURES_SETUP clingDictInBinary-createExe)
+# Next to the dictionary payload
+set_target_properties(clingDictInBinary PROPERTIES
+                      RUNTIME_OUTPUT_DIRECTORY $<1:${CMAKE_CURRENT_BINARY_DIR}/libsubdir>)
 
 add_custom_command(OUTPUT libsubdir/bindict_dict.cxx
                    WORKING_DIRECTORY ${CMAKE_CURRENT_BINARY_DIR}/libsubdir
                    COMMAND ${ROOT_genreflex_CMD} ${CMAKE_CURRENT_SOURCE_DIR}/classes.h -s ${CMAKE_CURRENT_SOURCE_DIR}/selection.xml -o bindict_dict.cxx
-                   )
-
-add_custom_command(TARGET clingDictInBinary
-                   POST_BUILD
-                   COMMAND ${CMAKE_COMMAND} -E copy ${CMAKE_CURRENT_BINARY_DIR}/clingDictInBinary${exesuffix} ${CMAKE_CURRENT_BINARY_DIR}/libsubdir/clingDictInBinary${exesuffix}
-                   COMMAND ${CMAKE_COMMAND} -E remove ${CMAKE_CURRENT_BINARY_DIR}/clingDictInBinary${exesuffix}
                    )
 
 if(NOT MSVC OR win_broken_tests)
