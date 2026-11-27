@@ -1,8 +1,8 @@
 CMAKE_BUILD_TYPE=RelWithDebInfo
 builtin_civetweb=ON
 cuda=ON
-experimental_adaptivecpp=OFF
-experimental_genvectorx=OFF
+experimental_adaptivecpp=ON
+experimental_genvectorx=ON
 gdml=OFF
 spectrum=OFF
 sqlite=OFF
