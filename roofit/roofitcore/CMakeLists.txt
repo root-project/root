@@ -121,6 +121,7 @@ set(ROOFITCORE_HEADERS
   RooFit/Detail/NormalizationHelpers.h
   RooFit/Detail/RooNLLVarNew.h
   RooFit/Detail/RooNormalizedPdf.h
+  RooFit/Detail/WorkspaceStreamingContext.h
   RooFit/EvalContext.h
   RooFit/Evaluator.h
   RooFit/Floats.h
@@ -443,6 +444,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFitCore
     src/TestStatistics/RooUnbinnedL.cxx
     src/TestStatistics/buildLikelihood.cxx
     src/TestStatistics/SharedOffset.cxx
+    src/WorkspaceStreamingContext.cxx
     ${RooFitMPTestStatisticsSources}
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"

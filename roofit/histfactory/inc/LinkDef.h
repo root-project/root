@@ -9,6 +9,9 @@
 
 #pragma link C++ class PiecewiseInterpolation- ;
 #pragma link C++ class ParamHistFunc+ ;
+#pragma link C++ class RooHistFactoryPdf+ ;
+#pragma link C++ class RooHistFactorySample- ;
+#pragma link C++ class RooHistFactorySample::Data+ ;
 #pragma link C++ class RooStats::HistFactory::LinInterpVar+ ;
 #pragma link C++ class RooStats::HistFactory::FlexibleInterpVar+ ;
 #pragma link C++ class RooStats::HistFactory::HistoToWorkspaceFactoryFast+ ;

@@ -371,6 +371,76 @@ double flexibleInterp(unsigned int code, ParamsArray params, unsigned int n, Dou
    return doCutoff && total <= 0 ? TMath::Limits<double>::Min() : total;
 }
 
+/// The scale factor of a sample of a HistFactory model (RooHistFactorySample): the product of the NormSys factors,
+/// interpolated like in FlexibleInterpVar, and of the NormFactors.
+template <typename ParamsArray, typename DoubleArray>
+double
+histFactoryScale(ParamsArray params, unsigned int nNormSys, int const *normSysParams, int const *normSysCodes,
+                 DoubleArray normSysLo, DoubleArray normSysHi, unsigned int nNormFactors, int const *normFactorParams)
+{
+   double coef = 1.0;
+   if (nNormSys > 0) {
+      double total = 1.0;
+      for (unsigned int i = 0; i < nNormSys; ++i) {
+         // Code 4 of FlexibleInterpVar is code 5 of PiecewiseInterpolation.
+         const unsigned int code = normSysCodes[i] == 4 ? 5 : normSysCodes[i];
+         total += flexibleInterpSingle(code, normSysLo[i], normSysHi[i], 1.0, 1.0, params[normSysParams[i]], total);
+      }
+      if (total <= 0) {
+         total = TMath::Limits<double>::Min();
+      }
+      coef *= total;
+   }
+   for (unsigned int i = 0; i < nNormFactors; ++i) {
+      coef *= params[normFactorParams[i]];
+   }
+   return coef;
+}
+
+/// The content of a bin of a sample of a HistFactory model (RooHistFactorySample) without the scale factor: the
+/// nominal content with the HistoSys variations, interpolated like in PiecewiseInterpolation and clamped at zero,
+/// times the parameters of the bin-wise modifiers.
+template <typename ParamsArray, typename DoubleArray>
+double
+histFactoryBin(ParamsArray params, unsigned int iBin, unsigned int nBins, DoubleArray nominal, unsigned int nHistoSys,
+               int const *histoSysParams, int const *histoSysCodes, DoubleArray histoSysLo, DoubleArray histoSysHi,
+               unsigned int nBinFactors, int const *binFactorParams)
+{
+   const double nom = nominal[iBin];
+   double value = nom;
+   if (nHistoSys > 0) {
+      double sum = nom;
+      for (unsigned int i = 0; i < nHistoSys; ++i) {
+         sum += flexibleInterpSingle(histoSysCodes[i], histoSysLo[i * nBins + iBin], histoSysHi[i * nBins + iBin], 1.0,
+                                     nom, params[histoSysParams[i]], sum);
+      }
+      value = sum < 0 ? 0 : sum;
+   }
+   for (unsigned int i = 0; i < nBinFactors; ++i) {
+      value *= params[binFactorParams[i * nBins + iBin]];
+   }
+   return value;
+}
+
+/// The weighted sum of the bins of a sample of a HistFactory model (RooHistFactorySample) without the scale factor.
+/// With the fractions of the bins in the integration range as weights, this is the integral of the sample.
+template <typename ParamsArray, typename DoubleArray>
+double
+histFactoryIntegral(ParamsArray params, DoubleArray weights, unsigned int nBins, DoubleArray nominal,
+                    unsigned int nHistoSys, int const *histoSysParams, int const *histoSysCodes, DoubleArray histoSysLo,
+                    DoubleArray histoSysHi, unsigned int nBinFactors, int const *binFactorParams)
+{
+   double out = 0.0;
+   for (unsigned int i = 0; i < nBins; ++i) {
+      if (weights[i] != 0.0) {
+         out += histFactoryBin(params, i, nBins, nominal, nHistoSys, histoSysParams, histoSysCodes, histoSysLo,
+                               histoSysHi, nBinFactors, binFactorParams) *
+                weights[i];
+      }
+   }
+   return out;
+}
+
 inline double landau(double x, double mu, double sigma)
 {
    if (sigma <= 0.)

@@ -4,6 +4,8 @@
 
 #include <RooStats/HistFactory/Measurement.h>
 #include <RooStats/HistFactory/MakeModelAndMeasurementsFast.h>
+#include <RooStats/HistFactory/RooHistFactoryPdf.h>
+#include <RooStats/HistFactory/RooHistFactorySample.h>
 #ifdef HISTFACTORY_XML
 #include <RooStats/HistFactory/ConfigParser.h>
 #endif
@@ -365,7 +367,7 @@ TEST_P(HFFixture, ModelProperties)
    auto simPdf = dynamic_cast<RooSimultaneous *>(ws->pdf("simPdf"));
    ASSERT_NE(simPdf, nullptr);
 
-   auto channelPdf = dynamic_cast<RooRealSumPdf *>(ws->pdf("channel1_model"));
+   auto channelPdf = dynamic_cast<RooHistFactoryPdf *>(ws->pdf("channel1_model"));
    ASSERT_NE(channelPdf, nullptr);
 
    auto obs = dynamic_cast<RooRealVar *>(ws->var("obs_x_channel1"));
@@ -399,36 +401,43 @@ TEST_P(HFFixture, ModelProperties)
       }
    }
 
-   // Check that sub models depend on their systematic uncertainties.
-   for (auto &subModelName : std::initializer_list<std::string>{"signal_channel1_shapes", "background1_channel1_shapes",
-                                                                "background2_channel1_shapes"}) {
-      auto subModel = ws->function(subModelName);
-      ASSERT_NE(subModel, nullptr) << "Unable to retrieve sub model with name " << subModelName;
-      if (subModelName.find("signal") != std::string::npos) {
-         EXPECT_FALSE(subModel->dependsOn(*ws->var("gamma_stat_channel1_bin_0")));
-         EXPECT_FALSE(subModel->dependsOn(*ws->var("gamma_stat_channel1_bin_1")));
+   // Check that the samples depend on their systematic uncertainties.
+   auto sample = [&](std::string const &name) -> RooHistFactorySample & {
+      auto *out = dynamic_cast<RooHistFactorySample *>(ws->function((name + "_channel1_shapes").c_str()));
+      if (!out) {
+         throw std::runtime_error("Unable to retrieve sample " + name);
+      }
+      EXPECT_EQ(out, channelPdf->sample(name)) << name;
+      return *out;
+   };
+   EXPECT_EQ(channelPdf->numSamples(), 3u);
+   for (auto &sampleName : std::initializer_list<std::string>{"signal", "background1", "background2"}) {
+      RooHistFactorySample &subModel = sample(sampleName);
+      if (sampleName == "signal") {
+         EXPECT_FALSE(subModel.dependsOn(*ws->var("gamma_stat_channel1_bin_0")));
+         EXPECT_FALSE(subModel.dependsOn(*ws->var("gamma_stat_channel1_bin_1")));
       } else {
-         EXPECT_TRUE(subModel->dependsOn(*ws->var("gamma_stat_channel1_bin_0")));
-         EXPECT_TRUE(subModel->dependsOn(*ws->var("gamma_stat_channel1_bin_1")));
+         EXPECT_TRUE(subModel.dependsOn(*ws->var("gamma_stat_channel1_bin_0")));
+         EXPECT_TRUE(subModel.dependsOn(*ws->var("gamma_stat_channel1_bin_1")));
       }
    }
 
-   EXPECT_TRUE(ws->function("signal_channel1_scaleFactors")->dependsOn(*ws->var("SigXsecOverSM")));
-   EXPECT_FALSE(ws->function("background1_channel1_scaleFactors")->dependsOn(*ws->var("SigXsecOverSM")));
-   EXPECT_FALSE(ws->function("background2_channel1_scaleFactors")->dependsOn(*ws->var("SigXsecOverSM")));
+   EXPECT_TRUE(sample("signal").dependsOn(*ws->var("SigXsecOverSM")));
+   EXPECT_FALSE(sample("background1").dependsOn(*ws->var("SigXsecOverSM")));
+   EXPECT_FALSE(sample("background2").dependsOn(*ws->var("SigXsecOverSM")));
 
    if (makeModelMode == MakeModelMode::OverallSyst) {
-      EXPECT_FALSE(ws->function("signal_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst2")));
-      EXPECT_FALSE(ws->function("signal_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst3")));
-      EXPECT_FALSE(ws->function("signal_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst4")));
+      EXPECT_FALSE(sample("signal").dependsOn(*ws->var("alpha_syst2")));
+      EXPECT_FALSE(sample("signal").dependsOn(*ws->var("alpha_syst3")));
+      EXPECT_FALSE(sample("signal").dependsOn(*ws->var("alpha_syst4")));
 
-      EXPECT_TRUE(ws->function("background1_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst2")));
-      EXPECT_TRUE(ws->function("background1_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst3")));
-      EXPECT_FALSE(ws->function("background1_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst4")));
+      EXPECT_TRUE(sample("background1").dependsOn(*ws->var("alpha_syst2")));
+      EXPECT_TRUE(sample("background1").dependsOn(*ws->var("alpha_syst3")));
+      EXPECT_FALSE(sample("background1").dependsOn(*ws->var("alpha_syst4")));
 
-      EXPECT_FALSE(ws->function("background2_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst2")));
-      EXPECT_TRUE(ws->function("background2_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst3")));
-      EXPECT_TRUE(ws->function("background2_channel1_scaleFactors")->dependsOn(*ws->var("alpha_syst4")));
+      EXPECT_FALSE(sample("background2").dependsOn(*ws->var("alpha_syst2")));
+      EXPECT_TRUE(sample("background2").dependsOn(*ws->var("alpha_syst3")));
+      EXPECT_TRUE(sample("background2").dependsOn(*ws->var("alpha_syst4")));
    }
 
    EXPECT_EQ(*mc->GetParametersOfInterest()->begin(), ws->var("SigXsecOverSM"));
@@ -794,4 +803,58 @@ TEST(HistFactory, GammaSystConstraint)
    std::unique_ptr<RooDataSet> toys{ws->pdf("beta_systConstraint")->generate(nom, 1000)};
    ASSERT_TRUE(toys);
    EXPECT_NEAR(toys->mean(nom), tau * 1.05, 1.);
+}
+
+// With HistoToWorkspaceFactoryFast::Configuration::writeMeasurement, the files of the channels and of the combined
+// model have the Measurement and the directories with its histograms next to the workspace; without, only the
+// workspace.
+TEST(HistFactory, WriteMeasurement)
+{
+   using namespace RooStats::HistFactory;
+   RooHelpers::LocalChangeMsgLevel changeMsgLvl(RooFit::WARNING);
+
+   const std::string inputFileName = "TestWriteMeasurement_input.root";
+   {
+      TFile f(inputFileName.c_str(), "RECREATE");
+      TH1D data{"data", "data", 2, 1, 2};
+      TH1D signal{"signal", "signal", 2, 1, 2};
+      data.SetBinContent(1, 12);
+      data.SetBinContent(2, 21);
+      signal.SetBinContent(1, 10);
+      signal.SetBinContent(2, 20);
+      f.WriteTObject(&data);
+      f.WriteTObject(&signal);
+   }
+
+   for (bool writeMeasurement : {true, false}) {
+      SCOPED_TRACE(writeMeasurement ? "with Measurement" : "without Measurement");
+      const std::string prefix = std::string("TestWriteMeasurement_") + (writeMeasurement ? "with" : "without");
+
+      Measurement meas("meas", "meas");
+      meas.SetOutputFilePrefix(prefix);
+      meas.SetPOI("mu");
+      meas.SetLumi(1.0);
+      meas.SetLumiRelErr(0.1);
+      Channel chan("channel1");
+      chan.SetData("data", inputFileName);
+      Sample sig("signal", "signal", inputFileName);
+      sig.AddNormFactor("mu", 1, 0, 3);
+      chan.AddSample(sig);
+      meas.AddChannel(chan);
+      meas.CollectHistograms();
+
+      HistoToWorkspaceFactoryFast::Configuration cfg;
+      cfg.writeMeasurement = writeMeasurement;
+      ASSERT_NE(std::unique_ptr<RooWorkspace>{MakeModelAndMeasurementFast(meas, cfg)}, nullptr);
+
+      for (auto const &[fileSuffix, wsName] : std::vector<std::pair<std::string, std::string>>{
+              {"_channel1_meas_model.root", "channel1"}, {"_combined_meas_model.root", "combined"}}) {
+         SCOPED_TRACE(fileSuffix);
+         std::unique_ptr<TFile> file{TFile::Open((prefix + fileSuffix).c_str())};
+         ASSERT_TRUE(file && file->IsOpen());
+         EXPECT_NE(std::unique_ptr<RooWorkspace>{file->Get<RooWorkspace>(wsName.c_str())}, nullptr);
+         EXPECT_EQ(std::unique_ptr<Measurement>{file->Get<Measurement>("meas")} != nullptr, writeMeasurement);
+         EXPECT_EQ(file->GetKey("channel1_hists") != nullptr, writeMeasurement);
+      }
+   }
 }

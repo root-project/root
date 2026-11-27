@@ -62,6 +62,7 @@ and try reading again.
 #include <RooResolutionModel.h>
 #include <RooTObjWrap.h>
 #include <RooWorkspaceHandle.h>
+#include <RooFit/Detail/WorkspaceStreamingContext.h>
 
 #include "TBuffer.h"
 #include "TInterpreter.h"
@@ -2530,7 +2531,9 @@ void RooWorkspace::Streamer(TBuffer &R__b)
 {
    if (R__b.IsReading()) {
 
+      RooFit::Detail::WorkspaceStreamingContext context{*this, nullptr};
       R__b.ReadClassBuffer(RooWorkspace::Class(), this);
+      context.finalize();
 
       // Perform any pass-2 schema evolution here
       for (RooAbsArg *node : _allOwnedNodes) {
@@ -2629,6 +2632,31 @@ void RooWorkspace::Streamer(TBuffer &R__b)
          }
       }
    }
+}
+
+////////////////////////////////////////////////////////////////////////////////
+/// Write the workspace to the current directory, like TObject::Write().
+///
+/// Objects in the workspace can store large payloads next to the workspace in the file, after the workspace itself
+/// was written. HistFactory models do that with their histograms, so that the workspace is not limited by the 1 GB
+/// size limit of single objects in ROOT files. This only happens when writing with this function or with
+/// writeToFile(), not with TDirectory::WriteObject() or TDirectory::WriteTObject(), which write everything into the
+/// workspace object. HistFactory writes an RNTuple, which also writes the other objects in memory that are attached to
+/// the file, like TFile::Write().
+
+Int_t RooWorkspace::Write(const char *name, Int_t option, Int_t bufsize) const
+{
+   TFile *file = gDirectory ? gDirectory->GetFile() : nullptr;
+   const bool canWritePayloads = file && file->IsWritable() && file->IsBinary();
+   RooFit::Detail::WorkspaceStreamingContext context{*this, canWritePayloads ? file : nullptr};
+   const Int_t nbytes = TObject::Write(name, option, bufsize);
+   context.finalize();
+   return nbytes;
+}
+
+Int_t RooWorkspace::Write(const char *name, Int_t option, Int_t bufsize)
+{
+   return static_cast<const RooWorkspace *>(this)->Write(name, option, bufsize);
 }
 
 

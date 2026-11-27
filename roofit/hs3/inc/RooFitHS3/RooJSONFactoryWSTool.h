@@ -96,6 +96,10 @@ public:
       /// their data set of one entry in the combined data set, so that the RooSimultaneous is the sampling
       /// distribution of all measurements. This option and the form of the resulting workspace may still change.
       bool importConstraintsAsChannels = false;
+      /// Import each `histfactory_dist` as a RooHistFactoryPdf of RooHistFactorySample objects. If false, or if a
+      /// channel has custom modifiers that depend on the observables, the channel is imported as before ROOT 6.44,
+      /// with several RooFit objects for each histogram.
+      bool useHistFactoryPdf = true;
    };
 
    static Config &config();
