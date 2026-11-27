@@ -142,7 +142,10 @@ class PyROOTApplication(object):
     def init_graphics(self, gEnv, gSystem):
         """Configure ROOT graphics to be used interactively"""
 
-        # Note that we only end up in this function if gROOT.IsBatch() is false
+        if getattr(self, "_graphics_initialized", False):
+            return
+        self._graphics_initialized = True
+
         import __main__
 
         if self._is_ipython and "IPython" in sys.modules and sys.modules["IPython"].version_info[0] >= 5:
