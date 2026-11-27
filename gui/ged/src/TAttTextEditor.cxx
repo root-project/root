@@ -110,7 +110,7 @@ void TAttTextEditor::ConnectSignals2Slots()
    fAlphaField->Connect("ReturnPressed()","TAttTextEditor", this, "DoAlphaField()");
    fAlpha->Connect("Pressed()","TAttTextEditor", this, "GetCurAlpha()");
    fColorSelect->Connect("ColorSelected(Pixel_t)", "TAttTextEditor", this, "DoTextColor(Pixel_t)");
-   fColorSelect->Connect("AlphaColorSelected(ULong_t)", "TAttTextEditor", this, "DoTextAlphaColor(ULong_t)");
+   fColorSelect->Connect("AlphaColorSelected(ULongptr_t)", "TAttTextEditor", this, "DoTextAlphaColor(ULongptr_t)");
    fInit = kFALSE;
 }
 

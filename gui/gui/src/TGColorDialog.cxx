@@ -1358,7 +1358,7 @@ void TGColorDialog::ColorSelected(Pixel_t color)
 
 void TGColorDialog::AlphaColorSelected(ULongptr_t color)
 {
-   Emit("AlphaColorSelected(ULong_t)", color);
+   Emit("AlphaColorSelected(ULongptr_t)", color);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -1623,7 +1623,7 @@ void TGColorDialog::SetColorInfo(Int_t event, Int_t px, Int_t py, TObject *objec
 
 void TGColorDialog::DoPreview()
 {
-   TColor *tcolor;
+   TColor *tcolor = nullptr;
    if ((tcolor = gROOT->GetColor(TVirtualX::Pixel2Number(fSample->GetBackground())))) {
       tcolor->SetAlpha(TMath::Max((Double_t)0, TMath::Min((Double_t)1, atof(fAlb->GetString()))));
    }
