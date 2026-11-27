@@ -21,7 +21,6 @@ builtin_zstd=ON
 ccache=OFF
 davix=OFF
 fortran=OFF
-llvm13_broken_tests=OFF
 minuit2_mpi=OFF
 minuit2_omp=OFF
 pyroot2=OFF

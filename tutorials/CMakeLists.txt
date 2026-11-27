@@ -197,13 +197,6 @@ if(NOT roofit)
   set(roofit_veto roofit/roofit/*.C roofit/roofit/*.py
                   roofit/roostats/*.C roofit/roostats/*.py
                   roofit/histfactory/*.C roofit/histfactory/*.py)
-else()
-  if(MSVC AND CMAKE_SIZEOF_VOID_P EQUAL 4 AND NOT llvm13_broken_tests)
-    # The following tutorials are failing with this error:
-    # IncrementalExecutor::executeFunction: symbol '__std_find_trivial_4@12' unresolved while linking [cling interface function]!
-    # on Windows 32 bit and Visual Studio v17.8
-    list(APPEND roofit_veto roofit/roofit/rf614_binned_fit_problems.C)
-  endif()
 endif()
 
 if(NOT unuran)
@@ -463,27 +456,6 @@ if(MSVC)
   # which is corrupting the data on Windows
   list(APPEND extra_veto analysis/tree/run_h1analysis.C)
   list(APPEND extra_veto legacy/hist040_TH2Poly_europe.C) # needs to download from the web
-endif()
-
-if(MSVC AND NOT llvm13_broken_tests)
-  list(APPEND extra_veto
-       math/exampleFunction.py
-       analysis/dataframe/df002_dataModel.C
-       analysis/dataframe/df016_vecOps.C
-       analysis/dataframe/df017_vecOpsHEP.C
-       analysis/dataframe/df002_dataModel.py
-       analysis/dataframe/df016_vecOps.py
-       analysis/dataframe/df017_vecOpsHEP.py
-       analysis/dataframe/df032_RDFFromNumpy.py
-       analysis/dataframe/df035_RDFFromPandas.py
-       analysis/unfold/testUnfold7c.C)
-  if(CMAKE_SIZEOF_VOID_P EQUAL 4)
-    list(APPEND extra_veto
-         analysis/dataframe/df007_snapshot.C
-         visualisation/graphics/earth.C
-         visualisation/graphs/gr015_smooth.C
-         io/ntuple/ntpl001_staff.C)
-  endif()
 endif()
 
 set(all_veto hsimple.C
