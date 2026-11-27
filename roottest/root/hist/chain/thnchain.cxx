@@ -70,10 +70,11 @@ class THnChainTest : public ::testing::Test {
 // it has the expected number of entries.
 TEST_F(THnChainTest, SimpleProjection)
 {
-   const auto projection = chain->Projection(0);
+   TH1* projection = chain->Projection(0);
    ASSERT_TRUE(projection);
 
    EXPECT_EQ(files.size(), projection->GetBinContent(6));
+   delete projection;
 }
 
 // Project an empty sub-range and verify it has no entries in projection.
@@ -83,7 +84,7 @@ TEST_F(THnChainTest, EmptySubRange)
    TAxis* axis = chain->GetAxis(0);
    axis->SetRange(0, 1);
 
-   const auto projection = chain->Projection(0);
+   TH1* projection = chain->Projection(0);
    ASSERT_TRUE(projection);
 
    EXPECT_EQ(1, projection->GetNbinsX());
@@ -93,4 +94,6 @@ TEST_F(THnChainTest, EmptySubRange)
    // number of entries from overflow/underflow bins.
    // EXPECT_EQ(0, projection->GetBinContent(0));
    // EXPECT_EQ(files.size(), projection->GetBinContent(2));
+
+   delete projection;
 }
