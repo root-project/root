@@ -111,6 +111,16 @@ TObject* THnChain::ProjectionAny(Int_t ndim, const Int_t* dim, Option_t* option)
       } else {
          h = hs->ProjectionND(ndim, dim, option);
       }
+      // Un-register the histos from gDirectory. Otherwise, "h" and "h_merged"
+      // are both objects with the same name in the gDirectory. This causes
+      // warnings like "Replacing existing TH1: h_proj_0 (Potential memory
+      // leak)". To avoid this, we un-register all projection histograms
+      // immediately, and then only re-register h_merged in the end.
+      // Only do this for ndim < 3, because the THnBase doesn't do the
+      // auto-registration.
+      if (ndim < 3) {
+         static_cast<TH1*>(h)->SetDirectory(nullptr);
+      }
 
       delete hs;
 
@@ -126,6 +136,9 @@ TObject* THnChain::ProjectionAny(Int_t ndim, const Int_t* dim, Option_t* option)
       } else {
          h_merged = h;
       }
+   }
+   if (ndim < 3) {
+      static_cast<TH1*>(h_merged)->SetDirectory(gDirectory);
    }
 
    return h_merged;
