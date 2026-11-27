@@ -487,7 +487,6 @@ jobs:
       SCCACHE_ENDPOINT: https://s3.cern.ch
       SCCACHE_REGION: auto
       SCCACHE_S3_KEY_PREFIX: 'sccache/${{ matrix.image }}'
-      SCCACHE_S3_NO_CREDENTIALS: 1 # Read-only mode. For jobs with write access, this needs to be overridden.
 
     steps:
       - name: Set up sccache-cache
@@ -495,6 +494,8 @@ jobs:
         uses: mozilla-actions/sccache-action@v0.0.11
 
       - name: Set up environment
+        env:
+          S3_ID: ${{ vars.SCCACHE_S3_ACCESS_KEY }}
         run: |
           if [ -d "$PYTHON_VENV/bin/" ]; then
             echo "$PYTHON_VENV/bin/" >> $GITHUB_PATH;
@@ -507,6 +508,10 @@ jobs:
             echo "CMAKE_CXX_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
             echo "CMAKE_C_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
             echo "CMAKE_CUDA_COMPILER_LAUNCHER=sccache" >> $GITHUB_ENV
+            if [ -z "${S3_ID}" ]; then
+              # No credentials, read-only mode. We are probably in a PR from a fork
+              echo "SCCACHE_S3_NO_CREDENTIALS=1" >> $GITHUB_ENV
+            fi
           fi
 
       - name: Checkout
@@ -588,7 +593,6 @@ jobs:
           OVERRIDES: ${{ join( matrix.overrides, ' ') }}
           AWS_ACCESS_KEY_ID: ${{ env.SCCACHE_ENABLED == 'true' && vars.SCCACHE_S3_ACCESS_KEY || '' }}
           AWS_SECRET_ACCESS_KEY: ${{ env.SCCACHE_ENABLED == 'true' && secrets.SCCACHE_S3_ACCESS_SECRET || '' }}
-          SCCACHE_S3_NO_CREDENTIALS: ${{ env.SCCACHE_ENABLED == 'true' && '' || '1'}}
         run: ".github/workflows/root-ci-config/build_root.py
                     --buildtype      RelWithDebInfo
                     --platform       ${{ matrix.image }}
