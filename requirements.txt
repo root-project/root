@@ -4,7 +4,7 @@
 numpy
 pandas
 
-# TMVA: SOFIE
+# ONNX export
 onnx
 onnxscript
 packaging
