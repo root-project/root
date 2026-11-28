@@ -4163,8 +4163,14 @@ static std::string AlternateTuple(const char *classname, const cling::LookupHelp
          auto iter = tupleContent.fElements.rbegin() + 1; // skip the 'stars'.
          auto theEnd = tupleContent.fElements.rend() - 1; // Skip the template name (tuple).
          auto sep = ':';
+         std::string align;
          while (iter != theEnd) {
-            alternateTuple << "   " << *iter << " _" << nMember << ";\n";
+#ifdef _MSC_VER
+            // The MSVC std::tuple<T, Rest...> derives from std::tuple<Rest...>, and the Microsoft ABI never
+            // reuses the tail padding of a base: an element is at least as aligned as all the ones before it.
+            align += "alignas(" + (iter->back() == '&' ? std::string("void*") : *iter) + ") ";
+#endif
+            alternateTuple << "   " << align << *iter << " _" << nMember << ";\n";
             initializers << "    " << sep << " _" << nMember << "(std::get<" << nMember << ">(std::forward<Tuple>(t)))\n";
             ++iter;
             --nMember;

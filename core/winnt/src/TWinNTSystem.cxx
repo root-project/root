@@ -680,6 +680,134 @@ namespace {
       }
    }
 
+   // TEMP-DIAG: r2: the interpreted stressHistoFit dies inside TH1::Fit without a stack trace. With JC_TEMP_DIAG
+   // set, report first-chance exceptions together with every word on the stack that points to code, which
+   // also works when the frames cannot be walked.
+   static bool JcTempRead(ULONG_PTR addr, void *out, SIZE_T n)
+   {
+      SIZE_T got = 0;
+      return ::ReadProcessMemory(::GetCurrentProcess(), (LPCVOID)addr, out, n, &got) && got == n;
+   }
+
+   static void JcTempDescribe(char *buf, size_t n, ULONG_PTR addr)
+   {
+      // "module+0xRVA" for an address inside a module
+      snprintf(buf, n, "(not in a module)");
+      HMODULE mod = nullptr;
+      if (::GetModuleHandleExA(GET_MODULE_HANDLE_EX_FLAG_FROM_ADDRESS | GET_MODULE_HANDLE_EX_FLAG_UNCHANGED_REFCOUNT,
+                               (LPCSTR)addr, &mod) &&
+          mod) {
+         char path[MAX_PATH + 1];
+         path[0] = 0;
+         ::GetModuleFileNameA(mod, path, MAX_PATH);
+         path[MAX_PATH] = 0;
+         const char *base = path;
+         for (const char *c = path; *c; ++c)
+            if (*c == '\\')
+               base = c + 1;
+         snprintf(buf, n, "%s+0x%llx", base, (unsigned long long)(addr - (ULONG_PTR)mod));
+      }
+   }
+
+   static bool JcTempIsCode(ULONG_PTR addr)
+   {
+      MEMORY_BASIC_INFORMATION mbi;
+      if (!::VirtualQuery((LPCVOID)addr, &mbi, sizeof(mbi)) || mbi.State != MEM_COMMIT)
+         return false;
+      return (mbi.Protect & (PAGE_EXECUTE | PAGE_EXECUTE_READ | PAGE_EXECUTE_READWRITE | PAGE_EXECUTE_WRITECOPY)) != 0;
+   }
+
+   static LONG WINAPI JcTempVectoredHandler(LPEXCEPTION_POINTERS xcp)
+   {
+      static LONG busy = 0;
+      static LONG nCxx = 0;
+      static LONG nOther = 0;
+      const EXCEPTION_RECORD *rec = xcp->ExceptionRecord;
+      const DWORD code = rec->ExceptionCode;
+      const bool isCxx = code == 0xE06D7363;
+      // debugger notifications: OutputDebugString, thread names
+      if (code == 0x40010006 || code == 0x4001000A || code == 0x406D1388)
+         return EXCEPTION_CONTINUE_SEARCH;
+      if (::InterlockedExchange(&busy, 1))
+         return EXCEPTION_CONTINUE_SEARCH;
+      if (::InterlockedIncrement(isCxx ? &nCxx : &nOther) > 12) {
+         ::InterlockedExchange(&busy, 0);
+         return EXCEPTION_CONTINUE_SEARCH;
+      }
+
+      char where[MAX_PATH + 64];
+      JcTempDescribe(where, sizeof(where), (ULONG_PTR)rec->ExceptionAddress);
+      fprintf(stderr, "[jc-TEMP] exception 0x%08lx at %p %s, thread %lu\n", (unsigned long)code, rec->ExceptionAddress,
+              where, (unsigned long)::GetCurrentThreadId());
+      if (code == EXCEPTION_ACCESS_VIOLATION && rec->NumberParameters >= 2)
+         fprintf(stderr, "[jc-TEMP]    access violation %s address %p\n",
+                 rec->ExceptionInformation[0] == 0 ? "reading" : (rec->ExceptionInformation[0] == 1 ? "writing" : "executing"),
+                 (void *)rec->ExceptionInformation[1]);
+      if (isCxx && rec->NumberParameters >= 3) {
+         // name of the thrown type; the throw information holds image-relative offsets on 64 bit
+         const ULONG_PTR base = rec->NumberParameters >= 4 ? rec->ExceptionInformation[3] : 0;
+         const ULONG_PTR throwInfo = rec->ExceptionInformation[2];
+         unsigned int types = 0, type = 0, descr = 0;
+         char name[200];
+         name[0] = 0;
+         if (throwInfo && JcTempRead(throwInfo + 12, &types, 4) && JcTempRead(base + types + 4, &type, 4) &&
+             JcTempRead(base + type + 4, &descr, 4)) {
+            const ULONG_PTR str = base + descr + 2 * sizeof(void *);
+            for (unsigned int i = 0; i + 1 < sizeof(name); ++i) {
+               if (!JcTempRead(str + i, name + i, 1) || !name[i])
+                  break;
+               name[i + 1] = 0;
+            }
+         }
+         fprintf(stderr, "[jc-TEMP]    C++ exception of type %s\n", name[0] ? name : "(unknown)");
+      }
+
+      const CONTEXT *ctx = xcp->ContextRecord;
+#if defined(_M_X64)
+      const ULONG_PTR pc = ctx->Rip, sp = ctx->Rsp, bp = ctx->Rbp;
+#elif defined(_M_IX86)
+      const ULONG_PTR pc = ctx->Eip, sp = ctx->Esp, bp = ctx->Ebp;
+#else
+      const ULONG_PTR pc = 0, sp = 0, bp = 0;
+#endif
+      fprintf(stderr, "[jc-TEMP]    pc=%p sp=%p bp=%p\n", (void *)pc, (void *)sp, (void *)bp);
+      fflush(stderr);
+
+      const int kMaxFound = 56;
+      ULONG_PTR found[kMaxFound];
+      unsigned int offset[kMaxFound];
+      int nFound = 0;
+      for (unsigned int i = 0; sp && i < 4096 && nFound < (isCxx ? 24 : kMaxFound); ++i) {
+         ULONG_PTR word = 0;
+         if (!JcTempRead(sp + i * sizeof(ULONG_PTR), &word, sizeof(word)))
+            break;
+         if (word > 0x10000 && JcTempIsCode(word)) {
+            found[nFound] = word;
+            offset[nFound] = (unsigned int)(i * sizeof(ULONG_PTR));
+            ++nFound;
+         }
+      }
+      for (int i = 0; i < nFound; ++i) {
+         JcTempDescribe(where, sizeof(where), found[i]);
+         fprintf(stderr, "[jc-TEMP]    sp+0x%04x: %p %s\n", offset[i], (void *)found[i], where);
+      }
+      fflush(stderr);
+
+      // the same addresses with the nearest exported symbol
+      if (InitImagehlpFunctions()) {
+         for (int i = -1; i < nFound; ++i) {
+            const DWORD64 addr = i < 0 ? (DWORD64)pc : (DWORD64)found[i];
+            const std::string moduleName = GetModuleName(addr);
+            const std::string functionName = GetFunctionName(addr);
+            fprintf(stderr, "[jc-TEMP]    symbol %2d: %s%s\n", i, moduleName.c_str(), functionName.c_str());
+         }
+         fflush(stderr);
+         _SymCleanup(::GetCurrentProcess());
+      }
+      ::InterlockedExchange(&busy, 0);
+      return EXCEPTION_CONTINUE_SEARCH;
+   }
+
    ////// Shortcuts helper functions IsShortcut and ResolveShortCut ///////////
 
    /////////////////////////////////////////////////////////////////////////////
@@ -1100,6 +1228,9 @@ Bool_t TWinNTSystem::Init()
    //WinNTSignal(kSigAlarm,                 SigHandler);
    WinNTSignal(kSigFloatingException,     SigHandler);
    ::SetUnhandledExceptionFilter(ExceptionFilter);
+   // TEMP-DIAG: r2: see JcTempVectoredHandler
+   if (std::getenv("JC_TEMP_DIAG"))
+      ::AddVectoredExceptionHandler(1, JcTempVectoredHandler);
 
    fSigcnt = 0;
 

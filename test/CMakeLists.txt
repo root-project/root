@@ -265,10 +265,9 @@ ROOT_ADD_TEST(test-stressfit-interpreted COMMAND ${root_exe} -b -q ${CMAKE_CURRE
 if(unuran)
   ROOT_EXECUTABLE(stressHistoFit stressHistoFit.cxx LIBRARIES MathCore Matrix Unuran Tree Gpad)
   ROOT_ADD_TEST(test-stresshistofit COMMAND stressHistoFit FAILREGEX "FAILED|Error in" LABELS longtest)
-  if(NOT MSVC OR llvm13_broken_tests)
-    ROOT_ADD_TEST(test-stresshistofit-interpreted COMMAND ${root_exe} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/stressHistoFit.cxx
-                  FAILREGEX "FAILED|Error in" DEPENDS test-stresshistofit )
-  endif()
+  # TEMP-DIAG: r2: JC_TEMP_DIAG enables the exception report of TWinNTSystem and the markers in the fit code
+  ROOT_ADD_TEST(test-stresshistofit-interpreted COMMAND ${root_exe} -b -q ${CMAKE_CURRENT_SOURCE_DIR}/stressHistoFit.cxx
+                FAILREGEX "FAILED|Error in" DEPENDS test-stresshistofit ENVIRONMENT JC_TEMP_DIAG=1)
 endif()
 
 #--stressEntryList---------------------------------------------------------------------------

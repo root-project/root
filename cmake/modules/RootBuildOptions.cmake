@@ -146,7 +146,6 @@ ROOT_BUILD_OPTION(gviz OFF "Enable support for Graphviz (graph visualization sof
 ROOT_BUILD_OPTION(http ON "Enable support for HTTP server")
 ROOT_BUILD_OPTION(imt ON "Enable support for implicit multi-threading via Intel® Thread Building Blocks (TBB)")
 ROOT_BUILD_OPTION(libcxx OFF "Build using libc++")
-ROOT_BUILD_OPTION(llvm13_broken_tests OFF "Enable broken tests with LLVM 13 on Windows")
 ROOT_BUILD_OPTION(macos_native OFF "Disable looking for libraries, includes and binaries in locations other than a native installation (MacOS only)")
 ROOT_BUILD_OPTION(mathmore OFF "Build libMathMore extended math library (requires GSL) [GPL]")
 ROOT_BUILD_OPTION(memory_termination OFF "Free internal ROOT memory before process termination (experimental, used for leak checking)")

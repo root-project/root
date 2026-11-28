@@ -47,6 +47,25 @@
 #include "TMinuit2TraceObject.h"
 #endif
 
+// TEMP-DIAG: r2: locate the crash of the interpreted stressHistoFit inside TH1::Fit (needs JC_TEMP_DIAG set)
+#ifdef _WIN32
+#include <cstdio>
+#include <cstdlib>
+#define JC_TEMP(...)                                   \
+   do {                                                \
+      static int jcOn = -1, jcN = 0;                   \
+      if (jcOn < 0)                                    \
+         jcOn = std::getenv("JC_TEMP_DIAG") ? 1 : 0;   \
+      if (jcOn && jcN++ < 6) {                         \
+         fprintf(stderr, "[jc-TEMP] " __VA_ARGS__);    \
+         fprintf(stderr, "\n");                        \
+         fflush(stderr);                               \
+      }                                                \
+   } while (0)
+#else
+#define JC_TEMP(...)
+#endif
+
 namespace ROOT {
 
 namespace Minuit2 {
@@ -472,6 +491,7 @@ ROOT::Minuit2::MnStrategy customizedStrategy(unsigned int strategyLevel, ROOT::M
 bool Minuit2Minimizer::Minimize()
 {
 
+   JC_TEMP("Minuit2Minimizer::Minimize: entered");
 
    MnPrint print("Minuit2Minimizer::Minimize", PrintLevel());
 
@@ -577,7 +597,9 @@ bool Minuit2Minimizer::Minimize()
 
    const ROOT::Minuit2::MnStrategy strategy = customizedStrategy(strategyLevel, fOptions);
 
+   JC_TEMP("Minuit2Minimizer::Minimize: starting the minimization");
    ROOT::Minuit2::FunctionMinimum min = GetMinimizer()->Minimize(*fMinuitFCN, fState, strategy, maxfcn, tol);
+   JC_TEMP("Minuit2Minimizer::Minimize: minimization done, %d function calls", (int)min.NFcn());
    fMinimum = std::make_unique<ROOT::Minuit2::FunctionMinimum>(min);
 
    // check if Hesse needs to be run. We do it when is requested (IsValidError() == true , set by SetParabError(true) in fitConfig)

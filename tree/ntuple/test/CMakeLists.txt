@@ -70,14 +70,12 @@ ROOT_GENERATE_DICTIONARY(SoAFieldDict ${CMAKE_CURRENT_SOURCE_DIR}/SoAField.hxx
                          MODULE ntuple_soa LINKDEF SoAFieldLinkDef.h OPTIONS -inlineInputHeader
                          DEPENDENCIES RIO ROOTVecOps)
 ROOT_ADD_GTEST(ntuple_type_name ntuple_type_name.cxx LIBRARIES ROOTNTuple CustomStruct)
-if(NOT MSVC OR llvm13_broken_tests)
-  ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTNTuple)
-  ROOT_GENERATE_DICTIONARY(ProxiedSTLContainerDict ${CMAKE_CURRENT_SOURCE_DIR}/ProxiedSTLContainer.hxx
-                           MODULE ntuple_types
-                           LINKDEF ProxiedSTLContainerLinkDef.h
-                           OPTIONS -inlineInputHeader
-                           DEPENDENCIES CustomStruct)
-endif()
+ROOT_ADD_GTEST(ntuple_types ntuple_types.cxx LIBRARIES ROOTNTuple)
+ROOT_GENERATE_DICTIONARY(ProxiedSTLContainerDict ${CMAKE_CURRENT_SOURCE_DIR}/ProxiedSTLContainer.hxx
+                         MODULE ntuple_types
+                         LINKDEF ProxiedSTLContainerLinkDef.h
+                         OPTIONS -inlineInputHeader
+                         DEPENDENCIES CustomStruct)
 ROOT_ADD_GTEST(ntuple_view ntuple_view.cxx LIBRARIES ROOTNTuple CustomStruct)
 ROOT_ADD_GTEST(ntuple_zip ntuple_zip.cxx LIBRARIES ROOTNTuple)
 

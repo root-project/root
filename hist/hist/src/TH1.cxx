@@ -58,6 +58,25 @@
 
 #include "TH1Merger.h"
 
+// TEMP-DIAG: r2: locate the crash of the interpreted stressHistoFit inside TH1::Fit (needs JC_TEMP_DIAG set)
+#ifdef _WIN32
+#include <cstdio>
+#include <cstdlib>
+#define JC_TEMP(...)                                   \
+   do {                                                \
+      static int jcOn = -1, jcN = 0;                   \
+      if (jcOn < 0)                                    \
+         jcOn = std::getenv("JC_TEMP_DIAG") ? 1 : 0;   \
+      if (jcOn && jcN++ < 6) {                         \
+         fprintf(stderr, "[jc-TEMP] " __VA_ARGS__);    \
+         fprintf(stderr, "\n");                        \
+         fflush(stderr);                               \
+      }                                                \
+   } while (0)
+#else
+#define JC_TEMP(...)
+#endif
+
 /** \addtogroup Histograms
 @{
 \class TH1C
@@ -4416,8 +4435,10 @@ TFitResultPtr TH1::Fit(const char *fname ,Option_t *option ,Option_t *goption, D
 TFitResultPtr TH1::Fit(TF1 *f1 ,Option_t *option ,Option_t *goption, Double_t xxmin, Double_t xxmax)
 {
    // implementation of Fit method is in file hist/src/HFitImpl.cxx
+   JC_TEMP("TH1::Fit: entered, this=%p f1=%p option='%s'", (void *)this, (void *)f1, option ? option : "(null)");
    Foption_t fitOption;
    ROOT::Fit::FitOptionsMake(ROOT::Fit::EFitObjectType::kHistogram,option,fitOption);
+   JC_TEMP("TH1::Fit: options parsed");
 
    // create range and minimizer options with default values
    ROOT::Fit::DataRange range(xxmin,xxmax);

@@ -40,6 +40,25 @@
 #include <memory>
 #include <limits>
 
+// TEMP-DIAG: r2: locate the crash of the interpreted stressHistoFit inside TH1::Fit (needs JC_TEMP_DIAG set)
+#ifdef _WIN32
+#include <cstdio>
+#include <cstdlib>
+#define JC_TEMP(...)                                   \
+   do {                                                \
+      static int jcOn = -1, jcN = 0;                   \
+      if (jcOn < 0)                                    \
+         jcOn = std::getenv("JC_TEMP_DIAG") ? 1 : 0;   \
+      if (jcOn && jcN++ < 6) {                         \
+         fprintf(stderr, "[jc-TEMP] " __VA_ARGS__);    \
+         fprintf(stderr, "\n");                        \
+         fflush(stderr);                               \
+      }                                                \
+   } while (0)
+#else
+#define JC_TEMP(...)
+#endif
+
 //#define DEBUG
 
 // utility functions used in TH1::Fit
@@ -140,6 +159,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 #endif
 
    // replacement function using  new fitter
+   JC_TEMP("HFit::Fit: entered");
    int hdim = HFit::GetDimension(h1);
    int iret = HFit::CheckFitFunction(f1, hdim);
    if (iret != 0) return iret;
@@ -206,6 +226,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    // fill data
    std::shared_ptr<ROOT::Fit::BinData> fitdata(new ROOT::Fit::BinData(opt,range) );
    ROOT::Fit::FillData(*fitdata, h1, f1);
+   JC_TEMP("HFit::Fit: data filled, %u points", (unsigned)fitdata->Size());
    if (fitdata->Size() == 0 ) {
       Warning("Fit","Fit data is empty ");
       return -1;
@@ -249,6 +270,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 #endif
    else
       fitter->SetFunction(static_cast<const ROOT::Math::IParamMultiFunction &>(ROOT::Math::WrappedMultiTF1(*f1) ) );
+   JC_TEMP("HFit::Fit: function set");
 
    // error normalization in case of zero error in the data
    if (fitdata->GetErrorType() == ROOT::Fit::BinData::kNoError) fitConfig.SetNormErrors(true);
@@ -353,6 +375,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
 #endif
 
    bool fitok = false;
+   JC_TEMP("HFit::Fit: fitter configured, starting the fit");
 
 
    // check if can use option user
@@ -379,6 +402,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
    else{ // standard least square fit
       fitok = fitter->Fit(fitdata, fitOption.ExecPolicy);
    }
+   JC_TEMP("HFit::Fit: fit done, ok=%d", (int)fitok);
    if ( !fitok  && !fitOption.Quiet )
       Warning("Fit","Abnormal termination of minimization.");
    iret |= !fitok;
@@ -406,6 +430,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
          HFit::GetDrawingRange(h1, range);
          HFit::StoreAndDrawFitFunction(h1, f1, range, !fitOption.Plus, !fitOption.Nograph, goption);
       }
+      JC_TEMP("HFit::Fit: result copied to the function, function stored");
 
       // print the result
       // if using Fitter class must be done here
@@ -447,6 +472,7 @@ TFitResultPtr HFit::Fit(FitObject * h1, TF1 *f1 , Foption_t & fitOption , const 
          //N.B=  this might create a memory leak if user does not delete the fitter they create
          TVirtualFitter::SetFitter( bcfitter );
       }
+      JC_TEMP("HFit::Fit: TBackCompFitter set, returning status %d", iret);
 
       if (fitOption.StoreResult)
       {

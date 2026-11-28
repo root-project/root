@@ -29,6 +29,25 @@
 
 #include "Math/MultiDimParamFunctionAdapter.h"
 
+// TEMP-DIAG: r2: locate the crash of the interpreted stressHistoFit inside TH1::Fit (needs JC_TEMP_DIAG set)
+#ifdef _WIN32
+#include <cstdio>
+#include <cstdlib>
+#define JC_TEMP(...)                                   \
+   do {                                                \
+      static int jcOn = -1, jcN = 0;                   \
+      if (jcOn < 0)                                    \
+         jcOn = std::getenv("JC_TEMP_DIAG") ? 1 : 0;   \
+      if (jcOn && jcN++ < 6) {                         \
+         fprintf(stderr, "[jc-TEMP] " __VA_ARGS__);    \
+         fprintf(stderr, "\n");                        \
+         fflush(stderr);                               \
+      }                                                \
+   } while (0)
+#else
+#define JC_TEMP(...)
+#endif
+
 namespace ROOT::Fit {
 
 // use a static variable to get default minimizer options for error def
@@ -694,7 +713,9 @@ bool Fitter::DoInitMinimizer() {
 
    // create first Minimizer
    // using an auto_Ptr will delete the previous existing one
+   JC_TEMP("Fitter::DoInitMinimizer: creating minimizer '%s'", fConfig.MinimizerType().c_str());
    fMinimizer = std::shared_ptr<ROOT::Math::Minimizer> ( fConfig.CreateMinimizer() );
+   JC_TEMP("Fitter::DoInitMinimizer: minimizer at %p", (void *)fMinimizer.get());
    if (fMinimizer == nullptr) {
       MATH_ERROR_MSG("Fitter::DoInitMinimizer","Minimizer cannot be created");
       return false;
@@ -783,11 +804,14 @@ bool Fitter::DoMinimization(const ROOT::Math::IMultiGenFunction * chi2func) {
 
    assert(fMinimizer );
 
+   JC_TEMP("Fitter::DoMinimization: calling Minimize()");
    bool isValid = fMinimizer->Minimize();
+   JC_TEMP("Fitter::DoMinimization: Minimize() returned %d", (int)isValid);
 
    if (!fResult) fResult = std::make_unique<FitResult>();
 
    fResult->FillResult(fMinimizer,fConfig, fFunc, isValid, fDataSize, fFitType, chi2func );
+   JC_TEMP("Fitter::DoMinimization: result filled");
 
    // if requested run Minos after minimization
    if (isValid && fConfig.MinosErrors()) {
