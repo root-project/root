@@ -2190,3 +2190,14 @@ TList *TApplication::GetApplications()
 {
    return fgApplications;
 }
+
+////////////////////////////////////////////////////////////////////////////////
+/// Process the pending GUI events, updating a web canvas first so that its
+/// pending drawing is part of them.
+
+void ROOT::Internal::ProcessGUIEvents()
+{
+   if (gPad && gPad->IsWeb())
+      gPad->UpdateAsync();
+   gSystem->ProcessEvents();
+}

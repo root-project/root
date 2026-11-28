@@ -60,7 +60,6 @@ class ImportLoadLibs(unittest.TestCase):
         # cppjit and Python libraries
         "libcppjit.*",
         "libcpyrt.*",
-        "libROOTPythonizations.*",
         "libpython.*",
         "libutil.*",
         ".*cpython.*",

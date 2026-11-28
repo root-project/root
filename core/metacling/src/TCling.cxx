@@ -111,6 +111,7 @@ clang/LLVM technology.
 #include "cling/Interpreter/Transaction.h"
 #include "cling/MetaProcessor/MetaProcessor.h"
 #include "cling/Utils/AST.h"
+#include "cling/Utils/Casting.h"
 #include "cling/Utils/ParserStateRAII.h"
 #include "cling/Utils/SourceNormalization.h"
 #include "cling/Interpreter/Exception.h"
@@ -1056,9 +1057,50 @@ inline bool TCling::TUniqueString::Append(const std::string& str)
    return notPresent;
 }
 
+namespace cling::valuePrinterInternal {
+// Defined in cling's ValuePrinter.cpp; declares cling::printValue() the first
+// time it is called.
+void declarePrintValue(Interpreter &Interp);
+} // namespace cling::valuePrinterInternal
+
+////////////////////////////////////////////////////////////////////////////////
+/// Print the object of type `type` at `obj` with cling::printValue().
+///
+/// The printer for a type is compiled on the first call and reused, so that
+/// printing many objects costs no compilation, nor memory for compiled code.
+/// Unloading code drops all printers (see UpdateListsOnUnloaded()), as the
+/// types they were compiled for might change when reloaded.
+
 std::string TCling::ToString(const char* type, void* obj)
 {
-   return fInterpreter->toString(type, obj);
+   std::string (*printer)(void *) = nullptr;
+   {
+      R__LOCKGUARD_CLING(gInterpreterMutex);
+      auto found = fValuePrinters.find(type);
+      if (found != fValuePrinters.end()) {
+         printer = found->second;
+      } else {
+         cling::valuePrinterInternal::declarePrintValue(*fInterpreter);
+         std::string name;
+         fInterpreter->createUniqueName(name);
+         name += "_ToString";
+         std::string code = "std::string " + name + "(void *obj) { return cling::printValue((" + type + " *)obj); }";
+         if (fInterpreter->declare(code) == cling::Interpreter::kSuccess) {
+            cling::Interpreter::PushTransactionRAII RAII(GetInterpreterImpl());
+            if (auto fd = llvm::dyn_cast_or_null<clang::FunctionDecl>(
+                   cling::utils::Lookup::Named(&fInterpreter->getSema(), name))) {
+               printer = cling::utils::VoidToFunctionPtr<std::string (*)(void *)>(
+                  fInterpreter->getAddressOfGlobal(clang::GlobalDecl(fd)));
+            }
+         }
+         if (!printer) {
+            Error("ToString", "cannot print an object of type %s", type);
+            return "";
+         }
+         fValuePrinters[type] = printer;
+      }
+   }
+   return printer(obj);
 }
 
 ////////////////////////////////////////////////////////////////////////////////
@@ -7078,6 +7120,10 @@ void TCling::UpdateListsOnCommitted(const cling::Transaction &T) {
 void TCling::UpdateListsOnUnloaded(const cling::Transaction &T)
 {
    HandleNewTransaction(T);
+
+   // The unloaded code might contain a type that ToString() has a printer
+   // for, or the printer itself
+   fValuePrinters.clear();
 
    auto Lists = std::make_tuple((TListOfDataMembers *)gROOT->GetListOfGlobals(),
                                 (TListOfFunctions *)gROOT->GetListOfGlobalFunctions(),

@@ -32,10 +32,29 @@ def _add_getitem_checked(klass):
     klass.__getitem__ = getitem_checked
 
 
+def _cling_print_value(self):
+    """
+    Print the object with the output of cling::printValue, like the ROOT
+    prompt does, falling back to __repr__ where that only gives an address.
+    """
+    import ROOT
+
+    if not ROOT.addressof(self):
+        # Null object: cppyy's generic __repr__. The class's own __repr__ may
+        # be defined in terms of str(), which would come back here.
+        return ROOT._cppyy.types.Instance.__repr__(self)
+
+    result = ROOT.gInterpreter.ToString(type(self).__cpp_name__, self)
+
+    if not result or result.startswith("@0x"):
+        # No printer, or cling only gives the address: cppyy's __repr__ says
+        # more
+        return repr(self)
+    return result
+
+
 # Generic pythonizor for pretty printing that is applied to (almost) all classes
 def pythonize_generic(klass, name):
-    from ROOT.libROOTPythonizations import AddPrettyPrintingPyz
-
     # Parameters:
     # klass: class to be pythonized
     # name: string containing the name of the class
@@ -57,4 +76,4 @@ def pythonize_generic(klass, name):
     ]
 
     if name not in exclude and not has_cpp_str:
-        AddPrettyPrintingPyz(klass)
+        klass.__str__ = _cling_print_value

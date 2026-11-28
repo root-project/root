@@ -125,6 +125,7 @@ private: // Data Members
    std::set<std::string> fAutoLoadedLibraries; // Set of libraries that were autoloaded
    std::hash<std::string> fStringHashFunction; // A simple hashing function
    std::unordered_set<const clang::NamespaceDecl*> fNSFromRootmaps;   // Collection of namespaces fwd declared in the rootmaps
+   std::unordered_map<std::string, std::string (*)(void *)> fValuePrinters; // ToString() printer for each type name
    TObjArray*      fRootmapFiles;     // Loaded rootmap files.
    Bool_t          fLockProcessLine;  // True if ProcessLine should lock gInterpreterMutex.
    Bool_t          fCxxModulesEnabled;// True if C++ modules was enabled
