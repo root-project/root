@@ -3,13 +3,12 @@ ROOTTEST_GENERATE_REFLEX_DICTIONARY(unorderedMap
                                     SELECTION unorderedMap_selection.xml
                                     FIXTURES_SETUP root-io-cpp11Containers-unorderedMapDict-fixture)
 
-# Test temporarily disabled due to a performance regression in LLVM22 leading to sporadic failures.
-# ROOTTEST_ADD_TEST(unorderedMap
-#                   MACRO  execUnorderedMap.C
-#                   OUTREF execUnorderedMap.ref
-#                   FIXTURES_REQUIRED root-io-cpp11Containers-unorderedMapDict-fixture
-#                   FIXTURES_SETUP root-io-cpp11Containers-unorderedMap-fixture
-#                   LABELS longtest)
+ROOTTEST_ADD_TEST(unorderedMap
+                  MACRO  execUnorderedMap.C
+                  OUTREF execUnorderedMap.ref
+                  FIXTURES_REQUIRED root-io-cpp11Containers-unorderedMapDict-fixture
+                  FIXTURES_SETUP root-io-cpp11Containers-unorderedMap-fixture
+                  LABELS longtest)
 
 # Copy of the test above, written as a compiled C++ program based on gtest. Useful for more fine-grained view on
 # potential test failures
@@ -51,14 +50,13 @@ if(NOT 32BIT AND NOT MSVC)
                                        root-io-cpp11Containers-forwardList-fixture
                      FIXTURES_SETUP root-io-cpp11Containers-unorderedSet-fixture)
 
-# Test temporarily disabled due to a performance regression in LLVM22 leading to sporadic failures.
-#    ROOTTEST_ADD_TEST(Names
-#                      COPY_TO_BUILDDIR auxCode.h commonUtils.h
-#                      MACRO  execcpp11ContainersNames.C
-#                      OUTREF execcpp11ContainersNames.ref
-#                      FIXTURES_REQUIRED root-io-cpp11Containers-unorderedSet-fixture
-#                                        root-io-cpp11Containers-forwardList-fixture
-#                                        root-io-cpp11Containers-unorderedMap-fixture)
+   ROOTTEST_ADD_TEST(Names
+                     COPY_TO_BUILDDIR auxCode.h commonUtils.h
+                     MACRO  execcpp11ContainersNames.C
+                     OUTREF execcpp11ContainersNames.ref
+                     FIXTURES_REQUIRED root-io-cpp11Containers-unorderedSet-fixture
+                                       root-io-cpp11Containers-forwardList-fixture
+                                       root-io-cpp11Containers-unorderedMap-fixture)
 endif()
 
 
