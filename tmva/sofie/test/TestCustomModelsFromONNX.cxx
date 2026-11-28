@@ -646,6 +646,38 @@ TEST(ONNX, ArgMax_NegAxis_SelectLast)
    expectEqual(output, correct_output);
 }
 
+TEST(ONNX, ArgMin)
+{
+   // default attributes: axis=0, keepdims=1 on a [2,3] tensor
+   std::vector<float> input({1, 9, 3, 7, 2, 8});
+   std::vector<int64_t> correct_output({0, 1, 0});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "ArgMin", input);
+
+   expectEqual(output, correct_output);
+}
+
+TEST(ONNX, ArgMin_Axis1_NoKeepdims)
+{
+   std::vector<float> input({1, 9, 3, 7, 2, 8});
+   std::vector<int64_t> correct_output({0, 1});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "ArgMin_Axis1_NoKeepdims", input);
+
+   expectEqual(output, correct_output);
+}
+
+TEST(ONNX, ArgMin_NegAxis_SelectLast)
+{
+   // axis=-1 with ties: select_last_index=1 picks the last minimum
+   std::vector<float> input({1, 1, 5, 7, 2, 2});
+   std::vector<int64_t> correct_output({1, 2});
+
+   ASSERT_INCLUDE_AND_RUN(std::vector<int64_t>, "ArgMin_NegAxis_SelectLast", input);
+
+   expectEqual(output, correct_output);
+}
+
 TEST(ONNX, PRelu)
 {
    SofieReference ref = readReference("PRelu");
