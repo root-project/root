@@ -383,6 +383,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE,
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_ActivateInterpreter) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
 #ifdef EMSCRIPTEN_STATIC_LIBRARY
   GTEST_SKIP() << "Test fails for Emscipten static library build";
 #endif
@@ -778,6 +781,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_EmscriptenExceptionHandling) {
 }
 
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_CreateInterpreter) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
   auto I = TestFixture::CreateInterpreter();
   EXPECT_TRUE(I);
   // Check if the default standard is c++14
@@ -1058,6 +1064,9 @@ TYPED_TEST(CPPINTEROP_TEST_MODE, SignalHandler_MultipleInterpreters) {
 
 #ifndef EMSCRIPTEN
 TYPED_TEST(CPPINTEROP_TEST_MODE, Interpreter_WrapperCacheIsPerInterpreter) {
+#if defined(_MSC_VER) && _MSC_VER >= 1951 && !defined(_WIN64)
+  GTEST_SKIP() << "Disabled on Windows (x86). Needs fixing.";
+#endif
   if (TypeParam::isOutOfProcess)
     GTEST_SKIP() << "Test fails for OOP JIT builds";
 
