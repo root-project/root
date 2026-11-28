@@ -288,6 +288,14 @@ if(MSVC)
         ___std_find_trivial_4@12
         ___std_find_trivial_8@16
       )
+    elseif(MSVC_VERSION GREATER_EQUAL 1940)
+      # The JIT looks these up under their stdcall-decorated name
+      set(cling_exports ${cling_exports}
+        __std_find_trivial_1@12=___std_find_trivial_1@12
+        __std_find_trivial_2@12=___std_find_trivial_2@12
+        __std_find_trivial_4@12=___std_find_trivial_4@12
+        __std_find_trivial_8@16=___std_find_trivial_8@16
+      )
     endif()
     if(MSVC_VERSION LESS 1914)
       set(cling_exports ${cling_exports} ??3@YAXPAX0@Z ??_V@YAXPAX0@Z)
