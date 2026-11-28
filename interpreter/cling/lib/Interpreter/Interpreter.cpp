@@ -600,6 +600,11 @@ namespace cling {
         CI->resetAndLeakASTContext();
         llvm::BuryPointer(CI->takeASTConsumer().get());
       } else {
+        // The Parser writes to Sema in its destructor, so it must go
+        // first; Sema, the ASTContext and the consumer are freed here,
+        // while the diagnostic client and the interpreter callbacks are
+        // still alive -- ~Sema and ~ASTContext reach both.
+        m_IncrParser->destroyParser();
         CI->setSema(nullptr);
         CI->setASTContext(nullptr);
         CI->setASTConsumer(nullptr);
@@ -625,11 +630,9 @@ namespace cling {
           CI->resetAndLeakPreprocessor();
           CI->resetAndLeakSourceManager();
           CI->resetAndLeakFileManager();
-        } else {
-          CI->setPreprocessor(nullptr);
-          CI->setSourceManager(nullptr);
-          CI->setFileManager(nullptr);
         }
+        // ~CompilerInstance destroys the Preprocessor, SourceManager and
+        // FileManager in the right order.
       }
 
       LO.setCompilingModule(clang::LangOptions::CMK_None);
