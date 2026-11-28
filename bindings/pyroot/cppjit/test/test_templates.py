@@ -533,10 +533,13 @@ class TestTEMPLATES:
         import cppjit
         import cppjit.gbl as gbl
 
+        # the friend declaration is needed for operator+ to access fX of other
+        # specializations, otherwise its instantiation is (correctly) rejected
         cppjit.cppdef("""\
         namespace OperatorAddTest {
         template <class V>
         class CustomVec {
+            template <class> friend class CustomVec;
             V fX;
         public:
             CustomVec() : fX(0) {}

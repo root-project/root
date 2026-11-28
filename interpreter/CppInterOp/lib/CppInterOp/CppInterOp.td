@@ -1237,6 +1237,16 @@ def BestOverloadFunctionMatch : CppInterOpAPI {
   ];
 }
 
+def GetLastOverloadMatchDiagnostics : CppInterOpAPI {
+  let Doc = [{\returns the compiler diagnostics (errors and warnings, formatted as
+clang prints them) from the instantiation of the body of the best match in the
+last call to BestOverloadFunctionMatch on this thread, or an empty string if no
+body was instantiated. They are not printed, since overload resolution may be
+used to probe for a valid match, and a match is rejected if its body turns out
+to be ill-formed.}];
+  let ReturnType = "std::string";
+}
+
 def CodeComplete : CppInterOpAPI {
   let Doc = [{Append all code completion suggestions to Results.
 \param[out] Results CC suggestions for code fragment (appended).
