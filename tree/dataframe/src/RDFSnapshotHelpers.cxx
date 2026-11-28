@@ -1058,9 +1058,14 @@ struct SnapshotOutputWriter {
    SnapshotOutputWriter &operator=(SnapshotOutputWriter &&) noexcept = delete;
 
    /// Register a branch and corresponding systematic uncertainty.
-   /// This will create an entry in the mapping from branch names to bitmasks, so the corresponding
-   /// column can be masked if it doesn't contain valid entries. This mapping is written next to the
+   /// This creates the bitmask branch holding the bit of the variation if needed. Branches of varied
+   /// columns (variationIndex > 0) also get an entry in the mapping from branch names to bitmasks, so the
+   /// corresponding column can be masked if it doesn't contain valid entries. This mapping is written next to the
    /// tree into the output file.
+   /// Nominal branches (variationIndex == 0) are not added to the mapping: they are written with their actual value
+   /// for every entry in the output, and they are the value of the column for every variation that doesn't vary it.
+   /// Masking them with the nominal bit would make those values unreadable in entries where only such variations
+   /// pass the selection. Whether the nominal selection passed is still recorded in bit 0 of the first bitmask.
    void RegisterBranch(std::string const &branchName, unsigned int variationIndex)
    {
       if (auto it = fBranchToVariationMapping.find(branchName); it != fBranchToVariationMapping.end()) {
@@ -1085,7 +1090,8 @@ struct SnapshotOutputWriter {
       }
 
       fBranchToVariationMapping[branchName] = variationIndex;
-      fBranchToBitmaskMapping[branchName] = std::make_pair(fBitMasks[vectorIndex].branchName, bitIndex);
+      if (variationIndex != 0)
+         fBranchToBitmaskMapping[branchName] = std::make_pair(fBitMasks[vectorIndex].branchName, bitIndex);
    }
 
    /// Clear all bits, as if none of the variations passed its filter.
@@ -1169,8 +1175,8 @@ ROOT::Internal::RDF::SnapshotHelperWithVariations::SnapshotHelperWithVariations(
 }
 
 /// Register a new column as a variation of the column at `originalColumnIndex`, and clone its properties.
-/// If a nominal column is registered here, it is written without changes, but it means that it will be masked
-/// in case its selection cuts don't pass.
+/// If a nominal column is registered here, it is written without changes for every entry in the output. It is not
+/// masked, because the value of the nominal column is also the value of the column for all variations that don't vary it.
 /// \param slot Task ID for MT runs.
 /// \param columnIndex Index where the data of this column will be passed into the helper.
 /// \param originalColumnIndex If the column being registered is a variation of a "nominal" column, this designates the
@@ -1186,7 +1192,7 @@ void ROOT::Internal::RDF::SnapshotHelperWithVariations::RegisterVariedColumn(uns
 {
    if (columnIndex == originalColumnIndex) {
       // This is a nominal column, but it participates in variations.
-      // It always needs to be written, but we still need to create a mask bit to mark when nominal is invalid.
+      // It always needs to be written
       assert(variationIndex == 0);
       fBranchData[columnIndex].fVariationIndex = 0;
       fOutputHandle->RegisterBranch(fBranchData[columnIndex].fOutputBranchName, variationIndex);
