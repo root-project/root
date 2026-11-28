@@ -413,6 +413,7 @@ jobs:
           - image: ubuntu2610
           - image: debian13
             overrides: ["dev=ON", "CMAKE_CXX_FLAGS=-Wsuggest-override"]
+          - image: debiantesting
           # Special builds
           - image: alma9
             platform_config: alma9-modules_off
