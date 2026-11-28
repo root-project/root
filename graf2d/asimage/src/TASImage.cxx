@@ -116,6 +116,8 @@ extern "C" {
 #   include <draw.h>
 }
 
+#include <fontconfig/fontconfig.h>
+
 // auxiliary functions for general polygon filling
 #include "TASPolyUtils.c"
 
@@ -2642,11 +2644,88 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
    // This is for backward compatibility...
    if (fn.Last('/') == 0) fn = fn(1, fn.Length() - 1);
 
-   const char *ttpath = gEnv->GetValue("Root.TTFontPath",
-                                       TROOT::GetTTFFontDir());
-   char *tmpstr = gSystem->Which(ttpath, fn, kReadPermission);
-   fn = tmpstr;
-   delete [] tmpstr;
+   const char *basename = gSystem->BaseName(fn);
+
+   int ttindex = 0;
+
+   FcPattern *pat = nullptr, *match;
+   FcResult result;
+
+   if (strcmp(basename, "timesi.ttf") == 0 ||
+       strcmp(basename, "FreeSerifItalic.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freeserif:italic");
+   }
+   else if (strcmp(basename, "timesbd.ttf") == 0 ||
+            strcmp(basename, "FreeSerifBold.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freeserif:bold");
+   }
+   else if (strcmp(basename, "timesbi.ttf") == 0 ||
+            strcmp(basename, "FreeSerifBoldItalic.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freeserif:bold:italic");
+   }
+   else if (strcmp(basename, "arial.ttf") == 0 ||
+            strcmp(basename, "FreeSans.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freesans");
+   }
+   else if (strcmp(basename, "ariali.ttf") == 0 ||
+            strcmp(basename, "FreeSansOblique.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freesans:italic");
+   }
+   else if (strcmp(basename, "arialbd.ttf") == 0 ||
+            strcmp(basename, "FreeSansBold.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freesans:bold");
+   }
+   else if (strcmp(basename, "arialbi.ttf") == 0 ||
+            strcmp(basename, "FreeSansBoldOblique.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freesans:bold:italic");
+   }
+   else if (strcmp(basename, "cour.ttf") == 0 ||
+            strcmp(basename, "FreeMono.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freemono");
+   }
+   else if (strcmp(basename, "couri.ttf") == 0 ||
+            strcmp(basename, "FreeMonoOblique.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freemono:italic");
+   }
+   else if (strcmp(basename, "courbd.ttf") == 0 ||
+            strcmp(basename, "FreeMonoBold.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freemono:bold");
+   }
+   else if (strcmp(basename, "courbi.ttf") == 0 ||
+            strcmp(basename, "FreeMonoBoldOblique.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freemono:bold:italic");
+   }
+   else if (strcmp(basename, "symbol.ttf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "standardsymbolsps");
+   }
+   else if (strcmp(basename, "times.ttf") == 0 ||
+            strcmp(basename, "FreeSerif.otf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "freeserif");
+   }
+   else if (strcmp(basename, "wingding.ttf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "dingbats");
+   }
+   else if (strcmp(basename, "BlackChancery.ttf") == 0) {
+      pat = FcNameParse ((const FcChar8*) "urwchanceryl");
+   }
+   else if (gSystem->AccessPathName(fn, kReadPermission) != 0) {
+      // Font name is not a file - usae as pattern
+      pat = FcNameParse ((const FcChar8*) fn.Data());
+   }
+
+   if (pat) {
+      FcConfigSubstitute (nullptr, pat, FcMatchPattern);
+      FcDefaultSubstitute (pat);
+      match = FcFontMatch (nullptr, pat, &result);
+      if (match) {
+         char *ttfnt;
+         FcPatternGetString (match, FC_FILE, 0, (FcChar8**) &ttfnt);
+         fn = ttfnt;
+         FcPatternGetInteger (match, FC_INDEX, 0, &ttindex);
+         FcPatternDestroy (match);
+      }
+      FcPatternDestroy (pat);
+   }
 
    if (fn.EndsWith(".pfa") || fn.EndsWith(".PFA") || fn.EndsWith(".pfb") || fn.EndsWith(".PFB") || fn.EndsWith(".ttf") || fn.EndsWith(".TTF") || fn.EndsWith(".otf") || fn.EndsWith(".OTF")) {
       ttfont = kTRUE;
@@ -2670,7 +2749,7 @@ void TASImage::DrawText(Int_t x, Int_t y, const char *text, Int_t size,
       return;
    }
 
-   ASFont *font = get_asfont(gFontManager, fn.Data(), 0, size, ASF_GuessWho);
+   ASFont *font = get_asfont(gFontManager, fn.Data(), ttindex, size, ASF_GuessWho);
 
    if (!font) {
       font = get_asfont(gFontManager, "fixed", 0, size, ASF_GuessWho);
