@@ -153,6 +153,7 @@ ROOT_STANDARD_LIBRARY_PACKAGE(RooFit
     src/RooUnblindUniform.cxx
     src/RooUniform.cxx
     src/RooVoigtian.cxx
+    src/SofieLoader.cxx
   DICTIONARY_OPTIONS
     "-writeEmptyRootPCM"
   LINKDEF

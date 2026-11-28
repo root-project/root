@@ -132,6 +132,8 @@ inline XMLConfig ParseXMLConfig(const std::string &filename)
 
 } // namespace Internal
 
+// TODO: the documentation of SOFIE linked below is not part of ROOT anymore. Link the documentation of the external
+// SOFIE package instead, once it exists.
 /// A replacement for the TMVA::Reader legacy interface.
 /// Performs inference for TMVA models stored as XML files.
 /// For neural network inference consider using [SOFIE](https://github.com/root-project/root/blob/master/tmva/sofie/README.md) instead.

@@ -11,10 +11,18 @@
 
 #include <TFile.h>
 
+#include "SofieLoader.h"
+
 #include <gtest/gtest.h>
 
 #include <cmath>
 #include <fstream>
+
+// RooONNXFunc needs SOFIE, which is loaded at runtime
+#define SKIP_IF_NO_SOFIE()                      \
+   if (!RooFit::Detail::IsSofieAvailable()) {   \
+      GTEST_SKIP() << "SOFIE is not available"; \
+   }
 
 namespace {
 
@@ -50,6 +58,8 @@ void fillArgs(RooArgList &args, int n, double value = 0.1, std::string const &pr
 /// vector.
 TEST(RooONNXFunc, Basic_1Tensor)
 {
+   SKIP_IF_NO_SOFIE();
+
    double refPred = readDoublesFromFile("regression_mlp_pred.txt")[0];
 
    RooArgList args;
@@ -62,6 +72,8 @@ TEST(RooONNXFunc, Basic_1Tensor)
 
 TEST(RooONNXFunc, Basic_2Tensors)
 {
+   SKIP_IF_NO_SOFIE();
+
    double refPred = readDoublesFromFile("regression_mlp_two_input_pred.txt")[0];
 
    RooArgList args0;
@@ -78,6 +90,8 @@ TEST(RooONNXFunc, Basic_2Tensors)
 // the RooWorkspace as a binary blob.
 TEST(RooONNXFunc, Basic_RooWorkspace)
 {
+   SKIP_IF_NO_SOFIE();
+
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::ObjectHandling, true};
 
    // Write to RooWorkspace
@@ -105,6 +119,8 @@ TEST(RooONNXFunc, Basic_RooWorkspace)
 /// single input vector.
 TEST(RooONNXFunc, Basic_CodegenAD)
 {
+   SKIP_IF_NO_SOFIE();
+
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Fitting, true};
 
    double refPred = readDoublesFromFile("regression_mlp_pred.txt")[0];
@@ -150,6 +166,8 @@ TEST(RooONNXFunc, Basic_CodegenAD)
 /// Test the analytic gradient of a RooONNXFunc with two input tensors.
 TEST(RooONNXFunc, Basic_CodegenAD_2Tensors)
 {
+   SKIP_IF_NO_SOFIE();
+
    RooHelpers::LocalChangeMsgLevel chmsglvl{RooFit::WARNING, 0u, RooFit::Fitting, true};
 
    double refPred = readDoublesFromFile("regression_mlp_two_input_pred.txt")[0];
@@ -236,6 +254,8 @@ void checkCodegenHessian(RooAbsReal &func, std::size_t n, double refVal, std::ve
 /// Validate the Clad Hessian of a RooONNXFunc against a PyTorch reference.
 TEST(RooONNXFunc, CodegenHessian)
 {
+   SKIP_IF_NO_SOFIE();
+
    RooArgList args;
    fillArgs(args, 10);
 
@@ -249,6 +269,8 @@ TEST(RooONNXFunc, CodegenHessian)
 /// Clad Hessian with two input tensors, including the mixed blocks.
 TEST(RooONNXFunc, CodegenHessian_2Tensors)
 {
+   SKIP_IF_NO_SOFIE();
+
    RooArgList args0;
    fillArgs(args0, 10, 0.1, "a");
    RooArgList args1;
@@ -264,6 +286,8 @@ TEST(RooONNXFunc, CodegenHessian_2Tensors)
 /// primal-value adjoint d_y.value nonzero (it stays zero for a top-level RooONNXFunc).
 TEST(RooONNXFunc, CodegenHessianCompound)
 {
+   SKIP_IF_NO_SOFIE();
+
    const std::size_t n = 10;
    double f = readDoublesFromFile("regression_mlp_tanh_pred.txt")[0];
    std::vector<double> g = readDoublesFromFile("regression_mlp_tanh_grad_0.txt");
@@ -287,6 +311,8 @@ TEST(RooONNXFunc, CodegenHessianCompound)
 /// adjoints d_out_d_input nonzero (they stay zero if the parameters are the inputs).
 TEST(RooONNXFunc, CodegenHessianNonlinearInputs)
 {
+   SKIP_IF_NO_SOFIE();
+
    const std::size_t n = 10;
    const double x = std::sqrt(0.1); // the reference inputs are u = 0.1
    std::vector<double> g = readDoublesFromFile("regression_mlp_tanh_grad_0.txt");

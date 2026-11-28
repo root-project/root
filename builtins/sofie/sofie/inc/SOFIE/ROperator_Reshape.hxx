@@ -1,0 +1,418 @@
+#ifndef SOFIE_ROPERATOR_RESHAPE
+#define SOFIE_ROPERATOR_RESHAPE
+
+#include "SOFIE/common.hxx"
+#include "SOFIE/ROperator.hxx"
+#include "SOFIE/RModel.hxx"
+
+#include <cassert>
+#include <cctype>
+#include <sstream>
+#include <algorithm>
+
+namespace SOFIE{
+
+enum ReshapeOpMode { Reshape, Flatten, Squeeze, Unsqueeze };
+
+
+class ROperator_Reshape final : public ROperator
+{
+
+private:
+
+   bool fVerbose = false;
+   bool fDimInput = false;
+   bool fDynamicShape = false;
+   bool fIsAlias = false;             // output shares the memory of the input
+   ReshapeOpMode fOpMode = Reshape;   // type of Reshape operator
+
+   int fAllowZero = 0; // (for Reshape) zero in tensor shape makes output shape equal to input tensor shape
+   int fAxis = 1;      // (for Flatten)
+
+   std::string fNData;        // input data tensor name
+   std::string fNInput2;       // reshape or axes tensor name depending on operator
+   std::string fNOutput;            // output tensor name
+   std::vector<Dim> fShapeInput;    // input shape data
+   std::vector<Dim> fShapeOutput;   // output shape data
+   std::vector<Dim> fOutputShapeData; // in case output is a shape tensor we store here the shape value data (can be parametric)
+   std::vector<int64_t> fAttrAxes;  // axes attributes (provided for all version of Squeeze/Unsqueeze)
+   std::vector<int64_t> fShape;     // shape tensor values provided for Reshape for int shapes4
+
+public:
+
+   std::string Name() const {
+      if (fOpMode == Reshape) return "Reshape";
+      if (fOpMode == Flatten) return "Flatten";
+      if (fOpMode == Squeeze) return "Squeeze";
+      if (fOpMode == Unsqueeze) return "Unsqueeze";
+      return "";
+   }
+
+   ROperator_Reshape(){}
+   ROperator_Reshape(ReshapeOpMode opMode, int attr_value, std::string nameData, std::string nameInput2, std::string nameOutput)
+      : fOpMode(opMode), fNData(UTILITY::Clean_name(nameData)), fNInput2(UTILITY::Clean_name(nameInput2)),
+         fNOutput(UTILITY::Clean_name(nameOutput))
+   {
+      if (opMode == Reshape) fAllowZero = attr_value;
+      if (opMode == Flatten) fAxis = attr_value;
+
+      fInputTensorNames = { fNData };
+      if(!fNInput2.empty()){
+         fInputTensorNames.emplace_back(fNInput2);
+      }
+      fOutputTensorNames = { fNOutput };
+   }
+
+   // for squeeze/unsqueezed operators following old ONNX version (< 10)
+   // In this cases axes are passed as attribute values
+   ROperator_Reshape(ReshapeOpMode opMode, std::vector<int64_t> attrAxes, std::string nameData, std::string nameOutput)
+      : fOpMode(opMode), fNData(UTILITY::Clean_name(nameData)), fNOutput(UTILITY::Clean_name(nameOutput)),
+        fAttrAxes(attrAxes)
+   {
+      assert(fOpMode == Squeeze || fOpMode == Unsqueeze);
+      fInputTensorNames = { fNData };
+      fOutputTensorNames = { fNOutput };
+   }
+
+
+   // output shape
+   std::vector<Dim> DoShapeInference(const std::vector<Dim> & input_shape, const std::vector<Dim> & target_shape)  {
+      if (fOpMode == Reshape) {
+         // correct the provided shape (here we have the value) for 0 or -1
+         // the target_shape can be a scalar in case of not present shape input tensor
+         std::vector<Dim> output_shape = target_shape;
+         bool hasMinusOne = false;
+         bool hasZero = false;
+         for (size_t i = 0; i < output_shape.size(); i++) {
+            // case for zero values in given shape: in this case we take the corresponding value from input shape
+            if (!output_shape[i].isParam) {
+               if (output_shape[i].dim == 0) {
+                  hasZero = true;
+                  if (fAllowZero)
+                     output_shape[i] = Dim{0};
+                  else {
+                     if (i > 0 && output_shape.size() != input_shape.size())
+                        std::cout << "WARNING: SOFIE Reshape Op : output shape has zero value at index " << i <<
+                                  " but input shape has a different rank than output shape" << std::endl;
+                     if (i >= input_shape.size())
+                        throw std::runtime_error("SOFIE Reshape Op : output shape has zero value at index " + std::to_string(i) +
+                              " but input shape does not have corresponding index");
+                     }
+                     output_shape[i] = input_shape[i];
+               } else if (output_shape[i].dim == static_cast<size_t>(-1)) {
+                  hasMinusOne = true;
+               }
+            }
+         }
+         if (hasZero && hasMinusOne) {
+            throw std::runtime_error("SOFIE Reshape Op : zero value in shape is not allowed when there is also a -1 in shape");
+         }
+         // now case of -1 in shape - we can infer the value of -1 from all other values
+         for (size_t i = 0; i < output_shape.size(); i++) {
+            if (output_shape[i] == static_cast<size_t>(-1) && !output_shape[i].isParam) {
+               auto tmp = output_shape;
+               tmp.erase(tmp.begin() + i); // erase -1 value to compute the length of the other dimensions
+               auto tmp_length = ConvertDimShapeToLength(tmp);
+               auto input_length = ConvertDimShapeToLength(input_shape);
+               if (fVerbose)
+                  std::cout << "reshape- try simplifying " << ConvertDimShapeToString(input_shape) << " with length "
+                            << input_length << " to " << tmp_length << std::endl;
+
+               if (IsInteger(tmp_length) && IsInteger(input_length))
+                  output_shape[i] = Dim{static_cast<size_t>(std::stoi(input_length) / std::stoi(tmp_length))};
+               else if (IsInteger(tmp_length) && std::stoi(tmp_length) == 1) {
+                  output_shape[i] = Dim{input_length, static_cast<size_t>(-1)};
+               }
+               else {
+                  //we can try simplifying expression if tmp_length is integer and part of input_length
+                  // contains tmp_length
+                  bool canSimplify = false;
+                  std::vector <Dim> reduced_input;
+                  if (IsInteger(tmp_length)) {
+
+                     // try to tokenize with * the input length
+
+                     std::stringstream ss(input_length);
+
+                     std::string token;
+
+                     // Tokenizing w.r.t. space '*'
+                     while(getline(ss, token, '*'))
+                     {
+                        // remove any whitespace
+                        token.erase(std::remove_if(token.begin(), token.end(),
+                                                   [](unsigned char x) { return std::isspace(x); }), token.end());
+                        if (token != tmp_length) {
+                           if (IsInteger(token)) {
+                                 size_t il = static_cast<size_t>(std::stoi(input_length));
+                                 size_t tl = static_cast<size_t>(std::stoi(tmp_length));
+                                 if ((il % tl) == 0) {
+                                 canSimplify = true;
+                                 reduced_input.push_back(Dim{il / tl});
+                                 }
+                           } else {
+                              reduced_input.push_back(Dim{token});
+                           }
+                        } else {
+                           // token is equal to tmp_length, can be not considered and is simplified
+                           canSimplify = true;
+                        }
+                     }
+                  }
+                  if (canSimplify) {
+                     // if length contains * we need to add some brackets
+                     std::string res_shape = ConvertDimShapeToLength(reduced_input);
+                     if (res_shape.find('*') != std::string::npos)
+                        output_shape[i] = Dim{std::string("(") + res_shape + ")", static_cast<size_t>(-1)};
+                     else
+                        output_shape[i] = Dim{res_shape};
+                  }
+                  if (!canSimplify)
+                     output_shape[i] = Dim{std::string("(") + input_length + " / (" + tmp_length + "))", static_cast<size_t>(-1)};
+               }
+
+               break; // cannot have more than -1
+            }
+            //  throw std::runtime_error(
+            //                   "SOFIE Reshape Op : output shape has multiple negative or zero values");
+         }
+
+         if (fVerbose)
+            std::cout << "Reshape: correct output shape  to " << ConvertDimShapeToString(output_shape) << std::endl;
+
+         if (!fDimInput && ConvertDimShapeToLength(output_shape) != ConvertDimShapeToLength(input_shape)) {
+            throw std::runtime_error("SOFIE Reshape Op : Invalid  shapes : " + ConvertDimShapeToString(input_shape) +
+                                     ConvertDimShapeToString(output_shape));
+         }
+         return output_shape;
+
+      } else if (fOpMode == Flatten) {
+         // flatten case
+         if (fAxis < 0)
+            fAxis += input_shape.size();
+         auto s1 = std::vector<Dim>(input_shape.begin(), input_shape.begin() + fAxis);
+         auto s2 = std::vector<Dim>(input_shape.begin() + fAxis, input_shape.end());
+         auto l1 = ConvertDimShapeToLength(s1);
+         auto l2 = ConvertDimShapeToLength(s2);
+         std::vector<Dim> newShape = {Dim{l1}, Dim{l2}};
+         return newShape;
+      } else if (fOpMode == Squeeze) {
+         // squeeze
+         // assume no axis is provided - remove all axes with value equal to 1
+         auto output_shape = input_shape;
+         if (fAttrAxes.empty()) {
+            size_t i = 0;
+            while (i < output_shape.size()) {
+               if (output_shape[i] == Dim{1}) {
+                  output_shape.erase(output_shape.begin() + i);
+               } else {
+                  i++;
+               }
+            }
+         } else {
+            auto axes = fAttrAxes;
+            for (size_t i = 0; i < axes.size(); i++) {
+               if (axes[i] < 0)
+                  axes[i] += input_shape.size();
+               if (!(output_shape[axes[i]] == Dim{1}))
+                  throw std::runtime_error("SOFIE Squeeze Op : Invalid  axis value " + std::to_string(axes[i]) +
+                                           " for " + ConvertDimShapeToString(output_shape));
+            }
+            // for calling vector::erase we must sort axes in decreasing order to avoid
+            std::sort(axes.begin(), axes.end(), std::greater<int>());
+            for (auto & axis : axes) {
+               output_shape.erase(output_shape.begin() + axis);
+            }
+         }
+         return output_shape;
+      }
+      else if (fOpMode == Unsqueeze) {
+         // unsqueeze
+         assert(!fAttrAxes.empty());
+         // axes refer to positions in the output tensor and can be given in any order:
+         // normalize negative values, sort them and insert in increasing order
+         auto axes = fAttrAxes;
+         // output rank
+         int64_t r = input_shape.size() + axes.size();
+         for (auto &a : axes) {
+            if (a < -r || a > r - 1)
+               throw std::runtime_error("SOFIE Unsqueeze Op - axes input is not in correct range");
+            if (a < 0)
+               a += r;
+         }
+         std::sort(axes.begin(), axes.end());
+         if (std::adjacent_find(axes.begin(), axes.end()) != axes.end())
+            throw std::runtime_error("SOFIE Unsqueeze Op - axes input contains duplicate values");
+         auto output_shape = input_shape;
+         for (auto a : axes)
+            output_shape.insert(output_shape.begin() + a, Dim{1});
+         return output_shape;
+      }
+      throw std::runtime_error("SOFIE Reshape Op : Invalid ReshapeOpMode");
+      return {Dim{}};
+   }
+
+   void Initialize(RModel& model) override {
+
+      fVerbose = model.Verbose();
+      if (fVerbose)
+         std::cout << "initialize reshape op type " << fOpMode << " -  for input " << fNData
+                   << " to shape given by " << fNInput2 << std::endl;
+
+      if (model.CheckIfTensorAlreadyExist(fNData) == false) {
+          // input must be a graph input, or already initialized intermediate tensor
+         throw std::runtime_error("SOFIE Reshape Op Input Tensor " + fNData + "  is not found in model");
+      }
+      fShapeInput = model.GetDimTensorShape(fNData);
+      fDimInput = model.IsDynamicTensor(fNData);
+      // check if optional tensor exists defining shape or axes
+      if (!fNInput2.empty()) {
+         if (model.CheckIfTensorAlreadyExist(fNInput2)) {
+            if (model.IsInitializedTensor(fNInput2)) {
+               // assume input shape is an initialized tensor
+               auto dptr = model.GetInitializedTensorData(fNInput2);
+               auto values = static_cast<int64_t *>(dptr.get());
+               auto vec = model.GetTensorShape(fNInput2);
+               size_t n = 1;
+               if (vec.size() > 0)
+                  n = vec[0]; // size of shape input tensor
+               // copy values in fShape vector or fAttrAxes
+               if (fOpMode == Reshape)
+                  fShape = std::vector<int64_t>(values, values + n);
+               else
+                  fAttrAxes = std::vector<int64_t>(values, values + n);
+
+               std::vector<Dim> targetShape(fShape.begin(),fShape.end());
+               fShapeOutput = DoShapeInference(fShapeInput, targetShape);
+               // set flag to not write tensor in weight file. Its data will be hard-coded in way model is constructed
+               model.SetNotWritableInitializedTensor(fNInput2);
+            } else if (model.IsShapeTensor(fNInput2)) {
+               auto shapeData = model.GetShapeTensorValues(fNInput2);
+               fShapeOutput = DoShapeInference(fShapeInput, shapeData);
+               if (model.Verbose())
+                  std::cout << "Reshape op - get output shape from shape tensor " << fNInput2 << " with value " << ConvertDimShapeToString(shapeData) << std::endl;
+            } else {
+               // we cannot get shape at initialization time but at run-time
+               fDynamicShape = true;
+               // size of shape output us given by size of shape input tensor
+               if (model.IsDynamicTensor(fNInput2)) {
+                  throw std::runtime_error("SOFIE Reshape Op 2nd input Tensor " + fNInput2 + " cannot have dynamic shape");
+               }
+               auto shapeInput2 = model.GetTensorShape(fNInput2);
+               fShapeOutput.resize(shapeInput2[0]);
+               for (size_t i = 0; i < fShapeOutput.size(); i++) {
+                  fShapeOutput[i] = Dim{ std::string("s_") + fNOutput + "_" + std::to_string(i)};
+               }
+            }
+         } else {
+            throw std::runtime_error("SOFIE Reshape Op 2nd input Tensor " + fNInput2 + " is not found in model");
+         }
+      } else if (!fAttrAxes.empty()) {
+         // case fNShape is empty and axes are provided as attributes (e.g. for Unsqueeze)
+         fShapeOutput = DoShapeInference(fShapeInput, std::vector<Dim>{});
+      } else if (fOpMode == Flatten || fOpMode == Squeeze) {
+         fShapeOutput = DoShapeInference(fShapeInput, std::vector<Dim>{});
+      } else {
+         throw std::runtime_error("SOFIE Reshape Op : Invalid Input/Attribute data");
+      }
+      // check if output is constant or not
+      if (model.IsInitializedTensor(fNData) && model.GetTensorType(fNData) == ETensorType::INT64) {
+         fIsOutputConstant = true;
+         auto inputData = static_cast<int64_t*>(model.GetInitializedTensorData(fNData).get());
+         auto o_shape = ConvertShapeToInt(fShapeOutput);
+         if (ConvertShapeToLength(ConvertShapeToInt(fShapeInput)) != ConvertShapeToLength(o_shape) )
+            throw std::runtime_error("SOFIE Reshape Op : Invalid Input/Output lengths");
+         model.AddConstantTensor<int64_t>(fNOutput, o_shape, inputData);
+         if (model.Verbose()) {
+            std::cout << Name() << " : " << fNData << " " << ConvertDimShapeToString(fShapeInput) << " -->  " << fNOutput << " (constant) " << ConvertDimShapeToString(fShapeOutput)  << " : " <<
+            ConvertValuesToString(ConvertShapeToLength(o_shape), inputData) << std::endl;
+         }
+      }
+      // for input shape tensors we can have it if output shape is size==1 or a scalar
+      else if (model.IsShapeTensor(fNData) && fShapeOutput.size() <=1) {
+         // not sure if we ever end-up here - maybe reshaping from scalar to vector or viceversa
+         fIsOutputParamShape = true;
+         fOutputShapeData = model.GetShapeTensorValues(fNData);
+         // pass the rank through the scalar flag: a shape tensor stores only its values,
+         // so a rank-0 output would otherwise read back as rank 1
+         model.AddShapeTensor(fNOutput, fOutputShapeData, fShapeOutput.empty());
+         if (model.Verbose()) {
+            std::cout << Name() << " : " << fNData << " " << ConvertDimShapeToString(fShapeInput) << " -->  " << fNOutput << " (shape) " << ConvertDimShapeToString(fShapeOutput)  << " : " <<
+            ConvertDimShapeToString(fOutputShapeData) << std::endl;
+         }
+      }
+      else {
+         // non-constant case
+         model.AddIntermediateTensor(fNOutput, model.GetTensorType(fNData), fShapeOutput);
+         // the data are not changed, so the output can share the memory of the input
+         fIsAlias = model.AddAliasTensor(fNOutput, fNData);
+         if (model.Verbose())
+            std::cout << Name() << " : " << fNData << " " << ConvertDimShapeToString(fShapeInput) << " -->  "
+                      << fNOutput << "  " << ConvertDimShapeToString(fShapeOutput) << (fIsAlias ? " (alias)" : "")
+                      << std::endl;
+      }
+   }
+
+   std::string Generate(std::string opName) override {
+
+
+      std::stringstream out;
+      std::string opType = "Reshape";
+      if (fOpMode == Flatten)
+         opType = "Flatten";
+      else if (fOpMode == Squeeze)
+         opType = "Squeeze";
+      else if (fOpMode == Unsqueeze)
+         opType = "Unsquueze";
+
+      out << SP << "///--------" << opType << " operator " << opName << " --> " << ConvertDimShapeToString(fShapeOutput) << "\n";
+
+      if (fIsOutputConstant) return out.str();  //no op for constant tensors
+
+      if (fIsOutputParamShape) {
+          // no code to generate here for param shape output. Tensor output is defined in Session constructor
+         out << "//----------------output is a shape tensor----------\n";
+         for (int i = 0; i < static_cast<int>(fShapeOutput[0].dim); i++) {
+            out << SP << "tensor_" << fNOutput << "[" << i << " ] = " << fOutputShapeData[i].GetVal() << ";\n";
+         }
+         return out.str();
+      }
+
+      // in case of dynamic output shape we need to set the shape value from input shape tensor
+      // and take case of the zero values
+      if (fDynamicShape) {
+         for (size_t i = 0; i < fShapeOutput.size(); i++) {
+            // since fNInput2 values are int64_t, should we check if they are negative?
+            out << SP << "size_t " << fShapeOutput[i].param << " = " << "tensor_" << fNInput2 << "[" << i << "];\n";
+            if (!fAllowZero)
+               out << SP << "if (tensor_" << fNInput2 << "[" << i << "] <= 0 ) "
+                         <<  fShapeOutput[i].param << " = " <<  fShapeInput[i] << ";\n";
+         }
+      }
+
+      // output of reshape is same as input
+      auto lengthOut = ConvertDimShapeToLength(fShapeOutput);
+      auto lengthIn = ConvertDimShapeToLength(fShapeInput);
+      // the output size comes from the shape values read above
+      out << RModel::SizeCheckMarker(fNOutput);
+      if (lengthOut != lengthIn) {
+         // check needs to be done at run-time
+         out << SP << "if (" << lengthOut << "!=" << lengthIn << ")\n";
+         out << SP << SP << "throw std::runtime_error(\"SOFIE Reshape " << opName << " output length "
+             << lengthOut << " is different than input one " << lengthIn << "\");\n";
+      }
+
+      if (fIsAlias) {
+         out << SP << "auto * tensor_" << fNOutput << " = tensor_" << fNData << ";\n";
+      } else {
+         out << SP << "std::copy( tensor_" << fNData << ", tensor_" << fNData << " + " << lengthIn << ", " << "tensor_"
+             << fNOutput << ");\n";
+      }
+      return out.str();
+   }
+};
+
+}//SOFIE
+
+
+#endif //SOFIE_ROPERATOR_RESHAPE

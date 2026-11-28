@@ -135,8 +135,6 @@ if (NOT dataframe)
         machine_learning/tmva102_Testing.py # depends on tmva101_Training.py
     )
     list(APPEND dataframe_veto machine_learning/tmva*.C)
-    list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.C)
-    list(APPEND dataframe_veto machine_learning/TMVA_SOFIE_RDataFrame*.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_NumPy.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_TensorFlow.py)
     list(APPEND dataframe_veto machine_learning/ml_dataloader_PyTorch.py)
@@ -346,6 +344,24 @@ if(NOT TARGET Gui)
   )
 endif()
 
+# The SOFIE tutorials with RDataFrame don't need TMVA, so they are not vetoed with the other tutorials of machine
+# learning when TMVA is not enabled. They need RDataFrame and PyROOT, PyTorch to train the model, and SOFIE, which
+# they load at runtime, to generate the code to evaluate it. The model and its code are created by
+# _higgsmodel_generate_sofie.py, which is not a tutorial itself but has to run before them.
+set(sofie_rdataframe_tutorials
+    machine_learning/_higgsmodel_generate_sofie.py
+    machine_learning/SOFIE_RDataFrame.C
+    machine_learning/SOFIE_RDataFrame.py
+)
+configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/Higgs_data.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
+if (tmva OR (dataframe AND pyroot))
+  ROOT_FIND_PYTHON_MODULE(torch)
+  ROOT_FIND_PYTHON_MODULE(onnx)
+endif()
+if (NOT dataframe OR NOT pyroot OR NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
+  set(sofie_rdataframe_veto ${sofie_rdataframe_tutorials})
+endif()
+
 if (NOT tmva)
   list(APPEND tmva_veto machine_learning/*.C machine_learning/*.py machine_learning/keras/*.C machine_learning/keras/*.py machine_learning/pytorch/*.py )
 else()
@@ -353,26 +369,11 @@ else()
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_class_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_reg_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
   configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/tmva_multiclass_example.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
-  configure_file(${CMAKE_CURRENT_SOURCE_DIR}/machine_learning/data/Higgs_data.root ${CMAKE_CURRENT_BINARY_DIR}/machine_learning/data COPYONLY)
 
   #---These do not need to run for TMVA
   list(APPEND tmva_veto machine_learning/createData.C)
   #these depends on external packages
-  ROOT_FIND_PYTHON_MODULE(torch)
   ROOT_FIND_PYTHON_MODULE(keras)
-  ROOT_FIND_PYTHON_MODULE(onnx)
-
-
-  if (NOT BLAS_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
-  endif()
-  # These SOFIE tutorials take the ONNX HiggsModel trained with PyTorch as input
-  if (NOT ROOT_TORCH_FOUND OR NOT ROOT_ONNX_FOUND)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.C)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame_JIT.C)
-    list(APPEND tmva_veto machine_learning/TMVA_SOFIE_RDataFrame.py)
-  endif()
 
 endif()
 
@@ -529,6 +530,9 @@ if(root7 AND webgui)
   list(APPEND tutorials ${tutorials_exp})
 endif()
 file(GLOB tutorials_veto RELATIVE ${CMAKE_CURRENT_SOURCE_DIR} ${all_veto})
+# The veto of TMVA doesn't apply to the SOFIE tutorials with RDataFrame, which have their own conditions
+list(REMOVE_ITEM tutorials_veto ${sofie_rdataframe_tutorials})
+list(APPEND tutorials_veto ${sofie_rdataframe_veto})
 
 list(LENGTH tutorials nTotal)
 list(REMOVE_ITEM tutorials ${tutorials_veto})
@@ -603,8 +607,7 @@ set (machine_learning-tmva003_RReader-depends tutorial-machine_learning-TMVAClas
 set (machine_learning-pytorch-ApplicationClassificationPyTorch-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
 set (machine_learning-pytorch-RegressionPyTorch-depends tutorial-machine_learning-pytorch-ApplicationClassificationPyTorch-py)
 set (machine_learning-pytorch-ApplicationRegressionPyTorch-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
-set (machine_learning-TMVA_SOFIE_RDataFrame-depends tutorial-machine_learning-TMVA_SOFIE_PyTorch_HiggsModel-py)
-set (machine_learning-TMVA_SOFIE_RDataFrame_JIT-depends tutorial-machine_learning-TMVA_SOFIE_RDataFrame)
+set (machine_learning-SOFIE_RDataFrame-depends tutorial-machine_learning-_higgsmodel_generate_sofie-py)
 set (machine_learning-keras-RegressionKeras-depends tutorial-machine_learning-pytorch-RegressionPyTorch-py)
 set (machine_learning-keras-ClassificationKeras-depends tutorial-machine_learning-pytorch-ClassificationPyTorch-py)
 set (machine_learning-keras-ApplicationRegressionKeras-depends tutorial-machine_learning-keras-RegressionKeras-py)
@@ -758,6 +761,7 @@ if(pyroot)
 
   #---Python tutorials dependencies--------------------------------------
   set(io-tree-ntuple1-depends tutorial-hsimple-py)
+  set(machine_learning-SOFIE_RDataFrame-depends tutorial-machine_learning-_higgsmodel_generate_sofie-py)
   set(hist-hist015_TH1_read_and_draw-depends tutorial-hsimple-py)
   set(hist-hist015_TH1_read_and_draw_uhi-depends tutorial-hsimple-py)
   set(math-fit-fit1-depends tutorial-hist-hist001_TH1_fillrandom-py)
@@ -830,7 +834,7 @@ if(pyroot)
       machine_learning/ml_dataloader_PyTorch.py
       machine_learning/ml_dataloader_resampling.py
       machine_learning/ml_dataloader_Higgs_Classification.py
-      machine_learning/TMVA_SOFIE_PyTorch_HiggsModel.py
+      machine_learning/_higgsmodel_generate_sofie.py
   )
   file(GLOB requires_xgboost RELATIVE ${CMAKE_CURRENT_SOURCE_DIR}
       machine_learning/tmva101_Training.py

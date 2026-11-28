@@ -8,6 +8,3 @@ add_subdirectory(tmva)
 if(TARGET Gui AND TARGET TreeViewer)
    add_subdirectory(tmvagui)
 endif()
-
-add_subdirectory(sofie)
-add_subdirectory(sofie_parsers)

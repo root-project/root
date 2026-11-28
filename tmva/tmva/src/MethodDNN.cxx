@@ -25,6 +25,7 @@
  * (see tmva/doc/LICENSE)                                          *
  **********************************************************************************/
 
+// TODO: refer to the external SOFIE package, which is not part of ROOT anymore, once it exists
 /*! \class TMVA::MethodDNN
 \ingroup TMVA
 Deep Neural Network Implementation.
@@ -136,6 +137,7 @@ Bool_t TMVA::MethodDNN::HasAnalysisType(Types::EAnalysisType type,
 /// default initializations
 
 void TMVA::MethodDNN::Init() {
+      // TODO: refer to the external SOFIE package, which is not part of ROOT anymore, once it exists
       Log() << kWARNING
             << "MethodDNN is deprecated and will be removed in ROOT 6.46. Please train neural networks with a "
                "dedicated machine learning library instead, and use SOFIE for inference in C++."
