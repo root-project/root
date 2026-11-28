@@ -45,14 +45,14 @@ body:
       label: Installation method
       placeholder: Package manager (which?), pre-built binary, build from source, ...
     validations:
-      required: true
+      required: false
   - type: input
     id: operating-system
     attributes:
       label: Operating system
       placeholder: Windows, MacOS, Linux (which distribution?)
     validations:
-      required: true
+      required: false
   - type: textarea
     id: additional-context
     attributes:

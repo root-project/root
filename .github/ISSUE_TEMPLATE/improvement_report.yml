@@ -17,14 +17,14 @@ body:
       label: ROOT version
       description: On Linux/MacOS, `root -b -q | xclip -sel clip`. On Windows, `root -b -q | clip.exe`
     validations:
-      required: true
+      required: false
   - type: input
     id: root-install-how
     attributes:
       label: Installation method
       placeholder: Package manager (which?), pre-built binary, build from source, ...
     validations:
-      required: true
+      required: false
   - type: input
     id: operating-system
     attributes:
