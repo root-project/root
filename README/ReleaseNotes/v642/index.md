@@ -54,8 +54,10 @@ The following people have contributed to this new version:
 * The **TMPIFile** class and the `mpi` build option (not to be confused with `minuit2_mpi`, which is unaffected) are deprecated and will be removed in ROOT 6.44.
 * The header `compiledata.h` will be renamed in ROOT 6.44. It did not have header guards and is not meant to be used directly. It is solely used by ROOT internally to set up `ACLiC`; consider using `gSystem` instead to access its content.
 * Including `RConfig.h` and `RVersion.h` is now deprecated and will be removed after ROOT 6.44, use instead `ROOT/RConfig.hxx` and `ROOT/RVersion.hxx`.
+* The header `GLconstants.h` is no longer public in ROOT 6.42.
 * The headers of the `bvh` library in `Geom` are no longer public in ROOT 6.42.
 * Usage of the following headers is now deprecated. These will be removed during the lifetime of ROOT 7:
+  * `Match.h`: use instead public interface of `TRegExp.h`
   * `Rpair.h`: use `<utility>` instead.
   * `Hparam.h` and `Hoption.h`: use instead `THistPainter`, `TGraph2DPainter` public interfaces.
   * `Htypes.h` and `Gtypes.h`: Use instead `Rtypes.h`.
