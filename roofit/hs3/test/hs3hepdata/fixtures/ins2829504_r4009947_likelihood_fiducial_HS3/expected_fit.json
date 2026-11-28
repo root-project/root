@@ -1,0 +1,62 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "k_tt1c": {
+     "best_fit": 1.2563488136098673,
+     "hesse_error": 0.18539903430227866,
+     "minus_one_sigma": -0.17217282985509225,
+     "plus_one_sigma": 0.18764204121365993
+    },
+    "k_tt2c": {
+     "best_fit": 1.2240219159001122,
+     "hesse_error": 0.2462859181987183,
+     "minus_one_sigma": -0.23066048889318183,
+     "plus_one_sigma": 0.25682327802762606
+    },
+    "k_tt_1b": {
+     "best_fit": 1.0771673706361429,
+     "hesse_error": 0.07407097587652112,
+     "minus_one_sigma": -0.07145826698068064,
+     "plus_one_sigma": 0.07487886837028991
+    },
+    "k_tt_light": {
+     "best_fit": 0.8961328993031998,
+     "hesse_error": 0.04631704568879241,
+     "minus_one_sigma": -0.044528092442897974,
+     "plus_one_sigma": 0.04671032789586821
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": [],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["k_tt1c", "k_tt2c", "k_tt_1b", "k_tt_light"],
+   "profile_scans": {
+    "k_tt1c": {
+     "points": [0.88555074500531, 1.0709497793075886, 1.441747847912146, 1.6271468822144246],
+     "twice_delta_nll": [5.245903454255313, 1.1684516766108572, 0.9770905035547912, 3.645983637776226]
+    },
+    "k_tt2c": {
+     "points": [0.7314500795026756, 0.977735997701394, 1.4703078340988305, 1.7165937522975487],
+     "twice_delta_nll": [5.223260913975537, 1.1486661513336003, 0.9233511248603463, 3.387148258741945]
+    }
+   },
+   "seconds_when_generated": 35.54,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2829504_r4009947_likelihood_fiducial_HS3"
+}

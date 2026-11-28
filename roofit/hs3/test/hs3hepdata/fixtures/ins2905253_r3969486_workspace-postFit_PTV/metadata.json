@@ -1,0 +1,35 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.37.01.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_mu",
+   "parameters": ["mu"],
+   "pdf": "combPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_mu_PTV_150_250",
+   "parameters": ["mu_PTV_150_250"],
+   "pdf": "combPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_mu_PTV_250_",
+   "parameters": ["mu_PTV_250_"],
+   "pdf": "combPdf",
+   "points": [[0.8], [0.9], [1.0], [1.1], [1.2]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2905253: https://www.hepdata.net/record/resource/3969486 (workspace-postFit_PTV.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2905253_r3969486_workspace-postFit_PTV",
+ "title": "Measurements of the production cross-sections of a Higgs boson in association with a vector boson and decaying into $WW^\\ast$ with the ATLAS detector at $\\sqrt{s} = 13$ TeV"
+}

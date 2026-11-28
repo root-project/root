@@ -1,0 +1,98 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "dPhi_ttbar_Z_Bin_001_mu": {
+     "best_fit": 1.1581072769316043,
+     "hesse_error": 0.19009602699894523,
+     "minus_one_sigma": -0.18689074199104203,
+     "plus_one_sigma": 0.19582426381300067
+    },
+    "dPhi_ttbar_Z_Bin_002_mu": {
+     "best_fit": 1.072681024828936,
+     "hesse_error": 0.17988609657612137,
+     "minus_one_sigma": -0.1795829069072446,
+     "plus_one_sigma": 0.18215008565725146
+    },
+    "dPhi_ttbar_Z_Bin_003_mu": {
+     "best_fit": 1.1150802492513268,
+     "hesse_error": 0.17190476616025502,
+     "minus_one_sigma": -0.17178563104103792,
+     "plus_one_sigma": 0.1738755371027354
+    },
+    "dPhi_ttbar_Z_Bin_004_mu": {
+     "best_fit": 1.0097263905454008,
+     "hesse_error": 0.14722746953317278,
+     "minus_one_sigma": -0.14731452776449938,
+     "plus_one_sigma": 0.14828568881793458
+    },
+    "dPhi_ttbar_Z_Bin_005_mu": {
+     "best_fit": 0.7834754477177708,
+     "hesse_error": 0.2669965063409936,
+     "minus_one_sigma": -0.26722875974961424,
+     "plus_one_sigma": 0.2740179996713186
+    },
+    "mu_FakeEl_HF": {
+     "best_fit": 0.8834557735914857,
+     "hesse_error": 0.09476796619444205,
+     "minus_one_sigma": -0.09240931028910847,
+     "plus_one_sigma": 0.09831141702178202
+    },
+    "mu_FakeEl_Other": {
+     "best_fit": 1.224145695209085,
+     "hesse_error": 0.37563839442391256,
+     "minus_one_sigma": -0.3670004908100915,
+     "plus_one_sigma": 0.41156635828196514
+    },
+    "mu_FakeMu_HF": {
+     "best_fit": 1.0128421564151326,
+     "hesse_error": 0.08324203306169098,
+     "minus_one_sigma": -0.08056560453799026,
+     "plus_one_sigma": 0.08689734328758487
+    },
+    "mu_WZ_b": {
+     "best_fit": 0.8695959699960446,
+     "hesse_error": 0.374684259494264,
+     "minus_one_sigma": -0.33387580250809995,
+     "plus_one_sigma": 0.4438138172623681
+    },
+    "mu_ZZ_b": {
+     "best_fit": 1.5669281520097058,
+     "hesse_error": 0.5815102052213126,
+     "minus_one_sigma": -0.5250965347616982,
+     "plus_one_sigma": 0.676515565983289
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["mu_FakeEl_HF", "mu_FakeEl_Other", "mu_FakeMu_HF", "mu_WZ_b", "mu_ZZ_b"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["dPhi_ttbar_Z_Bin_001_mu", "dPhi_ttbar_Z_Bin_002_mu", "dPhi_ttbar_Z_Bin_003_mu", "dPhi_ttbar_Z_Bin_004_mu", "dPhi_ttbar_Z_Bin_005_mu"],
+   "profile_scans": {
+    "dPhi_ttbar_Z_Bin_001_mu": {
+     "points": [0.7779152229337138, 0.9680112499326591, 1.3482033039305494, 1.5382993309294948],
+     "twice_delta_nll": [4.367776887840591, 1.035522069880244, 0.9437415183128905, 3.6061482451987104]
+    },
+    "dPhi_ttbar_Z_Bin_002_mu": {
+     "points": [0.7129088316766933, 0.8927949282528147, 1.2525671214050573, 1.4324532179811786],
+     "twice_delta_nll": [4.0930156793074275, 1.0033861694428197, 0.9755565366758674, 3.830057159135322]
+    }
+   },
+   "seconds_when_generated": 24.68,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_dPhi_ttbar_Z_5bins_comb_particle_tau2.4"
+}

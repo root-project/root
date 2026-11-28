@@ -1,0 +1,194 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "Norm_VV_HF": {
+     "best_fit": 1.0007202693952622,
+     "hesse_error": 0.33904872272311715,
+     "minus_one_sigma": -0.3529045717877007,
+     "plus_one_sigma": 0.3333895466278706
+    },
+    "Norm_fake_ExtConv": {
+     "best_fit": 1.3056455430207834,
+     "hesse_error": 0.3282697081642209,
+     "minus_one_sigma": -0.3195892402320892,
+     "plus_one_sigma": 0.35569368198230294
+    },
+    "Norm_fake_HF_el_TandM": {
+     "best_fit": 0.6270781551358681,
+     "hesse_error": 0.3051229526841739,
+     "minus_one_sigma": -0.29361099996446516,
+     "plus_one_sigma": 0.3340614936319842
+    },
+    "Norm_fake_HF_mu_TandM": {
+     "best_fit": 0.9281595497726011,
+     "hesse_error": 0.21586812928382582,
+     "minus_one_sigma": -0.20550244592625772,
+     "plus_one_sigma": 0.23042995252116016
+    },
+    "Norm_fake_IntConv": {
+     "best_fit": 1.023936540148378,
+     "hesse_error": 0.2368567184027312,
+     "minus_one_sigma": -0.2189039731524971,
+     "plus_one_sigma": 0.26378648303629193
+    },
+    "Norm_ttZ_LF": {
+     "best_fit": 1.1416699149339722,
+     "hesse_error": 0.16984307179838248,
+     "minus_one_sigma": -0.16395208038319242,
+     "plus_one_sigma": 0.17484488790041514
+    },
+    "ttW_Bin_001_mu": {
+     "best_fit": 2.5488090413826763,
+     "hesse_error": 0.5631484756222723,
+     "minus_one_sigma": -0.539707836488385,
+     "plus_one_sigma": 0.5876784232311226
+    },
+    "ttW_Bin_002_mu": {
+     "best_fit": 1.4647198812232523,
+     "hesse_error": 0.32031954327287326,
+     "minus_one_sigma": -0.30862100282144395,
+     "plus_one_sigma": 0.3313808443465523
+    },
+    "ttW_Bin_003_mu": {
+     "best_fit": 1.4411986559801617,
+     "hesse_error": 0.27005208167006034,
+     "minus_one_sigma": -0.26200826079754436,
+     "plus_one_sigma": 0.27911880790383553
+    },
+    "ttW_Bin_004_mu": {
+     "best_fit": 1.1534158111522959,
+     "hesse_error": 0.33848752357345535,
+     "minus_one_sigma": -0.32559145461923755,
+     "plus_one_sigma": 0.3510551957748852
+    },
+    "ttW_Bin_005_mu": {
+     "best_fit": 1.397556847487969,
+     "hesse_error": 0.4689377886571279,
+     "minus_one_sigma": -0.45922944951910577,
+     "plus_one_sigma": 0.48449752687227693
+    },
+    "ttW_Bin_006_mu": {
+     "best_fit": 2.9104507287620724,
+     "hesse_error": 0.7432192941777909,
+     "minus_one_sigma": -0.7184157691895824,
+     "plus_one_sigma": 0.8073937717743571
+    },
+    "ttW_Bin_007_mu": {
+     "best_fit": 1.3745279827741144,
+     "hesse_error": 0.4097596059805632,
+     "minus_one_sigma": -0.3883888924445843,
+     "plus_one_sigma": 0.43015336792429737
+    },
+    "ttW_Bin_008_mu": {
+     "best_fit": 2.1503088917207864,
+     "hesse_error": 0.6315395963896838,
+     "minus_one_sigma": -0.6029678876151077,
+     "plus_one_sigma": 0.6628562714525545
+    },
+    "ttW_Bin_009_mu": {
+     "best_fit": 0.8497217057885705,
+     "hesse_error": 0.9679520486067281,
+     "minus_one_sigma": -0.9203235460615508,
+     "plus_one_sigma": 1.0224418524496177
+    },
+    "ttW_Bin_010_mu": {
+     "best_fit": 1.6963949873373423,
+     "hesse_error": 1.2149853572563418,
+     "minus_one_sigma": -1.1518145973704481,
+     "plus_one_sigma": 1.347145720531028
+    },
+    "ttW_Bin_011_mu": {
+     "best_fit": 1.6969273232241795,
+     "hesse_error": 0.8743756672458056,
+     "minus_one_sigma": -0.8450495530729503,
+     "plus_one_sigma": 0.9119972034390896
+    },
+    "ttW_Bin_012_mu": {
+     "best_fit": 1.167282432847022,
+     "hesse_error": 0.4398410583497589,
+     "minus_one_sigma": -0.4234877596292182,
+     "plus_one_sigma": 0.4573099519657002
+    },
+    "ttW_Bin_013_mu": {
+     "best_fit": 1.6386383268419156,
+     "hesse_error": 0.39094160624590857,
+     "minus_one_sigma": -0.3785142499813219,
+     "plus_one_sigma": 0.40455362142840345
+    },
+    "ttW_Bin_014_mu": {
+     "best_fit": 1.0891649366720288,
+     "hesse_error": 0.49720186412123496,
+     "minus_one_sigma": -0.48232597101113234,
+     "plus_one_sigma": 0.5155030453966513
+    },
+    "ttW_Bin_015_mu": {
+     "best_fit": 1.2724979477223362,
+     "hesse_error": 0.684355059354672,
+     "minus_one_sigma": -0.6701190345263223,
+     "plus_one_sigma": 0.7074541492291971
+    },
+    "ttW_Bin_016_mu": {
+     "best_fit": 0.7695592205460254,
+     "hesse_error": 1.1355954836838338,
+     "minus_one_sigma": -1.133273910055354,
+     "plus_one_sigma": 1.2834602989967085
+    },
+    "ttW_Bin_017_mu": {
+     "best_fit": 2.076395721200995,
+     "hesse_error": 0.7191586018139218,
+     "minus_one_sigma": -0.7029764960499656,
+     "plus_one_sigma": 0.7399801441938676
+    },
+    "ttW_Bin_018_mu": {
+     "best_fit": 0.6941670265218408,
+     "hesse_error": 0.8779681028797697,
+     "minus_one_sigma": -0.8550025082392032,
+     "plus_one_sigma": 0.914652592741299
+    },
+    "ttW_Bin_019_mu": {
+     "best_fit": 2.743403130258484,
+     "hesse_error": 1.3316493554340274,
+     "minus_one_sigma": -1.2992635448331722,
+     "plus_one_sigma": 1.4091135454907653
+    },
+    "ttW_Bin_020_mu": {
+     "best_fit": 3.662769699607589,
+     "hesse_error": 2.1657623446087007,
+     "minus_one_sigma": -2.229226986751295,
+     "plus_one_sigma": 1.3372303003924109
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["Norm_VV_HF", "Norm_fake_ExtConv", "Norm_fake_HF_el_TandM", "Norm_fake_HF_mu_TandM", "Norm_fake_IntConv", "Norm_ttZ_LF"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["ttW_Bin_001_mu", "ttW_Bin_002_mu", "ttW_Bin_003_mu", "ttW_Bin_004_mu", "ttW_Bin_005_mu", "ttW_Bin_006_mu", "ttW_Bin_007_mu", "ttW_Bin_008_mu", "ttW_Bin_009_mu", "ttW_Bin_010_mu", "ttW_Bin_011_mu", "ttW_Bin_012_mu", "ttW_Bin_013_mu", "ttW_Bin_014_mu", "ttW_Bin_015_mu", "ttW_Bin_016_mu", "ttW_Bin_017_mu", "ttW_Bin_018_mu", "ttW_Bin_019_mu", "ttW_Bin_020_mu"],
+   "profile_scans": {
+    "ttW_Bin_001_mu": {
+     "points": [1.4225120901381316, 1.985660565760404, 3.1119575170049485, 3.6751059926272207],
+     "twice_delta_nll": [4.813685881046695, 1.093106057622208, 0.921443844341411, 3.419021685487678]
+    },
+    "ttW_Bin_002_mu": {
+     "points": [0.8240807946775057, 1.1444003379503789, 1.7850394244961256, 2.105358967768999],
+     "twice_delta_nll": [4.83834020548602, 1.0807068512149272, 0.9365976142071304, 3.485104212006263]
+    }
+   },
+   "seconds_when_generated": 298.22,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2745375_r3809859_raw_inputs_TREx_HEPData_differential_xs_differential_nJets_model_workspace_regularized"
+}

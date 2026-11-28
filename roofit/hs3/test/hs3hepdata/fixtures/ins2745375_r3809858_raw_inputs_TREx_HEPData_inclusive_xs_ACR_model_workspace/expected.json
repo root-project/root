@@ -1,0 +1,55 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["obsData"],
+    "functions": [],
+    "pdfs": ["simPdf"]
+   }
+  },
+  {
+   "expected": [3.0714952443086077, 1.1789770122886694, 0.0, -0.4572285324029508, -0.18328552215461968],
+   "id": "nll_scan_obsData_ARC",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "ARC": 0.318
+   },
+   "scan_parameters": ["ARC"],
+   "scan_points": [[0.2544], [0.2862], [0.318], [0.3498], [0.3816]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  },
+  {
+   "expected": [65.21579981195828, 28.717363153744373, 0.0, -21.679193687941734, -36.95594676976543],
+   "id": "nll_scan_obsData_Norm_ttW",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "Norm_ttW": 1.0
+   },
+   "scan_parameters": ["Norm_ttW"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins2745375_r3809858_raw_inputs_TREx_HEPData_inclusive_xs_ACR_model_workspace"
+}

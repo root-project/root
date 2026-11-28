@@ -1,0 +1,37 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["obsData"],
+    "functions": [],
+    "pdfs": ["simPdf"]
+   }
+  },
+  {
+   "expected": [-45.1037797062844, -22.639584071693434, 0.0, 22.78613086416567, 45.69683757678354],
+   "id": "nll_scan_obsData_SigXsecOverSM_50_N2",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "SigXsecOverSM_50_N2": 1.0
+   },
+   "scan_parameters": ["SigXsecOverSM_50_N2"],
+   "scan_points": [[0.8], [0.9], [1.0], [1.1], [1.2]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins2816994_r3757762_likelihood_mm_HNL50"
+}

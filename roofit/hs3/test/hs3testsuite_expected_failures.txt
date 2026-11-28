@@ -1,0 +1,8 @@
+# Checks of the HS3 conformance test suite that are known to fail with the
+# current RooFit. See roofit/doc/developers/roofit_hs3.md, "Conformance testing".
+#
+# Format: one check per line, <test_id>::<check_id>  # <one-line reason>
+#
+# These checks are run as expected failures: if one of them starts to pass, or
+# if an entry matches no check, the test fails. Remove entries in the same pull
+# request that fixes them.

@@ -1,0 +1,116 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "cos_theta_star_Z_Bin_001_mu": {
+     "best_fit": 1.6337138080021703,
+     "hesse_error": 0.2203327397616519,
+     "minus_one_sigma": -0.21625123782142067,
+     "plus_one_sigma": 0.23092566977185938
+    },
+    "cos_theta_star_Z_Bin_002_mu": {
+     "best_fit": 0.8830752761564149,
+     "hesse_error": 0.1495451847716644,
+     "minus_one_sigma": -0.1450272166987657,
+     "plus_one_sigma": 0.15539697768488894
+    },
+    "cos_theta_star_Z_Bin_003_mu": {
+     "best_fit": 1.0044009714092035,
+     "hesse_error": 0.14507792580506806,
+     "minus_one_sigma": -0.1408369360369956,
+     "plus_one_sigma": 0.1504991585068635
+    },
+    "cos_theta_star_Z_Bin_004_mu": {
+     "best_fit": 0.930202180307264,
+     "hesse_error": 0.14087647933758463,
+     "minus_one_sigma": -0.13666516273262447,
+     "plus_one_sigma": 0.14617951797697779
+    },
+    "cos_theta_star_Z_Bin_005_mu": {
+     "best_fit": 0.9539011924715225,
+     "hesse_error": 0.14565361475526273,
+     "minus_one_sigma": -0.14167032961568693,
+     "plus_one_sigma": 0.15079361245666678
+    },
+    "cos_theta_star_Z_Bin_006_mu": {
+     "best_fit": 0.958421894784904,
+     "hesse_error": 0.1455013457323887,
+     "minus_one_sigma": -0.14151398628589654,
+     "plus_one_sigma": 0.15063915469808514
+    },
+    "cos_theta_star_Z_Bin_007_mu": {
+     "best_fit": 1.0302492911894916,
+     "hesse_error": 0.1579314535334433,
+     "minus_one_sigma": -0.15360641074923534,
+     "plus_one_sigma": 0.1637190723724473
+    },
+    "cos_theta_star_Z_Bin_008_mu": {
+     "best_fit": 1.1728110157598204,
+     "hesse_error": 0.19941423136764852,
+     "minus_one_sigma": -0.1918546263201224,
+     "plus_one_sigma": 0.20994780922786954
+    },
+    "mu_FakeEl_HF": {
+     "best_fit": 0.8803151399276656,
+     "hesse_error": 0.09385634259840236,
+     "minus_one_sigma": -0.09140569754979401,
+     "plus_one_sigma": 0.09745054307757083
+    },
+    "mu_FakeEl_Other": {
+     "best_fit": 1.173012237288227,
+     "hesse_error": 0.36683393090020433,
+     "minus_one_sigma": -0.3583798776117636,
+     "plus_one_sigma": 0.40003633094695323
+    },
+    "mu_FakeMu_HF": {
+     "best_fit": 1.0046765068837409,
+     "hesse_error": 0.08322334913858481,
+     "minus_one_sigma": -0.08040778088500163,
+     "plus_one_sigma": 0.08681454203986852
+    },
+    "mu_WZ_b": {
+     "best_fit": 0.8170579889666154,
+     "hesse_error": 0.36533319426917904,
+     "minus_one_sigma": -0.3262396014321913,
+     "plus_one_sigma": 0.4323809925635724
+    },
+    "mu_ZZ_b": {
+     "best_fit": 1.5654796199023435,
+     "hesse_error": 0.6005782576703219,
+     "minus_one_sigma": -0.5372985220744618,
+     "plus_one_sigma": 0.7067396494776217
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["mu_FakeEl_HF", "mu_FakeEl_Other", "mu_FakeMu_HF", "mu_WZ_b", "mu_ZZ_b"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["cos_theta_star_Z_Bin_001_mu", "cos_theta_star_Z_Bin_002_mu", "cos_theta_star_Z_Bin_003_mu", "cos_theta_star_Z_Bin_004_mu", "cos_theta_star_Z_Bin_005_mu", "cos_theta_star_Z_Bin_006_mu", "cos_theta_star_Z_Bin_007_mu", "cos_theta_star_Z_Bin_008_mu"],
+   "profile_scans": {
+    "cos_theta_star_Z_Bin_001_mu": {
+     "points": [1.1930483284788664, 1.4133810682405183, 1.8540465477638222],
+     "twice_delta_nll": [4.483134631951543, 1.039522614748421, 0.9132299082775717]
+    },
+    "cos_theta_star_Z_Bin_002_mu": {
+     "points": [0.5839849066130861, 0.7335300913847504, 1.0326204609280794, 1.1821656456997438],
+     "twice_delta_nll": [4.613533952106081, 1.0656992664225982, 0.928570826908981, 3.4854910506146553]
+    }
+   },
+   "seconds_when_generated": 27.65,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_cos_theta_star_Z_8bins_comb_parton_tau0"
+}

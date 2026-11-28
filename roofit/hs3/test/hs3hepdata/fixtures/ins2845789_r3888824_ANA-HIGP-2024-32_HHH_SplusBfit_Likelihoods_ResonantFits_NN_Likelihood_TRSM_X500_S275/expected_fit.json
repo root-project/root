@@ -1,0 +1,46 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "DefaultBackgroundNorm": {
+     "best_fit": 0.058920842403292935,
+     "hesse_error": 0.0007424637381606217,
+     "minus_one_sigma": -0.0007390074042016468,
+     "plus_one_sigma": 0.0007459062525512046
+    },
+    "SigXsecOverSM6j": {
+     "best_fit": 1.3654027263216087e-10,
+     "hesse_error": 3.3726895603372578,
+     "minus_one_sigma": -1.3654027263216087e-10,
+     "plus_one_sigma": 1.037269782920849
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["DefaultBackgroundNorm"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["SigXsecOverSM6j"],
+   "profile_scans": {
+    "SigXsecOverSM6j": {
+     "points": [3.372689560473798],
+     "twice_delta_nll": [6.0003234363975935]
+    }
+   },
+   "seconds_when_generated": 0.67,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_ResonantFits_NN_Likelihood_TRSM_X500_S275"
+}

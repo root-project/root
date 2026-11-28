@@ -1,0 +1,59 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "k_ttC": {
+     "best_fit": 0.507311316076908,
+     "hesse_error": 0.422122341363234,
+     "minus_one_sigma": -0.40731131607690807,
+     "plus_one_sigma": 0.4966658218855657
+    },
+    "k_ttDel": {
+     "best_fit": 1.6440079452316514,
+     "hesse_error": 0.7040119937219564,
+     "minus_one_sigma": -0.5851877766198508,
+     "plus_one_sigma": 0.8919639533360606
+    },
+    "k_ttDmu": {
+     "best_fit": 0.7312915308242197,
+     "hesse_error": 0.3122916210056893,
+     "minus_one_sigma": -0.26092561414106424,
+     "plus_one_sigma": 0.37758291139229316
+    },
+    "k_ttQ": {
+     "best_fit": 0.8027421567453991,
+     "hesse_error": 0.36888835294576794,
+     "minus_one_sigma": -0.29831188350305865,
+     "plus_one_sigma": 0.4823668781557667
+    },
+    "k_ttW": {
+     "best_fit": 1.1381623831470713,
+     "hesse_error": 0.40584832619581945,
+     "minus_one_sigma": -0.34809724071369613,
+     "plus_one_sigma": 0.4926934243514173
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["k_ttC", "k_ttDel", "k_ttDmu", "k_ttQ", "k_ttW"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": [],
+   "profile_scans": {},
+   "seconds_when_generated": 2.81,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2816994_r3757761_likelihood_lowmass_combined_BONLY"
+}

@@ -1,0 +1,37 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["obsData"],
+    "functions": [],
+    "pdfs": ["simPdf"]
+   }
+  },
+  {
+   "expected": [-0.04791674120497191, -0.024651014566188678, 0.0, 0.02599514977191575, 0.05329508925206028],
+   "id": "nll_scan_obsData_SigXsecOverSM",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "SigXsecOverSM": 0.01
+   },
+   "scan_parameters": ["SigXsecOverSM"],
+   "scan_points": [[0.008], [0.009], [0.01], [0.011], [0.012]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins3147718_r4469390_mu_ADDn2_QBH_muj_ADDn2_Mth9.0_HS3"
+}

@@ -1,0 +1,37 @@
+{
+ "checks": [
+  {
+   "id": "static_integrity",
+   "kind": "static_integrity"
+  },
+  {
+   "id": "structure_import",
+   "kind": "structure_import",
+   "target": {
+    "data": ["obsData"],
+    "functions": [],
+    "pdfs": ["simPdf"]
+   }
+  },
+  {
+   "expected": [0.0, 5.369192978163483, 14.721438679058338, 27.72494603303494, 44.10023070528405],
+   "id": "nll_scan_obsData_SigXsecOverSM6j",
+   "kind": "twice_delta_nll_scan",
+   "reference_point": {
+    "SigXsecOverSM6j": 0.0
+   },
+   "scan_parameters": ["SigXsecOverSM6j"],
+   "scan_points": [[0.0], [0.1], [0.2], [0.3], [0.4]],
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "atol": 1e-05,
+    "rtol": 1e-06
+   }
+  }
+ ],
+ "schema_version": 1,
+ "test_id": "ins2845789_r3888824_ANA-HIGP-2024-32_HHH_SplusBfit_Likelihoods_HeavyResonantFits_NN_Likelihood_Heavy_X900_S275_width0p01"
+}

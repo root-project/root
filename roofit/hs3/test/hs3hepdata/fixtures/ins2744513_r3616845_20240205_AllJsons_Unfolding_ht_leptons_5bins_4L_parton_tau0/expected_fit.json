@@ -1,0 +1,92 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "ht_leptons_Bin_001_mu": {
+     "best_fit": 0.8346059629539823,
+     "hesse_error": 0.2914855440167708,
+     "minus_one_sigma": -0.27419044073191584,
+     "plus_one_sigma": 0.30994698212800853
+    },
+    "ht_leptons_Bin_002_mu": {
+     "best_fit": 1.1982534368050788,
+     "hesse_error": 0.3227744946179533,
+     "minus_one_sigma": -0.31102927660625357,
+     "plus_one_sigma": 0.3360259240890059
+    },
+    "ht_leptons_Bin_003_mu": {
+     "best_fit": 2.0127152971113764,
+     "hesse_error": 0.3738542306958058,
+     "minus_one_sigma": -0.35461628871989453,
+     "plus_one_sigma": 0.3941485108846238
+    },
+    "ht_leptons_Bin_004_mu": {
+     "best_fit": 1.227418862366237,
+     "hesse_error": 0.3478558192402826,
+     "minus_one_sigma": -0.32462865128420193,
+     "plus_one_sigma": 0.3723541707932505
+    },
+    "ht_leptons_Bin_005_mu": {
+     "best_fit": 0.5809323868866934,
+     "hesse_error": 0.2759006304174737,
+     "minus_one_sigma": -0.2513041190800012,
+     "plus_one_sigma": 0.30214252297408284
+    },
+    "mu_FakeEl_HF": {
+     "best_fit": 0.8720932505364395,
+     "hesse_error": 0.0931654982684832,
+     "minus_one_sigma": -0.0905020899510337,
+     "plus_one_sigma": 0.0968036765600863
+    },
+    "mu_FakeEl_Other": {
+     "best_fit": 1.1538337723847576,
+     "hesse_error": 0.3659084209900529,
+     "minus_one_sigma": -0.3562820289832377,
+     "plus_one_sigma": 0.398928353194205
+    },
+    "mu_FakeMu_HF": {
+     "best_fit": 0.9963210097251985,
+     "hesse_error": 0.0832889179507238,
+     "minus_one_sigma": -0.08029270810177765,
+     "plus_one_sigma": 0.08709292222479026
+    },
+    "mu_ZZ_b": {
+     "best_fit": 1.416247725118182,
+     "hesse_error": 0.6088794171378002,
+     "minus_one_sigma": -0.5475260023088928,
+     "plus_one_sigma": 0.713001779674328
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["mu_FakeEl_HF", "mu_FakeEl_Other", "mu_FakeMu_HF", "mu_ZZ_b"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["ht_leptons_Bin_001_mu", "ht_leptons_Bin_002_mu", "ht_leptons_Bin_003_mu", "ht_leptons_Bin_004_mu", "ht_leptons_Bin_005_mu"],
+   "profile_scans": {
+    "ht_leptons_Bin_001_mu": {
+     "points": [0.2516348749204407, 0.5431204189372114, 1.126091506970753, 1.4175770509875238],
+     "twice_delta_nll": [5.311414574707669, 1.139406277823582, 0.8908717251142662, 3.206583497001702]
+    },
+    "ht_leptons_Bin_002_mu": {
+     "points": [0.5527044475691721, 0.8754789421871254, 1.5210279314230322, 1.8438024260409853],
+     "twice_delta_nll": [4.608809678709804, 1.079960970502725, 0.9256629151113884, 3.439027849397462]
+    }
+   },
+   "seconds_when_generated": 12.32,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_5bins_4L_parton_tau0"
+}

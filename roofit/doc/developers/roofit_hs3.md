@@ -148,6 +148,167 @@ For more complicated cases where members are lists of elements, the
 methods `is_seq()`, `set_seq()`, `is_map()`, `set_map()` and
 ranged-based for-loops via `children()` might come in handy.
 
+### Conformance testing
+
+The HS3 conformance test suite checks that RooFit imports and evaluates a
+set of frozen HS3 files like the reference implementation. It consists of
+two repositories: the fixtures in
+[HS3TestSuite](https://github.com/hep-statistics-serialization-standard/HS3TestSuite)
+and the Python runner in
+[HS3TestSuiteCode](https://github.com/hep-statistics-serialization-standard/HS3TestSuiteCode).
+
+The suite is enabled with the CMake option `-Dtest_roofit_hs3testsuite=ON`,
+which requires `-Dtesting=ON`, `-Dpyroot=ON` and the `jsonschema` Python
+package. Both repositories are fetched at configuration time, so the option
+requires network access; alternatively, point
+`FETCHCONTENT_SOURCE_DIR_HS3TESTSUITE` and
+`FETCHCONTENT_SOURCE_DIR_HS3TESTSUITECODE` to local checkouts. The option is
+enabled in the ROOT CI. Run the suite with
+
+``` {.sh}
+    ctest -R roofit-hs3-hs3-suite --output-on-failure
+```
+
+Each check of each fixture is reported as a separate test case by
+`roofit/hs3/test/test_hs3_suite.py`, which uses
+`roofit/hs3/test/hs3testsuite_roofit_backend.py` to run the checks with
+RooFit.
+
+Both repositories are pinned to explicit commits in
+`roofit/hs3/test/CMakeLists.txt`. Checks that are known to fail with the
+current RooFit are listed in
+`roofit/hs3/test/hs3testsuite_expected_failures.txt`, one
+`<test_id>::<check_id>` per line, together with a one-line reason. They are
+run as expected failures: if one of them starts to pass, or if an entry
+matches no check, the test fails, so that the list can only shrink. When you
+fix a conformance issue in RooFit, remove the corresponding entries in the
+same pull request.
+
+To bump the pinned commits, update `hs3testsuite_tag` and
+`hs3testsuitecode_tag` in
+`roofit/hs3/test/CMakeLists.txt`, re-run the suite and update the list of
+expected failures accordingly. Make sure the runner and the fixtures are
+compatible, and adapt the RooFit backend if the backend interface of the
+runner has changed.
+
+### Published HS3 documents
+
+Experiments publish HS3 documents on [HEPData](https://www.hepdata.net),
+where they are listed as resources of the type "HS3" (search for
+`analysis:hs3`). These are the documents that users of RooFit actually have,
+and most of them were written by older versions of ROOT, so they show whether
+RooFit still reads what it once wrote. Being real analyses, they are also
+realistic benchmarks.
+
+The test `roofit/hs3/test/test_hs3_hepdata.py` runs these documents through
+the runner of the HS3 conformance test suite, with the RooFit backend of the
+suite and the fixtures in `roofit/hs3/test/hs3hepdata`. The fixtures have the
+layout of the suite, but without the HS3 documents: those are downloaded from
+HEPData when the test runs, and `manifest.json` pins them by their hashes.
+`hepdata.json` lists where each document is found. For every document, the
+test checks
+
+- with the suite: that the document is imported with its pdf and data set,
+  and that 2·(NLL − NLL(reference)) has the expected values at fixed points
+  along the parameters of interest (`expected.json`);
+- `round_trip`: that RooFit exports the imported workspace, and imports the
+  exported document again;
+- `fit_<data>`, only if the fits are enabled: the best-fit values, the
+  uncertainties from Hesse and the profile likelihood intervals (Minos) of
+  the parameters of interest and of the other free parameters without a
+  constraint (typically the normalization factors of backgrounds), and a
+  profile likelihood scan of the first parameters of interest
+  (`expected_fit.json`). The likelihood includes the external constraints of
+  the ModelConfig, e.g. the regularization of an unfolding. The HS3 test
+  suite has no check kind for fits, so this file and its check are specific
+  to this test. A model without parameters of interest, e.g. for a
+  background-only fit, is scanned and fitted in its normalization factors.
+
+Every fit of `expected_fit.json` says how it is run: `target` (the pdf and
+the data set), `parameter_point` (the parameter point of the document that is
+loaded before the fit: some documents keep the result of a conditional fit,
+with most parameters fixed, in `default_values`), optionally `strategy` (the
+Minuit strategy, 1 by default) and `fixed_parameters` (parameters that the fit
+holds at a value, e.g. the signal strength of a background-only fit), and the
+parameters. A fixture can have several fits of the same data set, e.g. a
+signal-plus-background model with an additional background-only fit
+(`fit_<data>_background_only`), whose normalization factors papers quote. The
+generator takes these settings from `hs3hepdata/fit_settings.json`, by INSPIRE
+id or test_id, each with its reason. `covariance_quality` is
+the status of the covariance matrix when the fixture was generated; unless it
+is 3 (full and accurate), the uncertainties from Hesse are not compared.
+
+A document that can't be used as it is published can be patched for the test
+with `hs3hepdata/patches/<test_id>.json`: an object with the `reason` and the
+`patch`, a [JSON Patch](https://datatracker.ietf.org/doc/html/rfc6902) of
+the document (with the operations `add`, `remove`, `replace` and `test`; a
+failed `test` is an error, so a patch can name what it changes). The patch is
+applied if the downloaded document has the hashes of `manifest.json`, which
+remain the ones of the published document. All checks, the fits and the
+generator use the patched document, and its `metadata.json` says that it is
+patched and why. An example are documents with parameters whose limits are
+±1e30, which was the value of `RooNumber::infinity()` until 2023 and is
+still found in workspaces created at the time. RooFit now reads these as
+finite limits, with which Minuit can't fit the parameter (its internal
+transformation of a parameter with limits loses all precision over such a
+range), and the patch gives these parameters a finite range.
+
+**The expected values are the ones that RooFit computed when the fixtures
+were generated. For now, they are assumed to be correct: they have not been
+compared with the published results of the analyses.** Every fixture says so
+in its `metadata.json` and `expected_fit.json`. The test is therefore a
+regression test, and the fits tell whether RooFit still finds the same
+minimum, not whether that is the published one.
+
+The test is enabled with the CMake option `-Dtest_roofit_hs3hepdata=ON`,
+which requires `-Dtesting=ON`, `-Dpyroot=ON` and the Python packages
+`jsonschema` and `hepdata-cli`. The latter is the client of HEPData, through
+which the test accesses it (HEPData refuses requests of other scripted
+clients). The runner of the suite is fetched at configuration time, like for
+the conformance test suite. **The test is not enabled in the ROOT CI and
+should not be**: HEPData must not be queried on every build. Run it by hand,
+for example before a release or after a change to the import of older
+documents:
+
+``` {.sh}
+    ctest -R roofit-hs3-hs3-hepdata --output-on-failure
+```
+
+The test needs network access when it runs and downloads a few hundred MB.
+Everything it downloads is kept in the directory given by the CMake variable
+`HS3HEPDATA_CACHE` (by default in the build directory) and is not downloaded
+again. The fits are enabled with `-DHS3HEPDATA_FITS=ON`. The test file can
+also be run directly, and is configured with environment variables:
+
+| Variable | Meaning |
+|---|---|
+| `HS3HEPDATA_CACHE` | the cache directory |
+| `HS3TESTSUITECODE_ROOT` | a checkout of HS3TestSuiteCode |
+| `HS3HEPDATA_FITS=1` | run the fits |
+| `HS3HEPDATA_EVAL_BACKEND` | the evaluation backend of RooFit for the fits, e.g. `codegen` |
+| `HS3HEPDATA_OFFLINE=1` | don't contact HEPData, and skip documents that are not in the cache |
+| `HS3HEPDATA_SELECT` | a regular expression for the documents to test |
+
+The time of every step (import, round trip, and for the fits: creating the
+likelihood, the minimization, Hesse, Minos and the profile scans) is written
+to `timings.json` in the cache directory, for use as a benchmark.
+
+Checks that are known to fail are listed in
+`roofit/hs3/test/hs3hepdata_expected_failures.txt`, one
+`<test_id>::<check_id>` per line together with a one-line reason, in the same
+way as for the conformance test suite: an expected failure that starts to
+pass, or an entry that matches no check, fails the test.
+
+The fixtures are generated with
+`roofit/hs3/test/hs3hepdata_generate_fixtures.py`. It adds fixtures for
+documents that are new on HEPData and keeps the existing ones, unless it is
+told to overwrite them. The test fails if HEPData lists HS3 documents without
+fixtures, or if a document has changed, so that neither goes unnoticed.
+A fit that fails, or does not finish within the time limit of the generator,
+gets no `expected_fit.json`. The fits are independent of each other, so they
+can be generated in parallel: the generator runs one in a process of its own
+with the option `--fit-worker <test_id>`.
+
 ### Contributing
 
 If you encounter a missing importer or exporter, please consider

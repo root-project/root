@@ -1,0 +1,9 @@
+# Checks of the test with the HS3 documents on HEPData that are known to fail
+# with the current RooFit. See roofit/doc/developers/roofit_hs3.md, "Published
+# HS3 documents".
+#
+# Format: one check per line, <test_id>::<check_id>  # <one-line reason>
+#
+# These checks are run as expected failures: if one of them starts to pass, or
+# if an entry matches no check, the test fails. Remove entries in the same pull
+# request that fixes them.

@@ -1,0 +1,35 @@
+{
+ "conformance": ["published"],
+ "description": "HS3 0.2 document published on HEPData, written by ROOT 6.33.01.",
+ "modified_from_source": false,
+ "nll_scans": [
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_b",
+   "parameters": ["b"],
+   "pdf": "simPdf",
+   "points": [[0.543], [0.5973], [0.6516], [0.7059], [0.7602]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_mu_Z",
+   "parameters": ["mu_Z"],
+   "pdf": "simPdf",
+   "points": [[0.933333333333], [0.966666666667], [1.0], [1.03333333333], [1.06666666667]]
+  },
+  {
+   "data": "obsData",
+   "id": "nll_scan_obsData_mu_ratio",
+   "parameters": ["mu_ratio"],
+   "pdf": "simPdf",
+   "points": [[0.866666666667], [0.933333333333], [1.0], [1.06666666667], [1.13333333333]]
+  }
+ ],
+ "notes": ["The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis."],
+ "reference_backend": "roofit 6.43.01",
+ "schema_version": 1,
+ "source": "HEPData, INSPIRE 2689657: https://www.hepdata.net/record/resource/3614664 (ratio_likelihood.json)",
+ "tags": ["hepdata"],
+ "test_id": "ins2689657_r3614664_ratio_likelihood",
+ "title": "Measurement of the $t\\bar{t}$ cross section and its ratio to the $Z$ production cross section using $pp$ collisions at $\\sqrt{s} = 13.6$ TeV with the ATLAS detector"
+}

@@ -195,6 +195,7 @@ option(gminimal "Enable only required options by default, but include X11/Cocoa"
 option(minimal "Enable only required options by default" OFF)
 option(rootbench "Build rootbench if rootbench exists in root or if it is a sibling directory (implies testing=ON)" OFF)
 option(roottest "Build roottest (implies testing=ON)" OFF)
+option(test_roofit_hs3hepdata "Test the HS3 import with the HS3 documents published on HEPData (downloads them when the test runs)" OFF)
 option(test_roofit_hs3testsuite "Setup and use the HS3 conformance test suite (requires network)" OFF)
 option(test_tmva_sofie "Enable SOFIE tests (requires BLAS library that can be found with CMake's FindBLAS)" ON)
 option(testing "Enable testing with CTest" OFF)
@@ -369,6 +370,9 @@ endif()
 #---running HS3 test suite requires both testing and pyroot, but testing globally disables tests
 if(testing AND test_roofit_hs3testsuite AND NOT pyroot)
   message(FATAL_ERROR "-Dtest_roofit_hs3testsuite=ON requires both -Dtesting=ON and -Dpyroot=ON)")
+endif()
+if(testing AND test_roofit_hs3hepdata AND NOT pyroot)
+  message(FATAL_ERROR "-Dtest_roofit_hs3hepdata=ON requires both -Dtesting=ON and -Dpyroot=ON)")
 endif()
 
 if(unfold AND NOT xml)

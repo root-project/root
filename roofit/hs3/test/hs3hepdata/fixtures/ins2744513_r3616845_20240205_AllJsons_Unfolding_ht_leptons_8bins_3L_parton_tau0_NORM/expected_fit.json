@@ -1,0 +1,110 @@
+{
+ "comment": "The expected values are the ones that RooFit computed when the fixture was generated. For now, they are assumed to be correct: they have not been compared with the published results of the analysis.",
+ "fits": [
+  {
+   "covariance_quality": 3,
+   "expected": {
+    "TotalXsecOverTheory_ht_leptons": {
+     "best_fit": 1.0399652623979978,
+     "hesse_error": 0.08958478514565005,
+     "minus_one_sigma": -0.0874762450425244,
+     "plus_one_sigma": 0.09186788481834897
+    },
+    "ht_leptons_Bin_001_mu": {
+     "best_fit": 1.20856803846303,
+     "hesse_error": 0.18513801603207802,
+     "minus_one_sigma": -0.18237977587133342,
+     "plus_one_sigma": 0.18519659335733843
+    },
+    "ht_leptons_Bin_002_mu": {
+     "best_fit": 1.087416280849987,
+     "hesse_error": 0.1329996560250425,
+     "minus_one_sigma": -0.13018357115129905,
+     "plus_one_sigma": 0.13380140084279438
+    },
+    "ht_leptons_Bin_003_mu": {
+     "best_fit": 1.0200237417557425,
+     "hesse_error": 0.13970018130446243,
+     "minus_one_sigma": -0.1360097552888733,
+     "plus_one_sigma": 0.14259460107813285
+    },
+    "ht_leptons_Bin_004_mu": {
+     "best_fit": 1.0699700035136346,
+     "hesse_error": 0.14381136968891728,
+     "minus_one_sigma": -0.1392306870535011,
+     "plus_one_sigma": 0.14801017610121978
+    },
+    "ht_leptons_Bin_005_mu": {
+     "best_fit": 0.7848840705918512,
+     "hesse_error": 0.13301483532186875,
+     "minus_one_sigma": -0.12879350209039764,
+     "plus_one_sigma": 0.13736020897800486
+    },
+    "ht_leptons_Bin_006_mu": {
+     "best_fit": 0.9229370952010661,
+     "hesse_error": 0.15387315588413375,
+     "minus_one_sigma": -0.14793158031618342,
+     "plus_one_sigma": 0.160659949681859
+    },
+    "ht_leptons_Bin_007_mu": {
+     "best_fit": 0.4520076009402097,
+     "hesse_error": 0.14224153290995215,
+     "minus_one_sigma": -0.13569450239316108,
+     "plus_one_sigma": 0.15039249692312665
+    },
+    "mu_FakeEl_HF": {
+     "best_fit": 0.8715038394053185,
+     "hesse_error": 0.09310317930472617,
+     "minus_one_sigma": -0.09035529920728061,
+     "plus_one_sigma": 0.09685302081515765
+    },
+    "mu_FakeEl_Other": {
+     "best_fit": 1.1564502006437711,
+     "hesse_error": 0.36285805679043914,
+     "minus_one_sigma": -0.3534692956320238,
+     "plus_one_sigma": 0.39507291856579
+    },
+    "mu_FakeMu_HF": {
+     "best_fit": 0.9971590196095909,
+     "hesse_error": 0.08330174242719046,
+     "minus_one_sigma": -0.08023372280517774,
+     "plus_one_sigma": 0.08699450257783019
+    },
+    "mu_WZ_b": {
+     "best_fit": 1.1223629627964846,
+     "hesse_error": 0.4105058996753038,
+     "minus_one_sigma": -0.355331015453412,
+     "plus_one_sigma": 0.49508704574129864
+    }
+   },
+   "id": "fit_obsData",
+   "normalization_factors": ["TotalXsecOverTheory_ht_leptons", "mu_FakeEl_HF", "mu_FakeEl_Other", "mu_FakeMu_HF", "mu_WZ_b"],
+   "parameter_point": "default_values",
+   "parameters_of_interest": ["ht_leptons_Bin_001_mu", "ht_leptons_Bin_002_mu", "ht_leptons_Bin_003_mu", "ht_leptons_Bin_004_mu", "ht_leptons_Bin_005_mu", "ht_leptons_Bin_006_mu", "ht_leptons_Bin_007_mu"],
+   "profile_scans": {
+    "ht_leptons_Bin_001_mu": {
+     "points": [0.8382920063988739, 1.023430022430952, 1.3937060544951079, 1.578844070527186],
+     "twice_delta_nll": [4.171658322102303, 1.0306581883269246, 0.9994010884911404, 3.9434170352615183]
+    },
+    "ht_leptons_Bin_002_mu": {
+     "points": [0.821416968799902, 0.9544166248249445, 1.2204159368750296, 1.353415592900072],
+     "twice_delta_nll": [4.283898866844538, 1.0443147112691804, 0.9882457918120053, 3.8456693718908355]
+    }
+   },
+   "seconds_when_generated": 23.0,
+   "target": {
+    "data": "obsData",
+    "pdf": "simPdf"
+   },
+   "tolerance": {
+    "best_fit_in_sigma": 0.02,
+    "twice_delta_nll_atol": 0.02,
+    "twice_delta_nll_rtol": 0.02,
+    "uncertainty_rtol": 0.05
+   }
+  }
+ ],
+ "reference_backend": "roofit 6.43.01 (v6-41-99-275-ga568ac52818)",
+ "schema_version": 1,
+ "test_id": "ins2744513_r3616845_20240205_AllJsons_Unfolding_ht_leptons_8bins_3L_parton_tau0_NORM"
+}
