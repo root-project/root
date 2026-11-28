@@ -504,15 +504,29 @@ else()
     )
   endif()
 
+  get_property(__cling_pch GLOBAL PROPERTY CLINGETCPCH)
+  get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
+  get_property(__pch_dictionaries GLOBAL PROPERTY ROOT_PCH_DICTIONARIES)
+
+  foreach(_dep ${__pch_dependencies})
+    string(REGEX REPLACE "^G__" "" _lib_target "${_dep}")
+    if(TARGET ${_lib_target})
+      get_target_property(_dep_header_sets ${_lib_target} HEADER_SETS)
+      if(_dep_header_sets) # With modern workflow of header file sets, we did not populate global indcirs property, do it here instead more cleanly (locally)
+        get_target_property(_dep_header_dirs ${_lib_target} HEADER_DIRS) # only from default file_set; not4dict, and private / friend file sets are excluded
+        if(_dep_header_dirs)
+          list(APPEND incdirs ${_dep_header_dirs})
+        endif()
+      endif()
+    endif()
+  endforeach()
+  list(REMOVE_DUPLICATES incdirs)
+
   foreach(d ${incdirs})
     if(NOT "${d}" MATCHES "AFTER|BEFORE|INTERFACE|PRIVATE|PUBLIC|SYSTEM")
       set(__allIncludes ${__allIncludes} -I${d})
     endif()
   endforeach()
-
-  get_property(__cling_pch GLOBAL PROPERTY CLINGETCPCH)
-  get_property(__pch_dependencies GLOBAL PROPERTY ROOT_PCH_DEPENDENCIES)
-  get_property(__pch_dictionaries GLOBAL PROPERTY ROOT_PCH_DICTIONARIES)
 
   add_custom_command(OUTPUT etc/allDict.cxx.pch
     BYPRODUCTS
