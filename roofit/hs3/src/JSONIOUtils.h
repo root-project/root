@@ -33,6 +33,11 @@ class ParamHistFunc;
 // observable.
 inline constexpr const char *arrayDistTag = "hs3_array_dist";
 
+// A bin-count distribution is read as a RooBinSamplingPdf of an extended pdf, which the document has no name for: the
+// name of the distribution with this suffix (bincounts_extended_dist and bincounts_density_dist).
+inline constexpr const char *binCountsExtendedSuffix = "_extended";
+inline constexpr const char *binCountsDensitySuffix = "_density";
+
 // An object with this attribute is a helper: RooFit created it to represent something of an HS3 document that it has
 // no class for, e.g. the RooProdPdf that holds the components of an array distribution together, or the parts of a
 // composite structure that stands for one HS3 object. A helper is not a statement of the user about the model, so:

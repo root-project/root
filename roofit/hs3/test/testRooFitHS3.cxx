@@ -8764,3 +8764,340 @@ TEST(RooFitHS3, LikelihoodOfCombinedAndPlainTerms)
    ASSERT_TRUE(RooJSONFactoryWSTool{ws2}.importJSONfromString(exported)) << exported;
    EXPECT_EQ(RooJSONFactoryWSTool{ws2}.exportJSONtoString(), exported);
 }
+
+namespace {
+
+// The binned data of the bin-count tests, and the axis that it shares with the bin-count distributions: bins of the
+// width one, from binCountsMin on.
+const double binCountsMin = -5.0;
+const std::vector<double> binCountsContents{0, 1, 4, 12, 25, 27, 15, 6, 2, 1};
+const std::string binCountsAxes = R"("axes": [{"name": "x", "min": -5.0, "max": 5.0, "nbins": 10}])";
+
+// A document that pairs the distribution `paired` with the binned data: a Gaussian and the distributions `dists` on
+// top of it.
+std::string binCountsDocument(std::vector<std::string> dists, std::string const &paired = "counts")
+{
+   dists.push_back(R"({"name": "g", "type": "gaussian_dist", "x": "x", "mean": "mu", "sigma": "sigma"})");
+   std::string contents;
+   for (double count : binCountsContents) {
+      contents += (contents.empty() ? "" : ", ") + std::to_string(count);
+   }
+   return document(
+      "0.3",
+      {distributions(dists),
+       section("data",
+               {R"({"name": "d", "type": "binned", )" + binCountsAxes + R"(, "contents": [)" + contents + "]}"}),
+       section("likelihoods", {R"({"name": "L", "distributions": [")" + paired + R"("], "data": ["d"]})"}),
+       defaultDomain({axes({"x", "mu"}, -5, 5), axes({"sigma"}, 0.1, 5), axes({"nu"}, 0, 1000)}),
+       defaultValues({values({{"mu", 0.3}, {"sigma", 1.2}, {"nu", 90}})})});
+}
+
+const std::string binCountsExtended =
+   R"({"name": "counts", "type": "bincounts_extended_dist", "rate": "nu", "dist": "g", )" + binCountsAxes + "}";
+
+// The same model as binCountsExtended, given by the rate density nu * Gaussian, which is not normalized.
+std::string binCountsDensityDocument()
+{
+   return replaced(
+      binCountsDocument({R"({"name": "counts", "type": "bincounts_density_dist", "x": "x", "density": "f", )" +
+                         binCountsAxes + "}"}),
+      R"("distributions":)",
+      R"json("functions": [{"name": "f", "type": "generic", "expression": "nu * TMath::Gaus(x, mu, sigma, 1)"}],
+         "distributions":)json");
+}
+
+// -log of the product of the Poisson distributions of the counts of binCountsDocument(), without the factorials. The
+// expected count of a bin is the exact integral of the rate density nu * Gaussian, which is normalized over the axis.
+// With `atBinCentres`, it is the density at the centre of the bin times the bin width instead.
+double binCountsNLL(double mu, double sigma, double nu, bool atBinCentres = false)
+{
+   const std::vector<double> &counts = binCountsContents;
+   auto cdf = [&](double x) { return ROOT::Math::normal_cdf(x, sigma, mu); };
+   double out = 0.0;
+   for (std::size_t i = 0; i < counts.size(); ++i) {
+      const double lo = binCountsMin + i;
+      const double p = atBinCentres ? ROOT::Math::normal_pdf(lo + 0.5, sigma, mu) : cdf(lo + 1.0) - cdf(lo);
+      const double expected = nu * p / (cdf(binCountsMin + counts.size()) - cdf(binCountsMin));
+      out += expected - counts[i] * std::log(expected);
+   }
+   return out;
+}
+
+// The difference of the NLL of the pdf "counts" for the data "d" between two points of the parameters.
+double binCountsNLLDifference(RooWorkspace &ws)
+{
+   std::unique_ptr<RooAbsReal> nll{ws.pdf("counts")->createNLL(*ws.data("d"))};
+   Detail::setValues(ws, {{"mu", 0.3}, {"sigma", 1.2}, {"nu", 90.0}});
+   const double atFirst = nll->getVal();
+   Detail::setValues(ws, {{"mu", -0.5}, {"sigma", 0.8}, {"nu", 120.0}});
+   return nll->getVal() - atFirst;
+}
+
+} // namespace
+
+// The bin-count distributions of HS3 are the product of the Poisson distributions of the bin counts, whose expected
+// counts are the integrals of the rate density over the bins, not its values at the bin centres (HS3 PR #165).
+TEST(RooFitHS3, BinCountsLikelihood)
+{
+   const double expected = binCountsNLL(-0.5, 0.8, 120.0) - binCountsNLL(0.3, 1.2, 90.0);
+   // The bin centres give another likelihood: the test tells them apart.
+   ASSERT_GT(std::abs(expected - (binCountsNLL(-0.5, 0.8, 120.0, true) - binCountsNLL(0.3, 1.2, 90.0, true))), 0.1);
+
+   Imported extended{binCountsDocument({binCountsExtended})};
+   EXPECT_EQ(extended.warnings, "");
+   ASSERT_NE(dynamic_cast<RooBinSamplingPdf *>(extended.pdf("counts")), nullptr);
+   EXPECT_NEAR(binCountsNLLDifference(extended), expected, 1e-6);
+
+   // The bin integrals of a rate density are numeric.
+   Imported density{binCountsDensityDocument()};
+   EXPECT_EQ(density.warnings, "");
+   EXPECT_NEAR(binCountsNLLDifference(density), expected, 1e-3);
+}
+
+TEST(RooFitHS3, BinCountsRoundTrip)
+{
+   // What RooFit reads is written back as the same distribution, without the pdfs that RooFit builds it from.
+   const std::string exported = reexport(binCountsDocument({binCountsExtended}));
+   Doc doc{exported};
+   EXPECT_TRUE(matches(doc, "distributions/counts",
+                       R"({"type": "bincounts_extended_dist", "rate": "nu", "dist": "g", )" + binCountsAxes + "}"));
+   EXPECT_THAT(exported, Not(HasSubstr(R"("counts_extended")")));
+   EXPECT_THAT(exported, Not(HasSubstr("epsilon")));
+   EXPECT_EQ(reexport(exported), exported);
+
+   const std::string density = reexport(binCountsDensityDocument());
+   EXPECT_TRUE(matches(Doc{density}, "distributions/counts",
+                       R"({"type": "bincounts_density_dist", "x": "x", "density": "f", )" + binCountsAxes + "}"));
+   EXPECT_THAT(density, Not(HasSubstr(R"("counts_density")")));
+   EXPECT_EQ(reexport(density), density);
+
+   // A RooBinSamplingPdf of a RooExtendPdf is a bin-count distribution. Its precision is not written: HS3 leaves the
+   // numerical method of the bin integrals to the implementation, so it is read back with the default of RooFit. The
+   // RooExtendPdf is not written: it is read back as "<name>_extended".
+   RooRealVar x{"x", "x", -5.0, 5.0};
+   x.setBins(10);
+   RooRealVar mu{"mu", "mu", 0.3, -5.0, 5.0};
+   RooRealVar sigma{"sigma", "sigma", 1.2, 0.1, 5.0};
+   RooRealVar nu{"nu", "nu", 90.0, 0.0, 1000.0};
+   RooGaussian g{"g", "", x, mu, sigma};
+   RooExtendPdf extended{"counts_extended", "", g, nu};
+   RooWorkspace ws;
+   ws.import(RooBinSamplingPdf{"counts", "", x, extended, 1e-6}, RooFit::Silence());
+   EXPECT_TRUE(matches(Doc{ws}, "distributions/counts",
+                       R"({"type": "bincounts_extended_dist", "rate": "nu", "dist": "g", )" + binCountsAxes + "}"));
+   EXPECT_THAT(toJSON(ws), Not(HasSubstr("epsilon")));
+   Imported back{toJSON(ws)};
+   EXPECT_EQ(object<RooBinSamplingPdf>(back, "counts")->epsilon(), 1e-4);
+   expectRoundTrip(ws, RoundTripModel{}.exportChangesAfterEvaluation());
+
+   // A RooBinSamplingPdf of a RooAddPdf with yields: the rate is the sum of the yields, and the RooAddPdf the pdf.
+   RooWorkspace wsMixture;
+   wsMixture.factory("Gaussian::sig(x[-5, 5], mu[0.3, -5, 5], sigma[1.2, 0.1, 5])");
+   wsMixture.factory("Exponential::bkg(x, c[-0.1, -1, 1])");
+   wsMixture.factory("SUM::model(nsig[80, 0, 1000] * sig, nbkg[20, 0, 1000] * bkg)");
+   wsMixture.var("x")->setBins(10);
+   wsMixture.import(RooBinSamplingPdf{"counts", "", *wsMixture.var("x"), *wsMixture.pdf("model")}, RooFit::Silence());
+   Doc mixture{wsMixture};
+   EXPECT_TRUE(matches(mixture, "distributions/counts",
+                       R"({"type": "bincounts_extended_dist", "rate": "counts_rate", "dist": "model"})"));
+   EXPECT_TRUE(matches(mixture, "functions/counts_rate", R"({"type": "sum", "summands": ["nsig", "nbkg"]})"));
+   Imported mixtureBack{toJSON(wsMixture)};
+   const std::string mixtureAgain = toJSON(mixtureBack);
+   EXPECT_EQ(reexport(mixtureAgain), mixtureAgain);
+}
+
+// RooFit evaluates a pdf that is fitted to binned data at the bin centres, which HS3 defines no contribution for (HS3
+// PR #165). The pdf is still written as it is, paired with the data, and with a warning: a bin-count distribution in
+// its place would be another likelihood, which is for the author of the model to choose with a RooBinSamplingPdf.
+TEST(RooFitHS3, PdfWithBinnedDataIsWrittenAsItIs)
+{
+   auto nllDifference = [](RooWorkspace &ws) {
+      RooAbsPdf &pdf = *modelConfig(ws, "ModelConfig").GetPdf();
+      std::unique_ptr<RooAbsReal> nll{pdf.createNLL(*ws.data("obsData"))};
+      Detail::setValues(ws, {{"mu", 0.3}, {"sigma", 1.2}, {"n", 100.0}});
+      const double atFirst = nll->getVal();
+      Detail::setValues(ws, {{"mu", -0.5}, {"sigma", 0.8}, {"n", 60.0}});
+      return nll->getVal() - atFirst;
+   };
+   RooWorkspace ws;
+   ws.factory("Gaussian::sig(x[-5, 5], mu[0.3, -5, 5], sigma[1.2, 0.1, 5])");
+   ws.factory("ExtendPdf::model(sig, n[100, 0, 1000])");
+   ws.var("x")->setBins(10);
+   std::unique_ptr<RooDataHist> data{ws.pdf("model")->generateBinned(*ws.var("x"), RooFit::ExpectedData())};
+   data->SetName("obsData");
+   ws.import(*data);
+   addModelConfig(ws, "ModelConfig", "model", "x", "mu");
+
+   std::string exported;
+   const std::string warnings = recordWarningsOf([&] { exported = toJSON(ws); });
+   EXPECT_THAT(warnings, HasSubstr("pairs the distribution 'model' over continuous variates with the binned data set "
+                                   "'obsData', for which HS3 defines no contribution"));
+   EXPECT_THAT(warnings,
+               HasSubstr("a fit of the shape alone is recovered by a bincounts_extended_dist with a free rate"));
+   EXPECT_TRUE(matches(Doc{exported}, "likelihoods/0", R"({"distributions": ["model"], "data": ["obsData"]})"));
+   EXPECT_THAT(exported, Not(HasSubstr("bincounts")));
+
+   // The model that is read back is the one that was written: the same pdf, evaluated at the bin centres.
+   Imported back{exported};
+   EXPECT_STREQ(modelConfig(back, "ModelConfig").GetPdf()->GetName(), "model");
+   EXPECT_NEAR(nllDifference(back), nllDifference(ws), 1e-9);
+   EXPECT_EQ(reexport(exported), exported);
+
+   // A RooBinSamplingPdf of a pdf that is not extended is no bin-count distribution of HS3, which are extended. It is
+   // written as a binsampling_dist, which integrates over the bins: the warning is not the one of the bin centres.
+   RooWorkspace wsSampling;
+   wsSampling.factory("Gaussian::sig(x[-5, 5], mu[0.3, -5, 5], sigma[1.2, 0.1, 5])");
+   wsSampling.var("x")->setBins(10);
+   wsSampling.import(RooBinSamplingPdf{"model", "", *wsSampling.var("x"), *wsSampling.pdf("sig")}, RooFit::Silence());
+   std::unique_ptr<RooDataHist> dataSampling{
+      wsSampling.pdf("sig")->generateBinned(*wsSampling.var("x"), 100, RooFit::ExpectedData())};
+   dataSampling->SetName("obsData");
+   wsSampling.import(*dataSampling);
+   addModelConfig(wsSampling, "ModelConfig", "model", "x", "mu");
+   std::string sampling;
+   const std::string samplingWarnings = recordWarningsOf([&] { sampling = toJSON(wsSampling); });
+   EXPECT_TRUE(matches(Doc{sampling}, "distributions/model", R"({"type": "binsampling_dist", "pdf": "sig"})"));
+   EXPECT_THAT(samplingWarnings, HasSubstr("pairs the binsampling_dist 'model' with the binned data set 'obsData'. A "
+                                           "binsampling_dist is not part of HS3"));
+   EXPECT_THAT(samplingWarnings,
+               HasSubstr("a fit of the shape alone is recovered by a bincounts_extended_dist with a free rate"));
+   EXPECT_THAT(samplingWarnings, Not(HasSubstr("bin centres")));
+
+   // Also as a factor of a product.
+   const std::string product = binCountsDocument(
+      {R"({"name": "sampled", "type": "binsampling_dist", "pdf": "g", "observable": "x", "epsilon": 1e-4})",
+       R"({"name": "prod", "type": "product_dist", "factors": ["sampled"]})"},
+      "prod");
+   EXPECT_THAT(Imported{product}.warnings,
+               HasSubstr("pairs the binsampling_dist 'sampled', a factor of 'prod', with the binned data set 'd'"));
+}
+
+// The axes of a bin-count distribution must be the axes of its data also if it is a factor of the product that is
+// paired with the data, which is how RooFit writes a channel with constraint terms.
+TEST(RooFitHS3, AxesOfBinCountFactorOfProduct)
+{
+   const std::string product = R"({"name": "prod", "type": "product_dist", "factors": ["counts"]})";
+   EXPECT_EQ(Imported{binCountsDocument({binCountsExtended, product}, "prod")}.warnings, "");
+   expectImportThrowsWithError(
+      binCountsDocument({replaced(binCountsExtended, R"("nbins": 10)", R"("nbins": 5)"), product}, "prod"),
+      "the \"axes\" of the bin-count distribution 'counts' are not the axes of the binned data set 'd'");
+
+   // Axes that are not valid are reported as such, and not as other axes than the ones of the data.
+   expectImportThrowsWithError(binCountsDocument({replaced(binCountsExtended, R"(, "nbins": 10)", "")}),
+                               "does not define the required component \"nbins\"");
+   expectImportThrowsWithError(binCountsDocument({replaced(binCountsExtended, R"("nbins": 10)", R"("nbins": 0)")}),
+                               "the axis 'x' of the bin-count distribution 'counts' has no bins");
+}
+
+// The expected counts of a bin-count distribution are the integrals of the rate density of its variate, which is
+// normalized over the range of the variate. RooFit can only integrate over bins that cover this range: it must not
+// take the range of the axis as the one of the variate instead.
+TEST(RooFitHS3, BinCountsOnPartOfTheRangeOfTheVariate)
+{
+   // Without data, nothing but the bin-count distribution says what its bins are.
+   const std::string pureModel =
+      replaced(binCountsDocument({binCountsExtended}), R"("data": ["d"])", R"("data": null)");
+   Imported ws{pureModel};
+   EXPECT_EQ(ws.var("x")->getBins(), 10);
+   EXPECT_NEAR(ws.pdf("counts")->expectedEvents(*ws.var("x")), 90.0, 1e-9);
+
+   // The data set, which is not paired, is moved to another variable: other bins of "x" than the ones of the
+   // bin-count distribution are rejected before (see BinCountsWithDifferentBinsOfOneVariable).
+   expectImportThrowsWithError(
+      replaced(replaced(pureModel, R"("type": "binned", "axes": [{"name": "x")",
+                        R"("type": "binned", "axes": [{"name": "y")"),
+               R"("axes": [{"name": "x", "min": -5.0, "max": 5.0, "nbins": 10}])",
+               R"("axes": [{"name": "x", "min": -2.0, "max": 3.0, "nbins": 5}])"),
+      "the axis 'x' of the bin-count distribution 'counts' has the range [-2, 3], but its variate has the range "
+      "[-5, 5]: RooFit supports only bin-count distributions whose bins cover the range of the variate");
+}
+
+// HS3 allows other bins of the variable of a bin-count distribution in another bin-count distribution or binned data
+// set. RooFit has one binning of a variable, which a RooBinSamplingPdf integrates over: without the check, one of them
+// would silently get the bins of the other.
+TEST(RooFitHS3, BinCountsWithDifferentBinsOfOneVariable)
+{
+   const std::string other = replaced(binCountsExtended, R"("name": "counts")", R"("name": "other")");
+   EXPECT_NO_THROW(Imported{binCountsDocument({binCountsExtended, other})});
+   expectImportThrowsWithError(
+      binCountsDocument({binCountsExtended, replaced(other, R"("nbins": 10)", R"("nbins": 5)")}),
+      "the bin-count distribution 'counts' and the bin-count distribution 'other' have different bins of 'x': RooFit "
+      "supports only one binning of the variable of a bin-count distribution");
+
+   // Also for binned data that the bin-count distribution is not paired with.
+   expectImportThrowsWithError(
+      replaced(binCountsDocument({binCountsExtended}), "1.000000]}]",
+               R"(1.000000]}, {"name": "coarse", "type": "binned", "contents": [1, 16, 52, 21, 3],
+                  "axes": [{"name": "x", "min": -5.0, "max": 5.0, "nbins": 5}]}])"),
+      "the bin-count distribution 'counts' and the binned data set 'coarse' have different bins of 'x'");
+
+   // And for the number of bins that older versions of RooFit wrote to the parameter points.
+   auto withBinsOfX = [](int nbins) {
+      return replaced(binCountsDocument({binCountsExtended}), R"({"name": "mu", "value": 0.3})",
+                      R"({"name": "mu", "value": 0.3}, {"name": "x", "value": 0.0, "nbins": )" +
+                         std::to_string(nbins) + "}");
+   };
+   EXPECT_NO_THROW(Imported{withBinsOfX(10)});
+   expectImportThrowsWithError(withBinsOfX(50), "the bin-count distribution 'counts' and the parameter point "
+                                                "'default_values' have different bins of 'x'");
+}
+
+// RooFit reads a bin-count distribution with an extended pdf that the document has no name for. The name that it
+// gets must not be the one of another object, which would silently be taken for it.
+TEST(RooFitHS3, BinCountsHelperNameIsFree)
+{
+   expectImportThrowsWithError(
+      binCountsDocument({binCountsExtended, R"({"name": "counts_extended", "type": "gaussian_dist", "x": "x",
+                                                "mean": "mu", "sigma": "sigma"})"}),
+      "RooFit reads the bin-count distribution 'counts' with a pdf of the name 'counts_extended', which is the name "
+      "of another object of the document");
+}
+
+// The axis of a bincounts_density_dist is the axis of its variate "x".
+TEST(RooFitHS3, BinCountsDensityAxisIsItsVariate)
+{
+   const std::string pureModel = replaced(binCountsDensityDocument(), R"("data": ["d"])", R"("data": null)");
+   EXPECT_NO_THROW(Imported{pureModel});
+   expectImportThrowsWithError(
+      replaced(pureModel, R"("density": "f", "axes": [{"name": "x")", R"("density": "f", "axes": [{"name": "mu")"),
+      "the bin-count distribution 'counts' has the axis 'mu', but its variate \"x\" is 'x'");
+}
+
+// HS3 defines no contribution for a distribution over continuous variates that is paired with binned data, also for
+// the components of a combined distribution, and the axes of a bin-count distribution must be the axes of its data.
+// It is an error from HS3 0.4 on. Older documents, as RooFit wrote them, are read with a warning.
+TEST(RooFitHS3, ContinuousDistributionWithBinnedData)
+{
+   const std::string message = "the likelihood 'L' pairs the distribution 'g' over continuous variates with the binned "
+                               "data set 'd', for which HS3 defines no contribution: wrap the distribution in a "
+                               "bin-count distribution";
+   EXPECT_THAT(Imported{binCountsDocument({}, "g")}.warnings, HasSubstr(message));
+   EXPECT_THAT(Imported{binCountsDocument({}, "g")}.warnings,
+               HasSubstr("Older versions of HS3 don't say how the distribution is evaluated on the bins"));
+   expectImportThrowsWithError(replaced(binCountsDocument({}, "g"), R"("0.3")", R"("0.4")"), message);
+
+   const std::string combined = replaced(
+      replaced(binCountsDocument({R"({"name": "sim", "type": "combined_dist", "columns": ["channel"],
+                                      "components": [{"key": ["a"], "dist": "g"}]})"},
+                                 "sim"),
+               R"("data": ["d"])", R"("data": ["all"])"),
+      R"("data": [)",
+      R"("data": [{"name": "all", "type": "combined", "columns": ["channel"],
+                   "components": [{"key": ["a"], "dataset": "d"}]}, )");
+   EXPECT_THAT(Imported{replaced(combined, R"("axes": [{"name": "x", "min": -5.0, "max": 5.0}, )",
+                                 R"("axes": [{"name": "channel", "categories": ["a"]},
+                                             {"name": "x", "min": -5.0, "max": 5.0}, )")}
+                  .warnings,
+               HasSubstr(message));
+   expectImportThrowsWithError(
+      replaced(replaced(combined, R"("axes": [{"name": "x", "min": -5.0, "max": 5.0}, )",
+                        R"("axes": [{"name": "channel", "categories": ["a"]},
+                                    {"name": "x", "min": -5.0, "max": 5.0}, )"),
+               R"("0.3")", R"("0.4")"),
+      message);
+
+   // The bin-count distribution is on the binning of the data.
+   expectImportThrowsWithError(
+      binCountsDocument({replaced(binCountsExtended, R"("min": -5.0, "max": 5.0)", R"("min": -4.0, "max": 6.0)")}),
+      "the \"axes\" of the bin-count distribution 'counts' are not the axes of the binned data set 'd'");
+}

@@ -14,6 +14,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <functional>
 #include <limits>
 #include <map>
 #include <optional>
@@ -24,6 +25,16 @@
 namespace RooFit {
 namespace HS3 {
 namespace {
+
+// The version of HS3 from which on a distribution over continuous variates must not be paired with binned data (HS3
+// PR #165).
+constexpr Version bareBinnedPairingVersion{0, 4, 0};
+
+// How a fit of the shape alone is written with the bin-count distributions, which are extended (see the remark on them
+// in the section "Likelihoods" of HS3).
+const char *const binCountsRecipe =
+   "The bin-count distributions are extended: a fit of the shape alone is recovered by a bincounts_extended_dist "
+   "with a free rate, whose bins cover the range of the variate";
 
 std::string at(const char *section, std::size_t index, std::string const &name)
 {
@@ -90,6 +101,21 @@ public:
          {_options.strict ? Diagnostic::Severity::Error : Diagnostic::Severity::Warning, path, message});
    }
 
+   // A distribution over continuous variates that is paired with binned data: an error from the version of HS3 on
+   // that defines no contribution for it. Older documents are still read, and RooFit still writes a pdf that is
+   // fitted to binned data like this, with this warning: a bin-count distribution in its place would be another
+   // likelihood, since RooFit evaluates the pdf at the bin centres.
+   void bareBinnedPairing(std::string const &path, std::string const &message)
+   {
+      if (_doc.metadata.version < bareBinnedPairingVersion) {
+         warning(path, message + ". Older versions of HS3 don't say how the distribution is evaluated on the bins: "
+                                 "implementations differ, e.g. at the bin centres or with integrals over the bins. " +
+                                    binCountsRecipe);
+      } else {
+         error(path, message);
+      }
+   }
+
    void checkHistFactory(HistFactoryDist const &dist, std::string const &name, std::string const &path);
    template <class Ref_t>
    void checkCombined(Combined<Ref_t> const &combined, std::string const &path, std::string const &context);
@@ -139,6 +165,9 @@ private:
    void checkFixedAxes();
    void checkCategoricalAxes();
    void checkLikelihoods();
+   bool isBinCountDist(std::string const &name, std::set<std::string> &visited) const;
+   void checkPairing(std::string const &likelihood, std::string const &distName, std::string const &dataName,
+                     std::string const &path);
    void checkAnalyses();
    void checkNormalizationRanges(Analysis const &analysis, std::string const &path);
    void checkData();
@@ -431,6 +460,165 @@ void Validator::checkCombinedData()
    }
 }
 
+// The number of bins of an axis.
+long numBinsOf(BinnedAxis const &axis)
+{
+   if (auto const *edges = std::get_if<EdgesBinning>(&axis.binning)) {
+      return static_cast<long>(edges->edges.size()) - 1;
+   }
+   return std::get<RegularBinning>(axis.binning).nbins;
+}
+
+// The edges of the bins of an axis.
+std::vector<double> edgesOf(BinnedAxis const &axis)
+{
+   if (auto const *edges = std::get_if<EdgesBinning>(&axis.binning)) {
+      return edges->edges;
+   }
+   const int n = std::get<RegularBinning>(axis.binning).nbins;
+   std::vector<double> out;
+   for (int i = 0; i <= n; ++i) {
+      out.push_back(axis.min + i * (axis.max - axis.min) / n);
+   }
+   return out;
+}
+
+// Whether the axes of a bin-count distribution are the axes of the binned data: the same names in the same order, and
+// the same edges.
+bool sameAxes(std::vector<BinnedAxis> const &distAxes,
+              std::vector<std::variant<BinnedAxis, CategoricalAxis>> const &dataAxes)
+{
+   if (distAxes.size() != dataAxes.size()) {
+      return false;
+   }
+   for (std::size_t i = 0; i < distAxes.size(); ++i) {
+      auto const *dataAxis = std::get_if<BinnedAxis>(&dataAxes[i]);
+      if (!dataAxis || dataAxis->name != distAxes[i].name) {
+         return false;
+      }
+      if (numBinsOf(distAxes[i]) < 1 || numBinsOf(distAxes[i]) != numBinsOf(*dataAxis)) {
+         return false;
+      }
+      const std::vector<double> l = edgesOf(distAxes[i]);
+      const std::vector<double> r = edgesOf(*dataAxis);
+      for (std::size_t j = 0; j < l.size(); ++j) {
+         if (std::abs(l[j] - r[j]) > 1e-9 * std::abs(l.back() - l.front())) {
+            return false;
+         }
+      }
+   }
+   return true;
+}
+
+bool isBinCountType(std::string const &type)
+{
+   // A binsampling_dist is not part of HS3, but RooFit integrates it over the bins as well.
+   return type == "bincounts_extended_dist" || type == "bincounts_density_dist" || type == "histfactory_dist" ||
+          type == "binsampling_dist";
+}
+
+// Whether the distribution is one over bin counts, like a histfactory_dist, or a product with such a factor, which is
+// how RooFit writes a channel with constraint terms. A distribution that the document doesn't have is not checked.
+bool Validator::isBinCountDist(std::string const &name, std::set<std::string> &visited) const
+{
+   Distribution const *dist = findByName(_doc.distributions, name);
+   if (!dist) {
+      return true; // a missing distribution is reported where it is referred to
+   }
+   if (!visited.insert(name).second) {
+      return false; // a product that is a factor of itself
+   }
+   auto const *generic = std::get_if<GenericObject>(&dist->body);
+   if (!generic) {
+      return std::holds_alternative<HistFactoryDist>(dist->body);
+   }
+   if (generic->type == "product_dist") {
+      for (std::string const &factor : factorsOf(*generic)) {
+         if (isBinCountDist(factor, visited)) {
+            return true;
+         }
+      }
+   }
+   return isBinCountType(generic->type);
+}
+
+// HS3 defines no contribution for a distribution over continuous variates that is paired with binned data (HS3 PR
+// #165): it has to be wrapped in a bin-count distribution on the binning of the data, whose axes must be the axes of
+// the data. The components of a combined distribution are paired with the components of the combined data by key.
+void Validator::checkPairing(std::string const &likelihood, std::string const &distName, std::string const &dataName,
+                             std::string const &path)
+{
+   Data const *data = findByName(_doc.data, dataName);
+   if (!data) {
+      return;
+   }
+   if (auto const *combinedData = std::get_if<CombinedData>(&data->body)) {
+      if (auto const *combinedDist = find<CombinedDist>(_doc.distributions, distName)) {
+         for (auto const &component : combinedData->components) {
+            if (auto const *distComponent = combinedDist->find(component.key)) {
+               checkPairing(likelihood, distComponent->ref.name, component.ref.name, path);
+            }
+         }
+      }
+      return;
+   }
+   auto const *binned = std::get_if<BinnedData>(&data->body);
+   if (!binned) {
+      return;
+   }
+   std::set<std::string> visited;
+   if (!isBinCountDist(distName, visited)) {
+      bareBinnedPairing(path, "the likelihood '" + likelihood + "' pairs the distribution '" + distName +
+                                 "' over continuous variates with the binned data set '" + dataName +
+                                 "', for which HS3 defines no contribution: wrap the distribution in a bin-count "
+                                 "distribution (bincounts_extended_dist or bincounts_density_dist) on the binning of "
+                                 "the data set, and pair that with the data set");
+      return;
+   }
+   // The bin-count distribution with "axes" that is paired with the data: the distribution itself, or a factor of the
+   // product, which can be nested. A binsampling_dist is a RooBinSamplingPdf that RooFit can't write as a bin-count
+   // distribution, e.g. of a pdf that is not extended. It integrates over the bins like one, but only RooFit reads it.
+   std::vector<std::pair<std::string, std::vector<BinnedAxis>>> binCountDists;
+   std::set<std::string> seen;
+   std::function<void(std::string const &)> collect = [&](std::string const &name) {
+      auto const *generic = find<GenericObject>(_doc.distributions, name);
+      if (!generic || !seen.insert(name).second) {
+         return;
+      }
+      if (generic->type == "product_dist") {
+         for (std::string const &factor : factorsOf(*generic)) {
+            collect(factor);
+         }
+      } else if (generic->type == "binsampling_dist") {
+         warning(path, "the likelihood '" + likelihood + "' pairs the binsampling_dist '" + name + "'" +
+                          (name == distName ? "" : ", a factor of '" + distName + "',") +
+                          " with the binned data set '" + dataName +
+                          "'. A binsampling_dist is not part of HS3: it gives the integrals of a distribution over " +
+                          "the bins, but other implementations may not read it. " + binCountsRecipe);
+      } else if (generic->type != "histfactory_dist" && isBinCountType(generic->type)) {
+         if (auto axes = axesOf(*generic)) {
+            for (BinnedAxis const &axis : *axes) {
+               if (numBinsOf(axis) < 1) {
+                  error(path, "the axis '" + axis.name + "' of the bin-count distribution '" + name +
+                                 "' has no bins: it needs \"nbins\" with \"min\" and \"max\", or \"edges\"");
+                  return;
+               }
+            }
+            binCountDists.emplace_back(name, std::move(*axes));
+         }
+      }
+   };
+   collect(distName);
+   if (binCountDists.size() == 1) {
+      if (!sameAxes(binCountDists.front().second, binned->axes)) {
+         error(path, "the \"axes\" of the bin-count distribution '" + binCountDists.front().first +
+                        "' are not the axes of the binned data set '" + dataName +
+                        "' that the likelihood '" + likelihood +
+                        "' pairs it with: they must have the same names in the same order, and the same bin edges");
+      }
+   }
+}
+
 void Validator::checkLikelihoods()
 {
    for (std::size_t i = 0; i < _doc.likelihoods.size(); ++i) {
@@ -442,6 +630,7 @@ void Validator::checkLikelihoods()
             if (!isDefinedIn(data->name, "data")) {
                error(path + ".data", "dataset '" + data->name + "' cannot be found!");
             }
+            checkPairing(likelihood.name, term.distribution.name, data->name, path);
          }
       }
       for (auto const &aux : likelihood.auxDistributions) {

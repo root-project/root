@@ -764,6 +764,83 @@ std::unique_ptr<RooRealVar> createObservable(HS3::BinnedAxis const &axis)
    return obs;
 }
 
+// In HS3, a bin-count distribution and a binned data set have their own bins of a variable. In RooFit, the variable
+// has the bins: the RooBinSamplingPdf that a bin-count distribution is read as integrates over them, and binned data
+// that is read sets them. A document with other bins of the variable of a bin-count distribution, in another
+// bin-count distribution, in a binned data set or in a parameter point, is valid, but RooFit can't represent it.
+void checkBinCountBinnings(HS3Document const &doc)
+{
+   std::map<std::string, std::pair<std::string, std::unique_ptr<RooRealVar>>> binned; // by the name of the variable
+   auto check = [&](HS3::BinnedAxis const &axis, std::string const &user, bool isDist) {
+      auto found = binned.find(axis.name);
+      if (found == binned.end()) {
+         if (isDist) {
+            binned[axis.name] = {user, createObservable(axis)};
+         }
+         return;
+      }
+      RooAbsBinning const &expected = found->second.second->getBinning();
+      std::unique_ptr<RooRealVar> obs = createObservable(axis);
+      RooAbsBinning const &binning = obs->getBinning();
+      bool same = expected.numBins() == binning.numBins();
+      for (int i = 0; same && i < expected.numBoundaries(); ++i) {
+         same = std::abs(expected.array()[i] - binning.array()[i]) <=
+                1e-9 * (expected.highBound() - expected.lowBound());
+      }
+      if (!same) {
+         RooJSONFactoryWSTool::error(found->second.first + " and " + user + " have different bins of '" + axis.name +
+                                     "': RooFit supports only one binning of the variable of a bin-count " +
+                                     "distribution");
+      }
+   };
+   for (auto const &dist : doc.distributions) {
+      auto const *generic = std::get_if<HS3::GenericObject>(&dist.body);
+      if (!generic || (generic->type != "bincounts_extended_dist" && generic->type != "bincounts_density_dist")) {
+         continue;
+      }
+      // The extended pdf that the distribution is read with has a name of its own, which must be free.
+      const std::string helper =
+         dist.name + (generic->type == "bincounts_density_dist" ? binCountsDensitySuffix : binCountsExtendedSuffix);
+      if (HS3::findByName(doc.distributions, helper) || HS3::findByName(doc.functions, helper)) {
+         RooJSONFactoryWSTool::error("RooFit reads the bin-count distribution '" + dist.name +
+                                     "' with a pdf of the name '" + helper +
+                                     "', which is the name of another object of the document");
+      }
+      if (!generic->node || !generic->node->has_child("axes")) {
+         continue;
+      }
+      HS3::Diagnostics diagnostics; // invalid axes are reported when the distribution is read
+      std::vector<HS3::BinnedAxis> axes = HS3::parseBinnedAxes((*generic->node)["axes"], diagnostics);
+      if (HS3::hasErrors(diagnostics)) {
+         continue;
+      }
+      for (auto const &axis : axes) {
+         check(axis, "the bin-count distribution '" + dist.name + "'", true);
+      }
+   }
+   for (auto const &data : doc.data) {
+      if (auto const *binnedData = std::get_if<HS3::BinnedData>(&data.body)) {
+         for (auto const &axis : binnedData->axes) {
+            if (auto const *binnedAxis = std::get_if<HS3::BinnedAxis>(&axis)) {
+               check(*binnedAxis, "the binned data set '" + data.name + "'", false);
+            }
+         }
+      }
+   }
+   // Older versions of RooFit wrote the number of bins of a variable to the parameter points.
+   for (auto const &point : doc.parameterPoints) {
+      for (auto const &parameter : point.parameters) {
+         auto found = binned.find(parameter.name);
+         if (parameter.nbins && found != binned.end()) {
+            RooAbsBinning const &expected = found->second.second->getBinning();
+            check(HS3::BinnedAxis{parameter.name, expected.lowBound(), expected.highBound(),
+                                  HS3::RegularBinning{*parameter.nbins}},
+                  "the parameter point '" + point.name + "'", false);
+         }
+      }
+   }
+}
+
 // Create the variables for the axes of binned data. A categorical axis is one bin per category. HS3 identifies
 // categories by name, so the data may list them in another order than the domain that declares the category.
 // RooDataHist looks up the bin of a category by the order of the states of the category it is given, so the category
@@ -4048,6 +4125,7 @@ void RooJSONFactoryWSTool::importAllNodes(JSONNode &n)
    // What HS3 requires of the variates and the constraints is checked on the document as it is, before the components
    // that are read as constraint terms are taken out of it.
    std::set<std::string> const bookkeepingColumns = checkVariates(validated->doc());
+   checkBinCountBinnings(validated->doc());
    HS3::AuxiliaryConstraints const auxiliary =
       HS3::readAuxiliaryChannelsAsConstraints(*validated, config().importConstraintsAsChannels);
    for (std::string const &message : auxiliary.warnings) {
