@@ -32,6 +32,11 @@ ROOT_ADD_GTEST(
 
 ROOT_ADD_GTEST(TClingLoadUnloadFile TClingLoadUnloadFileTests.cxx LIBRARIES Core RIO)
 
+# TEMP-DIAG: r2: layout of classes with virtual bases, MSVC versus cling
+ROOT_EXECUTABLE(jcTempLayout jcTempLayout.cxx LIBRARIES Core)
+configure_file(JcTempVtordispProbes.h . COPYONLY)
+ROOT_ADD_TEST(jc-temp-layout COMMAND jcTempLayout)
+
 if(pyroot)
   ROOT_ADD_PYUNITTEST(MetaClingTests MetaClingTests.py)
 endif()

@@ -45,6 +45,25 @@
 #include <iostream>
 #endif
 
+// TEMP-DIAG: r2: locate the crash of the interpreted stressHistoFit inside TH1::Fit (needs JC_TEMP_DIAG set)
+#ifdef _WIN32
+#include <cstdio>
+#include <cstdlib>
+#define JC_TEMP(...)                                   \
+   do {                                                \
+      static int jcOn = -1, jcN = 0;                   \
+      if (jcOn < 0)                                    \
+         jcOn = std::getenv("JC_TEMP_DIAG") ? 1 : 0;   \
+      if (jcOn && jcN++ < 6) {                         \
+         fprintf(stderr, "[jc-TEMP] " __VA_ARGS__);    \
+         fprintf(stderr, "\n");                        \
+         fflush(stderr);                               \
+      }                                                \
+   } while (0)
+#else
+#define JC_TEMP(...)
+#endif
+
 //  need to implement integral option
 
 namespace ROOT {
@@ -236,6 +255,7 @@ double FitUtil::EvaluateChi2(const IModelFunction &func, const BinData &data, co
          // optionally the integral of function in the bin is used
 
    unsigned int n = data.Size();
+   JC_TEMP("FitUtil::EvaluateChi2: entered, %u points", n);
 
    // set parameters of the function to cache integral value
 #ifdef USE_PARAMCACHE

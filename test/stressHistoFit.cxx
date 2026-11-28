@@ -359,6 +359,15 @@ vector<fitFunctions> l2DLinearFunctions;
 // Gaus 1D implementation
 Double_t gaus1DImpl(Double_t* x, Double_t* p)
 {
+#ifdef _WIN32 // TEMP-DIAG: r2: calls 1 to 33 come before the first fit; then how far does the fit get?
+   static int jcCalls = 0;
+   ++jcCalls;
+   if ((jcCalls > 33 && jcCalls < 38) || (jcCalls > 33 && (jcCalls & (jcCalls - 1)) == 0)) {
+      fprintf(stderr, "[jc-TEMP] gaus1DImpl: call %d, x=%p p=%p, x[0]=%g p=(%g, %g, %g)\n", jcCalls, (void *)x, (void *)p,
+              x[0], p[0], p[1], p[2]);
+      fflush(stderr);
+   }
+#endif
    return p[2]*TMath::Gaus(x[0], p[0], p[1]);
 }
 
@@ -459,7 +468,18 @@ public:
       } else {
 #endif
 //          printf("Normal FIT\n");
+#ifdef _WIN32 // TEMP-DIAG: r2: does the crash happen in Fit, in the conversion of its result or in its destructor?
+         {
+            JC_TEMP("ObjectWrapper::Fit: calling Fit");
+            auto jcResult = object->Fit(func, opts);
+            JC_TEMP("ObjectWrapper::Fit: Fit returned");
+            Int_t jcStatus = jcResult;
+            JC_TEMP("ObjectWrapper::Fit: status %d", jcStatus);
+            return jcStatus;
+         }
+#else
          return object->Fit(func, opts);
+#endif
    };
    const char* GetName() { return object->GetName(); }
 };
