@@ -17,8 +17,8 @@
 
 #include <string>
 #include <vector>
-#include <numeric>
 #include <iterator>
+#include <numeric>
 #include <utility>
 
 namespace ROOT {
@@ -43,12 +43,17 @@ std::pair<std::string_view, std::string_view> SplitAt(std::string_view str, char
  * \return the sep-delimited concatenation of strings
  */
 template <typename InputIt_t>
-std::string Join(const std::string &sep, InputIt_t begin, InputIt_t end)
+std::string Join(std::string_view sep, InputIt_t begin, InputIt_t end)
 {
    if (begin == end)
       return "";
 
-   return std::accumulate(std::next(begin), end, *begin, [&sep](auto const &a, auto const &b) { return a + sep + b; });
+   std::string first(*begin++);
+   return std::accumulate(begin, end, std::move(first), [sep](auto &&result, const auto &value) {
+      result += sep;
+      result += value;
+      return std::move(result);
+   });
 }
 
 /**
@@ -59,7 +64,7 @@ std::string Join(const std::string &sep, InputIt_t begin, InputIt_t end)
  * \return the sep-delimited concatenation of strings
  */
 template <class StringCollection_t>
-std::string Join(const std::string &sep, StringCollection_t &&strings)
+std::string Join(std::string_view sep, StringCollection_t &&strings)
 {
    return Join(sep, std::begin(strings), std::end(strings));
 }
