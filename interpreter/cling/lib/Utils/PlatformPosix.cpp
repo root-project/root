@@ -64,13 +64,20 @@ namespace {
     }
 
     bool operator () (const void* P) {
-      // std::find is considerably slower, do manual search instead.
-      if (P == lines[0] || P == lines[1] || P == lines[2] || P == lines[3]
-          || P == lines[4] || P == lines[5] || P == lines[6] || P == lines[7])
-        return true;
+      // Address of page containing P, assuming page_size is a power of 2.
+      // The validity is a property of the page: cache pages, not pointers,
+      // otherwise every new address in an array costs an msync() call.
+      void* base = (void*)(((size_t)P) & page_mask);
+      // Page 0 is never mapped. This also keeps the empty (null) cache lines
+      // from matching pointers into it, e.g. (int*)1.
+      if (!base)
+        return false;
 
-      // Address of page containing P, assuming page_size is a power of 2
-      void *base = (void *)(((size_t)P) & page_mask);
+      // std::find is considerably slower, do manual search instead.
+      if (base == lines[0] || base == lines[1] || base == lines[2] ||
+          base == lines[3] || base == lines[4] || base == lines[5] ||
+          base == lines[6] || base == lines[7])
+        return true;
 
       // P is invalid only when msync returns -1 and sets errno to ENOMEM
       if (::msync(base, page_size, MS_ASYNC) != 0) {
@@ -78,7 +85,7 @@ namespace {
         return false;
       }
 
-      push(P);
+      push(base);
       return true;
     }
   private:

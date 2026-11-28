@@ -20,6 +20,23 @@
 #include "clang/Sema/Sema.h"
 #include "clang/Sema/SemaDiagnostic.h"
 
+#include <cstdint>
+
+extern "C" {
+CLING_LIB_EXPORT
+const void* cling_runtime_internal_validPages[64];
+}
+
+namespace {
+  // Empty slots: an address that is not page aligned never matches a page.
+  struct InitValidPages {
+    InitValidPages() {
+      for (const void*& Slot : cling_runtime_internal_validPages)
+        Slot = (const void*)~(uintptr_t)0;
+    }
+  } sInitValidPages;
+} // namespace
+
 extern "C" {
 /// Throw an InvalidDerefException if the Arg pointer is invalid.
 ///\param Interp: The interpreter that has compiled the code.
@@ -54,6 +71,11 @@ void* cling_runtime_internal_throwIfInvalidPointer(void* Interp, void* Expr,
     throw cling::InvalidDerefException(&S, E,
           cling::InvalidDerefException::DerefType::INVALID_MEM);
   }
+  // Valid: record the page for the inline check in RuntimeUniverse.h.
+  // Concurrent updates of a slot are benign (each value is a valid page).
+  const uintptr_t Page = (uintptr_t)Arg & ~(uintptr_t)4095;
+  __atomic_store_n(&cling_runtime_internal_validPages[(Page >> 12) & 63],
+                   (const void*)Page, __ATOMIC_RELAXED);
   return const_cast<void*>(Arg);
 }
 }
