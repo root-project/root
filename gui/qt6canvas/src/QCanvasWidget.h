@@ -18,8 +18,7 @@
 #include <string>
 #include <vector>
 
-class TH1F;
-class TH2I;
+class TCanvas;
 
 class QCanvasWidget : public QWidget, public Ui::QCanvasWidget {
    Q_OBJECT
@@ -61,6 +60,7 @@ public slots:
    void ShowMarkers();
    void IconifyCanvas();
 
+   void SetViewMenubar(bool);
    void SetViewToolbar(bool);
    void SetViewEventStatus(bool);
    void SetViewToolTip(bool);

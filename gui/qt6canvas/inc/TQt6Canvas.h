@@ -29,12 +29,11 @@ protected:
    QPaintWidget *fPaintWidget = nullptr;
 
    Bool_t fFixedSize = kFALSE;      ///<! true when fixed-size canvas is configured
-   UInt_t fClientBits = 0;          ///<! latest status bits from client like editor visible or not
 
    Bool_t PerformUpdate(Bool_t async) override;
    TVirtualPadPainter *CreatePadPainter() override;
 
-   void AssignStatusBits(UInt_t bits);
+   Bool_t IsUseVirtualX() const override { return kFALSE; }
 
 
 public:
@@ -53,11 +52,11 @@ public:
    void ResizeCanvasWindow(Int_t) override {}
    void UpdateDisplay(Int_t = 0, Bool_t = kFALSE) override {}
 
-   void ShowMenuBar(Bool_t = kTRUE) override { }
-   void ShowStatusBar(Bool_t = kTRUE) override { }
+   void ShowMenuBar(Bool_t = kTRUE) override;
+   void ShowStatusBar(Bool_t = kTRUE) override;
    void ShowEditor(Bool_t = kTRUE) override {  }
-   void ShowToolBar(Bool_t = kTRUE) override { }
-   void ShowToolTips(Bool_t  = kTRUE) override { }
+   void ShowToolBar(Bool_t = kTRUE) override;
+   void ShowToolTips(Bool_t  = kTRUE) override;
 
    void ForceUpdate() override;
 
@@ -69,13 +68,15 @@ public:
    void Iconify() override;
    void RaiseWindow() override;
 
-   Bool_t HasEditor() const override;
-   Bool_t HasMenuBar() const override;
-   Bool_t HasStatusBar() const override;
-   Bool_t HasToolBar() const override { return kFALSE; }
-   Bool_t HasToolTips() const override;
+   Bool_t HasEditor() const override { return kFALSE; }
+   Bool_t HasMenuBar() const override { return kTRUE; }
+   Bool_t HasStatusBar() const override { return kTRUE; }
+   Bool_t HasToolBar() const override { return kTRUE; }
+   Bool_t HasToolTips() const override { return kTRUE; }
 
    static TCanvasImp *NewCanvas(TCanvas *c, const char *name, Int_t x, Int_t y, UInt_t width, UInt_t height);
+
+   static TCanvas *EmbedQt6Canvas(class QWidget *parent, const char *name);
 
    ClassDefOverride(TQt6Canvas, 0) // Qt6 implementation for TCanvasImp
 };
