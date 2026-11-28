@@ -1,0 +1,12 @@
+Processing execReadNestedSource.cxx+...
+Plain object: fId=1 fMember=10 fIntMember=100
+Plain vector i=0: fId=1 fMember=10 fIntMember=100
+Plain vector i=1: fId=2 fMember=20 fIntMember=200
+Plain vector i=2: fId=3 fMember=30 fIntMember=300
+Tree (splitlevel 0) i=0: fId=1 fMember=10 fIntMember=100
+Tree (splitlevel 0) i=1: fId=2 fMember=20 fIntMember=200
+Tree (splitlevel 0) i=2: fId=3 fMember=30 fIntMember=300
+Tree (splitlevel 99) i=0: fId=1 fMember=10 fIntMember=100
+Tree (splitlevel 99) i=1: fId=2 fMember=20 fIntMember=200
+Tree (splitlevel 99) i=2: fId=3 fMember=30 fIntMember=300
+(int) 0
