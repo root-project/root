@@ -6,6 +6,9 @@
 #include "TH2.h"
 #include "TH3.h"
 #include "TRandomGen.h"
+#include "TError.h"
+
+#include <string>
 
 TH1 * h1 = nullptr;
 TH1 * h2 = nullptr;
@@ -89,5 +92,26 @@ TEST(TH1, FindLastBinAbove )
 
    EXPECT_EQ( 4, h1->FindLastBinAbove(th_value, 1,3,8) );
    EXPECT_EQ( 14, h1->FindLastBinAbove(th_value, 1, 0, 30) );
+}
+
+static std::string gLastErrorLocation;
+
+static void CaptureErrorLocation(int, Bool_t, const char *location, const char *)
+{
+   gLastErrorLocation = location ? location : "";
+}
+
+TEST(TH1, FindLastBinAboveInvalidAxisWarningLocation)
+{
+   if (!h1) CreateHist();
+
+   ErrorHandlerFunc_t oldHandler = GetErrorHandler();
+   SetErrorHandler(CaptureErrorLocation);
+
+   // Passing an axis larger than the histogram dimension triggers the warning.
+   (void)h1->FindLastBinAbove(th_value, 2);
+   EXPECT_EQ("FindLastBinAbove", gLastErrorLocation);
+
+   SetErrorHandler(oldHandler);
 }
 

@@ -3954,7 +3954,7 @@ Int_t TH1::FindLastBinAbove(Double_t threshold, Int_t axis, Int_t firstBin, Int_
 
    if (axis < 1 || ( axis > 1 && GetDimension() == 1 ) ||
        ( axis > 2 && GetDimension() == 2 ) || ( axis > 3 && GetDimension() > 3) ) {
-      Warning("FindFirstBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
+      Warning("FindLastBinAbove","Invalid axis number : %d, axis x assumed\n",axis);
       axis = 1;
    }
    if (firstBin < 1) {
