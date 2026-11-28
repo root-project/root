@@ -494,6 +494,10 @@ This is not expected to affect typical usage, since the resolution model was nev
 
 ## Graphics and GUI
 
+### Mathtext
+
+Drawings using TMathText can be now exported as PDF, not only PNG and PS.
+
 ### New POLF and POLN draw options for TH2
 
 Since ROOT 6.36, the implementation of the "POL" draw option was changed. Angle and radius range automatically scale to the visible histogram range, filling the full 2*Pi angle and full radius range.
