@@ -56,6 +56,7 @@ void RegisterBasicUnaryParsers(RModelParser_ONNX &parser)
    parser.RegisterOperator("Acosh", ParseBasicUnary<EBasicUnaryOperator::kAcosh>);
    parser.RegisterOperator("Atanh", ParseBasicUnary<EBasicUnaryOperator::kAtanh>);
    parser.RegisterOperator("Floor", ParseBasicUnary<EBasicUnaryOperator::kFloor>);
+   parser.RegisterOperator("Mish", ParseBasicUnary<EBasicUnaryOperator::kMish>);
 }
 
 } // namespace SOFIE

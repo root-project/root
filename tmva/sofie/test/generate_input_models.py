@@ -4036,25 +4036,43 @@ def make_MinMultidirectionalBroadcast():
     ]
     graph = helper.make_graph(
         nodes,
-        'Min',
+        "Min",
         inputs=[
-            _vi('A', FLOAT, [3, 1]),
-            _vi('B', FLOAT, [2, 3, 1]),
-            _vi('C', FLOAT, [1, 4]),
+            _vi("A", FLOAT, [3, 1]),
+            _vi("B", FLOAT, [2, 3, 1]),
+            _vi("C", FLOAT, [1, 4]),
         ],
         outputs=[
-            _vi('Y', FLOAT, []),
+            _vi("Y", FLOAT, []),
         ],
     )
     return _model(graph, opset=17, ir_version=8)
 
 
+def make_Mish():
+    """Ops: Mish"""
+    nodes = [
+        helper.make_node("Mish", ["input"], ["output"]),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "Mish",
+        inputs=[
+            _vi("input", FLOAT, [2, 3]),
+        ],
+        outputs=[
+            _vi("output", FLOAT, [2, 3]),
+        ],
+    )
+    return _model(graph, opset=18, ir_version=8, producer_name="onnx-example")
+
+
 def make_Mod_ConstantFolding():
     """Ops: Constant, Mod"""
     nodes = [
-        helper.make_node('Constant', [], ['X'], value=_tensor('X', INT64, [3], [10, 7, 5])),
-        helper.make_node('Constant', [], ['D'], value=_tensor('D', INT64, [3], [3, 3, 3])),
-        helper.make_node('Mod', ['X', 'D'], ['Y'], fmod=0),
+        helper.make_node("Constant", [], ["X"], value=_tensor("X", INT64, [3], [10, 7, 5])),
+        helper.make_node("Constant", [], ["D"], value=_tensor("D", INT64, [3], [3, 3, 3])),
+        helper.make_node("Mod", ["X", "D"], ["Y"], fmod=0),
     ]
     graph = helper.make_graph(
         nodes,
@@ -6632,6 +6650,7 @@ MODELS = {
     "MeanMultidirectionalBroadcast": make_MeanMultidirectionalBroadcast,
     "MinInt64": make_MinInt64,
     "MinMultidirectionalBroadcast": make_MinMultidirectionalBroadcast,
+    "Mish": make_Mish,
     "Mod_ConstantFolding": make_Mod_ConstantFolding,
     "Mul": make_Mul,
     "Neg": make_Neg,
