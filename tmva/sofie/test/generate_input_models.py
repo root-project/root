@@ -6223,6 +6223,38 @@ def make_GemmDynBias():
     return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
 
 
+def make_GemmBroadcastBiasBeta():
+    """Ops: Gemm with beta != 1 and a bias C of shape [N] that is broadcast to
+    the output."""
+    nodes = [
+        helper.make_node("Gemm", ["A", "B", "C"], ["Y"], name="gemm_0", alpha=1.0, beta=2.5),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "gemm_broadcast_bias_beta",
+        inputs=[_vi("A", FLOAT, [2, 3])],
+        outputs=[_vi("Y", FLOAT, [2, 4])],
+        initializer=[_random_tensor("B", [3, 4], seed=211), _random_tensor("C", [4], seed=212)],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
+def make_GemmBroadcastColumnBiasBeta():
+    """Ops: Gemm with beta != 1 and a bias C of shape [M, 1] that is broadcast
+    along the columns of the output."""
+    nodes = [
+        helper.make_node("Gemm", ["A", "B", "C"], ["Y"], name="gemm_0", alpha=1.0, beta=2.5),
+    ]
+    graph = helper.make_graph(
+        nodes,
+        "gemm_broadcast_column_bias_beta",
+        inputs=[_vi("A", FLOAT, [2, 3])],
+        outputs=[_vi("Y", FLOAT, [2, 4])],
+        initializer=[_random_tensor("B", [3, 4], seed=213), _random_tensor("C", [2, 1], seed=214)],
+    )
+    return _model(graph, opset=13, ir_version=10, producer_name="onnx-example")
+
+
 def make_IdentityWeightOutput():
     """Ops: Identity, Mul. The graph output s is an Identity of a weight: no
     operator writes it at run time, so the model has to copy it into the output
@@ -6573,6 +6605,8 @@ MODELS = {
     "GatherNegativeIndices": make_GatherNegativeIndices,
     "GatherRuntimeNegativeIndices": make_GatherRuntimeNegativeIndices,
     "Gelu": make_Gelu,
+    "GemmBroadcastBiasBeta": make_GemmBroadcastBiasBeta,
+    "GemmBroadcastColumnBiasBeta": make_GemmBroadcastColumnBiasBeta,
     "GemmDynBias": make_GemmDynBias,
     "Gemm_ConstantFolding": make_Gemm_ConstantFolding,
     "Gemm_ConstantFolding_Shared": make_Gemm_ConstantFolding_Shared,
@@ -7434,6 +7468,8 @@ TEST_INPUTS = {
     "GatherRuntimeNegativeIndices": [f32(np.arange(0.0, 10.0), (5, 2)), i64([-1, 2, -5])],
     "Gelu": [f32([1.0, -2.0, 3.0, 0.5, -1.0, 2.0], (6,))],
     # N = 2 rows
+    "GemmBroadcastBiasBeta": [rand_f32(215, (2, 3))],
+    "GemmBroadcastColumnBiasBeta": [rand_f32(216, (2, 3))],
     "GemmDynBias": [rand_f32(36, (2, 3)), rand_f32(37, (2, 4))],
     # Note: the second operand must produce a mix of true and false results,
     # otherwise a constant implementation would pass the test.
