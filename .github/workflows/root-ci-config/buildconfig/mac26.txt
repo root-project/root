@@ -1,5 +1,5 @@
 CMAKE_BUILD_RPATH=/usr/local/lib
-CMAKE_CXX_STANDARD=23
+CMAKE_CXX_STANDARD=20
 builtin_cfitsio=ON
 builtin_cppzmq=ON
 builtin_davix=ON
