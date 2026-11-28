@@ -144,6 +144,10 @@ TEST(RHistEngine, SetBinContent)
    engine.SetBinContent(indices, 43);
    EXPECT_EQ(engine.GetBinContent(indices), 43);
 
+   const std::vector<RBinIndex> indicesV = {index};
+   engine.SetBinContent(indicesV, 44);
+   EXPECT_EQ(engine.GetBinContent(indicesV), 44);
+
    // This also works if the value must be converted to the bin content type.
    RHistEngine<float> engineF({axis});
    engineF.SetBinContent(index, 42);
@@ -168,6 +172,17 @@ TEST(RHistEngine, SetBinContentInvalidNumberOfArguments)
    EXPECT_THROW(engine2.SetBinContent(1, 0), std::invalid_argument);
    EXPECT_NO_THROW(engine2.SetBinContent(1, 2, 0));
    EXPECT_THROW(engine2.SetBinContent(1, 2, 3, 0), std::invalid_argument);
+
+   const std::vector<RBinIndex> indicesV1 = {1};
+   const std::vector<RBinIndex> indicesV2 = {1, 2};
+   const std::vector<RBinIndex> indicesV3 = {1, 2, 3};
+
+   EXPECT_NO_THROW(engine1.SetBinContent(indicesV1, 0));
+   EXPECT_THROW(engine1.SetBinContent(indicesV2, 0), std::invalid_argument);
+
+   EXPECT_THROW(engine2.SetBinContent(indicesV1, 0), std::invalid_argument);
+   EXPECT_NO_THROW(engine2.SetBinContent(indicesV2, 0));
+   EXPECT_THROW(engine2.SetBinContent(indicesV3, 0), std::invalid_argument);
 }
 
 TEST(RHistEngine, SetBinContentNotFound)
@@ -177,6 +192,9 @@ TEST(RHistEngine, SetBinContentNotFound)
    RHistEngine<int> engine({axis});
 
    EXPECT_THROW(engine.SetBinContent(Bins, 0), std::invalid_argument);
+
+   const std::vector<RBinIndex> indicesV = {Bins};
+   EXPECT_THROW(engine.GetBinContent(indicesV), std::invalid_argument);
 }
 
 TEST(RHistEngine, Add)
