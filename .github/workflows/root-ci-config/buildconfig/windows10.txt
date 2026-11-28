@@ -1,3 +1,4 @@
+CMAKE_GENERATOR=
 asimage_tiff=OFF
 builtin_cfitsio=ON
 builtin_civetweb=ON
