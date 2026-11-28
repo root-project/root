@@ -5563,7 +5563,7 @@ void TBranchElement::SetAddressImpl(void* addr, bool implied, Int_t offset)
    // FIXME: This is a tail recursion, we burn stack.
    Int_t nbranches = fBranches.GetEntriesFast();
    char *localObject = fObject;
-   if (fOnfileObject && this != GetMother()) {
+   if (fOnfileObject && this != GetMother() && (0 <= fType && fType <= 2)) {
       localObject = fOnfileObject->GetObjectAt(0) + offset;
    }
    for (Int_t i = 0; i < nbranches; ++i) {
