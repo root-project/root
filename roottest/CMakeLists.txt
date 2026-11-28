@@ -14,6 +14,22 @@ set(ROOT_genreflex_CMD $<TARGET_FILE:genreflex>)
 set(ROOT_rootcint_CMD $<TARGET_FILE:rootcint>)
 set(ROOT_rootcling_CMD $<TARGET_FILE:rootcling>)
 
+# Meta-targets to build what has been excluded from all with EXCLUDE_FROM_ALL.
+# There are several groups of these targets, depending on which macro created
+# it (see RootMacros.cmake).
+
+add_custom_target(roottest_dictionaries)
+add_custom_target(roottest_executables)
+add_custom_target(roottest_reflex_dictionaries)
+
+add_custom_target(roottest)
+
+add_dependencies(roottest
+                 roottest_dictionaries
+                 roottest_executables
+                 roottest_reflex_dictionaries
+)
+
 execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--tutdir" OUTPUT_VARIABLE ROOT_TUTORIALS_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--incdir" OUTPUT_VARIABLE ROOT_INCLUDE_DIRS OUTPUT_STRIP_TRAILING_WHITESPACE)
 execute_process(COMMAND ${ROOT_CONFIG_EXECUTABLE} "--libdir" OUTPUT_VARIABLE ROOT_LIBRARY_DIR OUTPUT_STRIP_TRAILING_WHITESPACE)

@@ -180,9 +180,13 @@ def main():
 
     build(options, args.buildtype)
 
+    roottest_targets_built = False
+    if testing and options_dict.get("roottest") == "ON" and not benchmark:
+        roottest_targets_built = build_roottest_targets(args.buildtype)
+
     # Done before anything else touches the build tree, and reported only at the
     # very end so that a spurious rebuild does not cost us the test results.
-    null_build_ok = build_utils.dry_run or check_for_spurious_rebuilds(args.buildtype)
+    null_build_ok = build_utils.dry_run or check_for_spurious_rebuilds(args.buildtype, roottest_targets_built)
 
     # Build artifacts should only be uploaded for full builds, and only for
     # "official" branches (master, v?-??-??-patches), i.e. not for pull_request
@@ -203,6 +207,11 @@ def main():
             extra_ctest_flags = ' -R "^rootbench-" '
         if ctest_custom_flags:
             extra_ctest_flags += ctest_custom_flags
+        if roottest_targets_built:
+            # Skip the tests that only build these targets. -FS stops ctest from
+            # adding them back as fixture setups; it applies to all fixtures,
+            # which only matters if the test set is narrowed with -R.
+            extra_ctest_flags += " -LE '^roottest_cmake_target$' -FS '.*' "
         ctest_returncode = run_ctest(extra_ctest_flags)
 
     if args.coverage:
@@ -489,14 +498,15 @@ def dump_requested_config(options):
     print(f"\nBUILD OPTIONS: {options}")
 
 
-def cmake_build_command(buildtype) -> str:
+def cmake_build_command(buildtype, target=None) -> str:
     generator_flags = "-- '-verbosity:minimal' '-consoleloggerparameters:summary'" if WINDOWS else ""
     parallel_jobs = "4" if WINDOWS else str(os.cpu_count())
 
     builddir = os.path.join(WORKDIR, "build")
+    target_flags = f" --target {target}" if target else ""
 
     return f"""
-        cmake --build '{builddir}' --config '{buildtype}' --parallel '{parallel_jobs}' {generator_flags}
+        cmake --build '{builddir}'{target_flags} --config '{buildtype}' --parallel '{parallel_jobs}' {generator_flags}
     """
 
 
@@ -508,8 +518,39 @@ def cmake_build(buildtype):
         die(result, "Failed to build")
 
 
+@github_log_group("Build roottest targets")
+def build_roottest_targets(buildtype) -> bool:
+    """Build the "roottest" meta-target: the dictionaries, libraries and
+    executables that the tests labelled "roottest_cmake_target" would
+    otherwise build one by one.
+
+    Advantages:
+      * Much faster tests, because no overhead from starting separate CMake
+        processes wrapped in individual tests. This affects Ninja in
+        particular, because all these tests had to be run in serial: Ninja
+        doesn't support separate processes building separate targets of the
+        same project.
+      * The roottest build artifacts are cached together with the main
+        artifacts and reused in the incremental builds
+
+    It is a separate build after the main one, so that the roottest targets
+    don't need dependencies on everything from the main build they use at
+    build time (e.g. the C++ modules rootcling loads).
+
+    Returns whether the build succeeded. If not, ctest runs the labelled tests
+    as usual, which reports the broken targets per test.
+    """
+    result = subprocess_with_log(cmake_build_command(buildtype, target="roottest"))
+
+    if result != 0:
+        build_utils.print_warning("Failed to build the roottest targets, the tests will build them instead")
+        return False
+
+    return True
+
+
 @github_log_group("Check for spurious rebuilds")
-def check_for_spurious_rebuilds(buildtype) -> bool:
+def check_for_spurious_rebuilds(buildtype, roottest_targets_built) -> bool:
     """Build a second time and check that there was nothing left to do.
 
     Returns whether the build tree was already up to date, i.e. whether the
@@ -519,7 +560,10 @@ def check_for_spurious_rebuilds(buildtype) -> bool:
 
     def rebuild() -> int:
         # Use `subprocess_with_capture` to exclude the redo/second build from the list of reproducing steps.
-        return subprocess_with_capture(cmake_build_command(buildtype)).returncode
+        result = subprocess_with_capture(cmake_build_command(buildtype)).returncode
+        if result == 0 and roottest_targets_built:
+            result = subprocess_with_capture(cmake_build_command(buildtype, target="roottest")).returncode
+        return result
 
     try:
         touched = null_build_check.check_null_build(builddir, rebuild)

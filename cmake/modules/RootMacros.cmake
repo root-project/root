@@ -2806,6 +2806,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
   set(targetname_libgen ${dictname}libgen)
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictname}.cxx)
+  add_dependencies(roottest_dictionaries ${targetname_libgen})
   set_property(TARGET ${targetname_libgen} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
 
   if(ARG_SOURCES)
@@ -2838,6 +2839,7 @@ macro(ROOTTEST_GENERATE_DICTIONARY dictname)
                                     ${build_config}
                                     --target ${dictname}${fast} ${targetname_libgen}${fast}
                                     -- ${always-make})
+  set_tests_properties(${GENERATE_DICTIONARY_TEST} PROPERTIES LABELS "roottest_cmake_target")
 
   set_property(TEST ${GENERATE_DICTIONARY_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
   if(GeneratorNeedsBuildSerialization)
@@ -2908,6 +2910,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
                              ${reflex_pass_options})
 
   add_library(${targetname_libgen} EXCLUDE_FROM_ALL SHARED ${dictionary}.cxx)
+  add_dependencies(roottest_reflex_dictionaries ${targetname_libgen})
   set_target_properties(${targetname_libgen} PROPERTIES  ${ROOT_LIBRARY_PROPERTIES} )
   set_property(TARGET ${targetname_libgen} PROPERTY BUILD_WITH_INSTALL_RPATH OFF) # will never be installed anyway
   set_target_properties(${targetname_libgen} PROPERTIES WINDOWS_EXPORT_ALL_SYMBOLS TRUE)
@@ -2946,6 +2949,7 @@ macro(ROOTTEST_GENERATE_REFLEX_DICTIONARY dictionary)
                                     ${build_config}
                                     --target ${targetname_dictgen}${fast} ${targetname_libgen}${fast}
                                     -- ${always-make})
+  set_tests_properties(${GENERATE_REFLEX_TEST} PROPERTIES LABELS "roottest_cmake_target")
 
   set_property(TEST ${GENERATE_REFLEX_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
   if(GeneratorNeedsBuildSerialization)
@@ -2988,6 +2992,8 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   CMAKE_PARSE_ARGUMENTS(ARG "" "RESOURCE_LOCK" "LIBRARIES;COMPILE_FLAGS;DEPENDS;FIXTURES_SETUP;FIXTURES_CLEANUP;FIXTURES_REQUIRED" ${ARGN})
 
   add_executable(${executable} EXCLUDE_FROM_ALL ${ARG_UNPARSED_ARGUMENTS})
+  add_dependencies(roottest_executables ${executable})
+
   set_target_properties(${executable} PROPERTIES
     BUILD_WITH_INSTALL_RPATH OFF # will never be installed anyway
     # The generator expression stops multi-config generators like Visual
@@ -3038,6 +3044,8 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
                                     ${build_config}
                                     --target ${executable}${fast}
                                     -- ${always-make})
+
+  set_tests_properties(${GENERATE_EXECUTABLE_TEST} PROPERTIES LABELS "roottest_cmake_target")
   set_property(TEST ${GENERATE_EXECUTABLE_TEST} PROPERTY ENVIRONMENT ${ROOTTEST_ENVIRONMENT})
 
   #- provided fixtures and resource lock are set here
@@ -3069,6 +3077,7 @@ macro(ROOTTEST_GENERATE_EXECUTABLE executable)
   endif()
 
 endmacro()
+
 
 #-------------------------------------------------------------------------------
 # macro ROOTTEST_SETUP_MACROTEST()
