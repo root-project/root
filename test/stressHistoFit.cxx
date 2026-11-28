@@ -136,6 +136,21 @@ extern "C" {
 
 using std::string, std::vector, std::cout, std::endl;
 
+// TEMP-DIAG: r1: the interpreted run crashes on Windows before the name of the first test is printed
+#ifdef _WIN32
+int gJcDiag = 0;
+#define JC_TEMP(...)                                \
+   do {                                             \
+      if (gJcDiag++ < 80) {                         \
+         fprintf(stderr, "[jc-TEMP] " __VA_ARGS__); \
+         fprintf(stderr, "\n");                     \
+         fflush(stderr);                            \
+      }                                             \
+   } while (0)
+#else
+#define JC_TEMP(...)
+#endif
+
 
 unsigned int __DRAW__ = 0;
 unsigned int __WRITE__ = 0; // write fitted object in a file
@@ -453,9 +468,11 @@ public:
 template <typename T>
 void printTestName(T* object, TF1* func)
 {
+   JC_TEMP("printTestName: entered");
    string str = "Test  ";
    if (gTestIndex < 10) str += " ";  // add an extra space
    str += ROOT::Math::Util::ToString(gTestIndex);
+   JC_TEMP("printTestName: ToString done");
    str += ":  '";
    str += object->GetName();
    str += "' with '";
@@ -463,8 +480,10 @@ void printTestName(T* object, TF1* func)
    str += "'...";
    while ( str.length() != 65 )
       str += '.';
+   JC_TEMP("printTestName: string built");
    printf("%s", str.c_str());
    fflush(stdout);
+   JC_TEMP("printTestName: printed");
 }
 
 // In debug mode, separator for the different tests
@@ -656,14 +675,19 @@ int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFu
    int numberOfFailedFits = 0;
    const double* origpars = &(fitFunction.origPars[0]);
    const double* fitpars = &(fitFunction.fitPars[0]);
+   JC_TEMP("testFitters: entered");
    std::vector<double> parSteps(func->GetNpar());   // use empty step sizes
+   JC_TEMP("testFitters: parSteps created");
 
    func->SetParameters(fitpars);
    func->SetParErrors(parSteps.data());
+   JC_TEMP("testFitters: parameters set");
    SetParsLimits(fitFunction.parLimits, func);
+   JC_TEMP("testFitters: limits set");
 
    // use as reference algorithm the first one in the list
    auto & refAlgo = listAlgos[0][0];
+   JC_TEMP("testFitters: got reference algorithm");
 
    printTestName(object, func);
 
@@ -702,7 +726,10 @@ int testFitters(T* object, F* func, vector< vector<algoType> >& listAlgos, fitFu
             if (variableBins) opt += " WIDTH";
             //std::cout << "doing selected fit with option " << opt << std::endl;
             // perform the fit
+            JC_TEMP("testFitters: fit %d with %s/%s, options '%s'", numberOfFits, listAlgos[j][i].type.Data(),
+                    listAlgos[j][i].algo.Data(), opt.Data());
             object->Fit(func, opt);
+            JC_TEMP("testFitters: fit %d done", numberOfFits);
             // if is a reference set the reference value for chi2 (parameters are compared to original ones)
             if (listAlgos[j][i].reference) {
                ref.chi = func->GetChisquare()/func->GetNDF();
@@ -762,28 +789,51 @@ int test1DObjects(vector< vector<algoType> >& listH,
    for ( unsigned int j = 0; j < listOfFunctions.size(); ++j )
    {
       if ( func ) delete func;
+      JC_TEMP("test1DObjects: function %u, creating TF1", j);
       func = new TF1( listOfFunctions[j].name, listOfFunctions[j].func, minX, maxX, listOfFunctions[j].npars);
+      JC_TEMP("test1DObjects: TF1 created");
       // set original parameter values
       func->SetParameters(&(listOfFunctions[j].origPars[0]));
+      JC_TEMP("test1DObjects: TF1 parameters set");
 
       // create here h1 since it is used to make TGraphs's and THnsparse
       if (h1) delete h1;
       h1 = new TH1D("h1", "Histogram1D Equal Bins", nbinsX, minX, maxX);
+      JC_TEMP("test1DObjects: TH1D created");
       rndm.SetSeed(100+gTestIndex);
+      JC_TEMP("test1DObjects: seed set");
 
+#ifdef _WIN32 // TEMP-DIAG: r1: the steps of the fill loop below, one at a time and without touching rndm
+      if (gJcDiag < 80) {
+         double jcX[1] = {h1->GetBinCenter(1)};
+         JC_TEMP("test1DObjects: calling the fit function directly");
+         double jcV = listOfFunctions[j].func(jcX, &(listOfFunctions[j].origPars[0]));
+         JC_TEMP("test1DObjects: direct call gave %g, calling TF1::Eval", jcV);
+         jcV = func->Eval(jcX[0]);
+         JC_TEMP("test1DObjects: TF1::Eval gave %g, calling TRandom3::Poisson", jcV);
+         TRandom3 jcRndm(1);
+         jcV = jcRndm.Poisson(jcV);
+         JC_TEMP("test1DObjects: TRandom3::Poisson gave %g, starting the fill loop", jcV);
+      }
+#endif
       for (int i = 1; i <= h1->GetNbinsX() + 1; ++i)
          h1->SetBinContent(i, rndm.Poisson(func->Eval(h1->GetBinCenter(i))));
+      JC_TEMP("test1DObjects: histogram filled");
 
       h1->Sumw2(); // make as a weighted histo to test weighted fits
+      JC_TEMP("test1DObjects: Sumw2 done");
       gTestIndex++;
       if (gSelectedTest == 0 || gSelectedTest == gTestIndex) {
          // fill equal bin 1D  histogram
          TString hname = "H1D_EqBins";
          h1->SetName(hname);
+         JC_TEMP("test1DObjects: histogram renamed");
 
          if (c1 && !__DRAW__) delete c1;
          c1 = new TCanvas(TString::Format("c%d_H1D",gTestIndex), "Histogram1D");
+         JC_TEMP("test1DObjects: TCanvas created");
          ObjectWrapper<TH1D*> owh1(h1);
+         JC_TEMP("test1DObjects: calling testFitters");
          globalStatus += status = testFitters(&owh1, func, listH, listOfFunctions[j]);
          if (__DRAW__) {
             h1->DrawCopy();
@@ -1425,6 +1475,7 @@ int stressHistoFit()
    cout << "****************************************************************************" <<endl;
 
    std::cout << "\nTest 1D and 2D objects\n\n";
+   JC_TEMP("stressHistoFit: calling test1DObjects");
    iret += test1DObjects(listTH1DAlgos, listAlgosTGraph, listAlgosTGraphError, l1DFunctions);
    iret += test2DObjects(listTH2DAlgos, listAlgosTGraph2D, listAlgosTGraph2DError, l2DFunctions);
 
