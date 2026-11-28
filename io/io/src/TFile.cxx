@@ -3279,8 +3279,10 @@ void TFile::MakeProject(const char *dirname, const char * /*classes*/,
 
    fclose(fpMAKE);
 
-
-   if (!opt.Contains("nocompilation")) {
+   // Here we preserve the "nocompilation" option in case it's in use somewhere,
+   // even if the documentation describes the "nocompile" option. See #9215
+   const auto noCompile = opt.Contains("nocompile") || opt.Contains("nocompilation");
+   if (!noCompile) {
       // now execute the generated script compiling and generating the shared lib
       path = gSystem->WorkingDirectory();
       gSystem->ChangeDirectory(clean_dirname.Data());
