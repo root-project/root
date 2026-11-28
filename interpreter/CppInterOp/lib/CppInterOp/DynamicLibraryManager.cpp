@@ -23,6 +23,7 @@
 #include "llvm/Support/Endian.h"
 #endif
 
+#include <algorithm>
 #include <fstream>
 #include <iostream>
 #include <sys/stat.h>
@@ -386,6 +387,7 @@ DynamicLibraryManager::loadLibrary(StringRef libStem, bool permanent,
   if (!insRes.second)
     return kLoadLibAlreadyLoaded;
   m_LoadedLibraries.insert(canonicalLoadedLib);
+  m_OpenDyLibs.push_back(dyLibHandle);
   return kLoadLibSuccess;
 #undef DEBUG_TYPE
 }
@@ -418,6 +420,10 @@ void DynamicLibraryManager::unloadLibrary(StringRef libStem) {
 
   m_DyLibs.erase(dyLibHandle);
   m_LoadedLibraries.erase(canonicalLoadedLib);
+  auto it =
+      std::find(m_OpenDyLibs.rbegin(), m_OpenDyLibs.rend(), dyLibHandle);
+  if (it != m_OpenDyLibs.rend())
+    *it = (DyLibHandle)-1; // Invalidate
 #undef DEBUG_TYPE
 }
 

@@ -175,6 +175,7 @@ extern "C" void R__SetZipMode(int);
 
 static DestroyInterpreter_t *gDestroyInterpreter = nullptr;
 static void *gInterpreterLib = nullptr;
+static void *gRIOLib = nullptr;
 
 // Mutex for protection of concurrent gROOT access
 TVirtualMutex* gROOTMutex = nullptr;
@@ -1075,6 +1076,11 @@ TROOT::~TROOT()
       fClosedObjects->Delete("slow"); // and closed files
       fFiles->Delete("slow");       // and files
       SafeDelete(fFiles);
+      // Delete the content of `TDirectory::fList` early, before the destruction of TCling,
+      // rather than after (during the `TDirectory` destructor.
+      if (fList) {
+         fList->Delete("slow");
+      }
       fSockets->Delete();           SafeDelete(fSockets);     // and sockets
       fMappedFiles->Delete("slow");                     // and mapped files
       TSeqCollection *tl = fMappedFiles; fMappedFiles = nullptr; delete tl;
@@ -1161,6 +1167,14 @@ TROOT::~TROOT()
       SafeDelete(fCleanups);
 #endif
 
+      // Clear fCleanups before deleting fInterpreter, because ~TCling() will
+      // dlclose dynamically loaded libraries (e.g. libTree, libHistPainter)
+      // whose objects may still be registered in fCleanups, and ~TNamed() of
+      // TCling itself (as well as subsequent destructors) triggers
+      // TROOT::RecursiveRemove() -> fCleanups->RecursiveRemove().
+      if (fCleanups)
+         fCleanups->Clear();
+
 #ifdef _MSC_VER
       // usedToIdentifyRootClingByDlSym is available when TROOT is part of rootcling.
       if (dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")) {
@@ -1171,6 +1185,10 @@ TROOT::~TROOT()
       // deleting the interpreter makes things crash at exit in some cases
       delete fInterpreter;
 #endif
+      if (gRIOLib) {
+         dlclose(gRIOLib);
+         gRIOLib = nullptr;
+      }
 
       // Prints memory stats
       TStorage::PrintStatistics();
@@ -2233,9 +2251,9 @@ void TROOT::InitInterpreter()
    if (!dlsym(RTLD_DEFAULT, "usedToIdentifyRootClingByDlSym")
        && !dlsym(RTLD_DEFAULT, "usedToIdentifyStaticRoot")) {
       char *libRIO = gSystem->DynamicPathName("libRIO");
-      void *libRIOHandle = dlopen(libRIO, RTLD_NOW|RTLD_GLOBAL);
+      gRIOLib = dlopen(libRIO, RTLD_NOW|RTLD_GLOBAL);
       delete [] libRIO;
-      if (!libRIOHandle) {
+      if (!gRIOLib) {
          TString err = dlerror();
          fprintf(stderr, "Fatal in <TROOT::InitInterpreter>: cannot load library %s\n", err.Data());
          exit(1);

@@ -1692,6 +1692,10 @@ TCling::~TCling()
    delete fNormalizedCtxt;
    delete fLookupHelper;
    gCling = nullptr;
+
+   if (gROOT && gROOT->GetListOfCleanups())
+      gROOT->GetListOfCleanups()->Remove(this);
+   ResetBit(kMustCleanup);
 }
 
 ////////////////////////////////////////////////////////////////////////////////

@@ -17,6 +17,8 @@
 #include "llvm/Support/Debug.h"
 #include "llvm/Support/Path.h"
 
+#include <vector>
+
 namespace CppInternal {
 class Dyld;
 class InterpreterCallbacks;
@@ -57,6 +59,7 @@ private:
   ///\brief DynamicLibraries loaded by this Interpreter.
   ///
   DyLibs m_DyLibs;
+  std::vector<DyLibHandle> m_OpenDyLibs;
   llvm::StringSet<> m_LoadedLibraries;
 
   ///\brief System's include path, get initialized at construction time.
