@@ -344,9 +344,14 @@ if(ZLIB_NG)
                      MACROARG "\"hsimpleF.root\",30*25000,109,12649062,30"
                      FIXTURES_REQUIRED root-io-filemerger-hsimpleF-fixture)
 else()
+   if(WIN32 AND CMAKE_SIZEOF_VOID_P EQUAL 4)
+      set(SIZE101 "415015")
+   else()
+      set(SIZE101 "415025")
+   endif()
    ROOTTEST_ADD_TEST(simple-zlib-compr-level1
                      MACRO testSimpleFile.C
-                     MACROARG "\"hsimple101.root\",25000,101,415025,25"
+                     MACROARG "\"hsimple101.root\",25000,101,${SIZE101},25"
                      FIXTURES_REQUIRED root-io-filemerger-hsimple101-fixture)
 
    ROOTTEST_ADD_TEST(simple-zlib-compr-level6
