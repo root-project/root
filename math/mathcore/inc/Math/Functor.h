@@ -121,6 +121,12 @@ private :
    std::function<double(double)> fFunc;
 };
 
+// MSVC puts no vtordisp field in front of the virtual base of the two gradient functors, while the interpreter
+// does: code compiled by MSVC then crashes on objects that the interpreter constructed. Make them agree.
+#ifdef _MSC_VER
+#pragma vtordisp(push, 0)
+#endif
+
 /**
    GradFunctor class for Multidimensional gradient functions.
    It is used to wrap in a very C++ callable object to make gradient functions.
@@ -310,6 +316,9 @@ private :
    std::function<double(double)> fDerivFunc;
 };
 
+#ifdef _MSC_VER
+#pragma vtordisp(pop)
+#endif
 
 } // end namespace Math
 
