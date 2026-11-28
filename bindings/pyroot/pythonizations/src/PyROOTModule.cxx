@@ -30,8 +30,6 @@
 #include <utility>
 #include <vector>
 
-#include "IOHandler.cxx"
-
 namespace PyROOT {
 
 PyObject *gRootModule = nullptr;
@@ -164,24 +162,6 @@ static PyMethodDef gPyROOTMethods[] = {
     "Install an input hook to process GUI events"},
    {"_CPPInstance__expand__", (PyCFunction)PyROOT::CPPInstanceExpand, METH_VARARGS,
     "Deserialize a pickled object"},
-   {"JupyROOTExecutor", (PyCFunction)JupyROOTExecutor, METH_VARARGS, "Create JupyROOTExecutor"},
-   {"JupyROOTDeclarer", (PyCFunction)JupyROOTDeclarer, METH_VARARGS, "Create JupyROOTDeclarer"},
-   {"JupyROOTExecutorHandler_Clear", (PyCFunction)JupyROOTExecutorHandler_Clear, METH_NOARGS,
-    "Clear JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_Ctor", (PyCFunction)JupyROOTExecutorHandler_Ctor, METH_NOARGS,
-    "Create JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_Poll", (PyCFunction)JupyROOTExecutorHandler_Poll, METH_NOARGS,
-    "Poll JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_EndCapture", (PyCFunction)JupyROOTExecutorHandler_EndCapture, METH_NOARGS,
-    "End capture JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_InitCapture", (PyCFunction)JupyROOTExecutorHandler_InitCapture, METH_NOARGS,
-    "Init capture JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_GetStdout", (PyCFunction)JupyROOTExecutorHandler_GetStdout, METH_NOARGS,
-    "Get stdout JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_GetStderr", (PyCFunction)JupyROOTExecutorHandler_GetStderr, METH_NOARGS,
-    "Get stderr JupyROOTExecutorHandler"},
-   {"JupyROOTExecutorHandler_Dtor", (PyCFunction)JupyROOTExecutorHandler_Dtor, METH_NOARGS,
-    "Destruct JupyROOTExecutorHandler"},
    {"PyObjRefCounterAsStdAny", (PyCFunction)PyROOT::PyObjRefCounterAsStdAny, METH_VARARGS,
     "Wrap a reference count to any Python object in a std::any for resource management in C++"},
    {NULL, NULL, 0, NULL}};
