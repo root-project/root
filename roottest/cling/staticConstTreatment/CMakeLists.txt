@@ -10,5 +10,4 @@ ROOTTEST_ADD_TEST(execStaticConst
                   MACRO execStaticConst.C
                   OUTREF execStaticConst.ref
                   DEPENDS ${dependencies}
-                  WILLFAIL
                   LABELS roottest regression cling)
