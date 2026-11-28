@@ -287,3 +287,33 @@ TEST_F(TTreeReaderFriends, EntryChainFriend)
       EXPECT_EQ(entry, 30);
    }
 }
+
+TEST_F(TTreeReaderFriends, MainChainShorterFilesInFriendChain)
+{
+   // The following lines reproduce a problem in current ROOT master, to be added as a separate test
+   TChain main{fExtraTreeName};
+   main.Add(fExtraFileName);
+
+   TChain fr{fFriendTreeName};
+   fr.Add(fFriendFileName);
+   fr.Add(fFriendFileName);
+   main.AddFriend(&fr);
+
+   // The main chain has one TTree with 10 entries. The friend chain has two TTrees, each with 2 entries. The call to
+   // GetBranch will implicitly call LoadTree(0) because it happens before the TTreeReader starts its entry iteration.
+   // This internally had the TTreeReader believe that it was switching the tree when going at the start of the second
+   // TTree in the friend chain with this error
+   // The current tree in the TChain tree_10entries has changed (e.g. by TTree::Process) even though
+   // TTreeReader::SetEntry() was called, which switched the tree again. Did you mean to call
+   // TTreeReader::SetLocalEntry()? This error is incorrect, since it's just the TTree in the friend chain being
+   // switched, rightfully. Check that TTreeReader only complains when the actual current tree is being switched,
+   // avoiding complaints when the friend trees are switched correctly.
+   TTreeReader r{&main};
+   auto *tree = r.GetTree();
+   tree->GetBranch("y");
+   TTreeReaderValue<int> rv{r, "y"};
+   r.SetEntry(2);
+   EXPECT_EQ(*rv, 0);
+   r.SetEntry(3);
+   EXPECT_EQ(*rv, 1);
+}
