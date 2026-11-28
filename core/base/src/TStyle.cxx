@@ -574,6 +574,7 @@ void TStyle::Copy(TObject &obj) const
    ((TStyle&)obj).fPadTopMargin     = fPadTopMargin;
    ((TStyle&)obj).fPadLeftMargin    = fPadLeftMargin;
    ((TStyle&)obj).fPadRightMargin   = fPadRightMargin;
+   ((TStyle&)obj).fPadMarginInDivide = fPadMarginInDivide;
    ((TStyle&)obj).fPadGridX         = fPadGridX;
    ((TStyle&)obj).fPadGridY         = fPadGridY;
    ((TStyle&)obj).fPadTickX         = fPadTickX;
@@ -720,6 +721,7 @@ void TStyle::Reset(Option_t *opt)
    fPadTopMargin   = 0.1;
    fPadLeftMargin  = 0.1;
    fPadRightMargin = 0.1;
+   fPadMarginInDivide = kFALSE;
    fPadGridX       = kFALSE;
    fPadGridY       = kFALSE;
    fPadTickX       = 0;
