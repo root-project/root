@@ -1265,9 +1265,9 @@ and their corresponding variations:
 | 2 |              20 |             -20 |            19.5 |           -19.5 |            20.5 |           -20.5 |             111 |
 | 3 |              30 |             -30 |            29.5 |           -29.5 |            30.5 |           -30.5 |             111 |
 | 4 |              40 |             -40 |            39.5 |           -39.5 |            40.5 |           -40.5 |             111 |
-| 5 |               0 |               0 |            49.5 |           -49.5 |               0 |               0 |             010 |
+| 5 |              50 |             -50 |            49.5 |           -49.5 |               0 |               0 |             010 |
 | 6 |`* Not written *`|                 |                 |                 |                 |                 |                 |
-| 7 |               0 |               0 |               0 |               0 |            70.5 |           -70.5 |             100 |
+| 7 |              70 |             -70 |               0 |               0 |            70.5 |           -70.5 |             100 |
 
 "x" and "y" are the nominal values, and their variations are snapshot as `<ColumnName>__<VariationName>_<VariationTag>`.
 
@@ -1280,19 +1280,22 @@ RDataFrame writes a bitmask for each event, see last column of the table above. 
 associated columns are valid. The bitmask is implemented as a 64-bit `std::bitset` in memory, written to the output
 dataset as a `std::uin64_t`. For every 64 columns, a new bitmask column is added to the output dataset.
 
-For each column that gets varied, the nominal and all variation columns are each assigned a bit to denote whether their
-entries are valid. A mapping of column names to the corresponding bitmask is placed in the same file as the output
-dataset, with a name that follows the pattern `"R_rdf_column_to_bitmask_mapping_<NAME_OF_THE_DATASET>"`. It is of type
+For each column that gets varied, the variation columns are each assigned a bit to denote whether their entries are
+valid. Nominal columns are not masked, because they hold the value of the column for every variation that doesn't vary
+it. Whether the nominal selection passed is recorded in bit 0 of the first bitmask, so it can be selected with e.g.
+`Filter("(R_rdf_mask_Events_0 & 1) != 0")`. A mapping of column names to the corresponding bitmask is placed in the
+same file as the output dataset, with a name that follows the pattern
+`"R_rdf_column_to_bitmask_mapping_<NAME_OF_THE_DATASET>"`. It is of type
 `std::unordered_map<std::string, std::pair<std::string, unsigned int>>`, and maps a column name to the name of the
 bitmask column and the index of the relevant bit. For example, in the same file as the dataset "Events" there would be
 an object named `R_rdf_column_to_bitmask_mapping_Events`. This object for example would describe a connection such as:
 
 ~~~
-muon_pt --> (R_rdf_mask_Events_0, 42)
+muon_pt__muon_scale_up --> (R_rdf_mask_Events_0, 42)
 ~~~
 
-which means that the validity of the entries in `muon_pt` is established by the bit `42` in the bitmask found in the
-column `R_rdf_mask_Events_0`.
+which means that the validity of the entries in `muon_pt__muon_scale_up` is established by the bit `42` in the bitmask
+found in the column `R_rdf_mask_Events_0`.
 
 When RDataFrame opens a file, it checks for the existence of this mapping between columns and bitmasks, and loads it automatically if found. As such,
 RDataFrame makes the treatment of the various bitmap maskings completely transparent to the user.
