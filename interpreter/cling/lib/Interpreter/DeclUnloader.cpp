@@ -1120,6 +1120,9 @@ namespace cling {
 
   bool DeclUnloader::VisitClassTemplateSpecializationDecl(
       ClassTemplateSpecializationDecl* CTSD, bool RemoveSpec) {
+    if (RemoveSpec && CTSD->getSpecializationKind() == TSK_ImplicitInstantiation)
+      return true;
+
     // ClassTemplateSpecializationDecl: CXXRecordDecl, FoldingSet
     bool Successful = VisitCXXRecordDecl(CTSD);
     if (RemoveSpec) {
@@ -1164,6 +1167,9 @@ namespace cling {
 
   bool DeclUnloader::VisitVarTemplateSpecializationDecl(
       VarTemplateSpecializationDecl* VTSD, bool RemoveSpec) {
+    if (RemoveSpec && VTSD->getSpecializationKind() == TSK_ImplicitInstantiation)
+      return true;
+
     // VarTemplateSpecializationDecl: VarDecl, FoldingSet
     bool Successful = VisitVarDecl(VTSD);
     if (RemoveSpec) {
