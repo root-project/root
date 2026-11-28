@@ -2883,8 +2883,12 @@ TEST(RooFitHS3, ArrayDistImport)
    EXPECT_TRUE(p1->getNoRounding());
    EXPECT_TRUE(p2->getNoRounding());
    EXPECT_FALSE(p3->getNoRounding());
-   EXPECT_DOUBLE_EQ(p1->getVal(), TMath::Poisson(20.0, 22.0));
-   EXPECT_DOUBLE_EQ(p2->getVal(), TMath::Poisson(10.0, 9.0));
+   // Not EXPECT_DOUBLE_EQ: the logarithm of the Poisson probability is a diff
+   // rence of larger terms, so the result depends on whether the compiler
+   // fuses the multiplication with the subtra tion, and RooPoisson and
+   // TMath::Poisson() are not necessarily compiled the same way.
+   EXPECT_FLOAT_EQ(p1->getVal(), TMath::Poisson(20.0, 22.0));
+   EXPECT_FLOAT_EQ(p2->getVal(), TMath::Poisson(10.0, 9.0));
 
    // Gaussian: parameters by name, default sigma, numbers.
    auto *ga = dynamic_cast<RooGaussian *>(ws.pdf("nom_a_constraint"));
