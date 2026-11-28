@@ -2,6 +2,7 @@
 #include "THashTable.h"
 #include "TInterpreter.h"
 #include "TROOT.h"
+#include "TRealData.h"
 #include "TStreamerInfo.h"
 #include "TVirtualMutex.h"
 #include "Math/GenVector/LorentzVector.h"
@@ -16,6 +17,7 @@
 #include <deque>
 #include <mutex>
 #include <thread>
+#include <tuple>
 
 TEST(TClass, CachedLayoutDoesNotTakeInterpreterLock)
 {
@@ -163,6 +165,23 @@ TEST(TClass, CollectionSizeof)
    EXPECT_EQ(sizeof(std::deque<unsigned int>), TClass::GetClass("std::deque<unsigned int>")->GetClassSize());
    EXPECT_EQ(sizeof(std::deque<long>), TClass::GetClass("std::deque<long>")->GetClassSize());
    EXPECT_EQ(sizeof(std::deque<unsigned long>), TClass::GetClass("std::deque<unsigned long>")->GetClassSize());
+}
+
+// The class emulating a std::tuple must have the layout of the real one, also where the standard library
+// leaves padding between the elements (with the Microsoft ABI: in front of the char).
+TEST(TClass, TupleLayout)
+{
+   std::tuple<char, int, double> t;
+   auto cl = TClass::GetClass("std::tuple<char, int, double>");
+   ASSERT_NE(cl, nullptr);
+   EXPECT_EQ(cl->Size(), static_cast<Int_t>(sizeof(t)));
+   auto offset = [&](const char *member) {
+      auto rd = cl->GetRealData(member);
+      return rd ? rd->GetThisOffset() : -1;
+   };
+   EXPECT_EQ(offset("_0"), (char *)&std::get<0>(t) - (char *)&t);
+   EXPECT_EQ(offset("_1"), (char *)&std::get<1>(t) - (char *)&t);
+   EXPECT_EQ(offset("_2"), (char *)&std::get<2>(t) - (char *)&t);
 }
 
 TEST(TClass, ReSubstTemplateArg)
